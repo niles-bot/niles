@@ -39,7 +39,7 @@ Absolutely nothing
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+Might eventually host this whom knows
 
 ## Built With
 
