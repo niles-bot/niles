@@ -1,0 +1,22 @@
+{
+  "name": "niles",
+  "version": "1.0.0",
+  "description": "niles discord bot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sean Coffey",
+  "license": "MIT",
+  "dependencies": {
+    "cluster": "^0.7.7",
+    "discord.js": "^11.1.0",
+    "dotenv": "^4.0.0",
+    "node-google-calendar": "^1.0.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seanecoffey/niles/"
+  }
+}
