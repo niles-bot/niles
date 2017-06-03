@@ -78,7 +78,7 @@ exports.run = async function(message) {
         message.channel.send({
             embed: new discord.RichEmbed()
                 .setColor('#FFFFF')
-                .setDescription('Click [here](https://discordapp.com/oauth2/authorize?permissions=523344&scope=bot&client_id=' + client.user.id + ') to invite me to your server')
+                .setDescription('Click [here](https://discordapp.com/oauth2/authorize?permissions=27648&scope=bot&client_id=' + client.user.id + ') to invite me to your server')
         });
   if (cmd === 'dbtest') {
     initdb = require('../handlers/init');
@@ -111,7 +111,7 @@ exports.run = async function(message) {
 (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
     .addField('System Info', `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed(2) + ' MB')}`, true)
     .addField('Libraries', `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
-    .addField('Links', '[Bot invite](https://discordapp.com/oauth2/authorize?permissions=523344&scope=bot&client_id=320434122344366082) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)', true)
+    .addField('Links', '[Bot invite](https://discordapp.com/oauth2/authorize?permissions=27648&scope=bot&client_id=320434122344366082) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)', true)
     .setFooter('Created by Sean#8856');
 
     message.channel.send({ embed: embed});

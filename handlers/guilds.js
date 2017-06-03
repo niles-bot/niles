@@ -1,5 +1,6 @@
 const snekfetch = require('snekfetch');
 const fs = require('fs');
+const empty = {};
 
 exports.create = (guild) => {
   guilddb[guild.id] = '!';
@@ -16,6 +17,11 @@ exports.delete = (guild) => {
     if (err)
       return console.log(Date() + ' deleteGuilde error: ' + err);
   });
+  guilddbString = './stores/' + String(guild.id) + 'db.json';
+  fs.writeFile(guilddbString, JSON.stringify(empty, '','\t'), (err) => {
+    if (err)
+      return console.log(Date() + ' deleteGuilde error: ' + err);
+    });
 }
 
 //First time initialisation guilds.init(message)
