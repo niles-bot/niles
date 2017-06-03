@@ -13,8 +13,8 @@ var fs = require('fs');
 const KEYPATH = process.env.KEYPATH;
 var json = fs.readFileSync(KEYPATH, 'utf8');
 var key = JSON.parse(json).private_key;
-module.exports.key = key;
 
+module.exports.key = key;
 module.exports.serviceAcctId = SERVICE_ACCT_ID;
 module.exports.calendarId = CALENDAR_ID;
 module.exports.timezone = TIMEZONE;

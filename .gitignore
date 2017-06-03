@@ -39,4 +39,5 @@ Thumbs.db
 # Specific files #
 ######################
 .ENV
+Niles-88ff4614f57e.json
 node_modules/*
