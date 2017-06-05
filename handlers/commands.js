@@ -39,8 +39,12 @@ exports.run = async function(message) {
         //Testing temporary message storage and deletion
       })
   //HELP
-  if (cmd === 'help' || mentioned(message, 'help'))
+  if (cmd === 'help' || mentioned(message, 'help')) {
       message.author.send(HELP_MESSAGE);
+      message.channel.fetchMessage(message.id).then( m => {
+        m.delete(1000)
+      }).catch( e => console.log(e));
+    }
   //CLEAN
   if (['clean','purge'].includes(cmd)) {
     message.channel.send('**WARNING** - This will delete all messages in this channel! Are you sure? (`y`/`n`)');
@@ -67,9 +71,13 @@ exports.run = async function(message) {
         });
   //RESTART - Need to add auth
   if (['reboot','restart','kill'].includes(cmd) || mentioned(message, ['reboot','restart','kill'])) {
+    message.channel.fetchMessage(message.id).then( m => {
+      m.delete()
+    }).catch( e => console.log(e));
     await message.channel.send('Okay... I\'ll be back in a moment.');
     await client.destroy()
-    .then(restart => process.exit(1))
+    .then(restart => process.exit(1));
+
   }
   //INITIALISE - Deprecate
   if (cmd === 'init' || mentioned(message, 'init')) {
@@ -117,7 +125,11 @@ exports.run = async function(message) {
   }
   //UPDATE - Syncs Google Events to Local JSON
   if(['update', 'sync', 'refresh'].includes(cmd) || mentioned(message, ['update','sync', 'refresh'])) {
-    generateEvents(message.guild, calendarId);
+    await generateEvents(message.guild, calendarId);
+    await updateWeek(message);
+    message.channel.fetchMessage(message.id).then( m => {
+      m.delete(2500)
+    }).catch( e => console.log(e));
   }
   //DELETE
   if(cmd === 'delete') {
@@ -130,10 +142,9 @@ exports.run = async function(message) {
   //DISPLAYS THE CALENDAR IN CURRENT CHANNEL
   if(cmd === 'display' || mentioned(message, 'display')) {
     createWeek(message.channel);
-  }
-  //PUSH UPDATE - Pushes update to last written calendar using edits
-  if(cmd === 'pushupdate') {
-    updateWeek(message);
+    message.channel.fetchMessage(message.id).then( m => {
+      m.delete(2000)
+    }).catch( e => console.log(e));
   }
   //Update google Calendar ID or Timezone.
   if(['id','tz'].includes(cmd)) {
@@ -236,21 +247,17 @@ function createWeek(thisChannel) {
   gdb = require(guilddbString);
   var c1 = defer();
   var dayMap = map_days(thisChannel.guild.id);
-  var nextkey = 0;
-  //Create separate code block for each day
+  var finalString = ''
+
   for (let i = 0; i < 7; i++) {
     var key = 'day' + String(i);
-    sendString = '**' + checkDay(dayMap[i].getDay()) + ' : **' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
+    var sendString='';
+    sendString += '\n**' + checkDay(dayMap[i].getDay()) + ' : **' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
     if (gdb[key] == '[]' || gdb[key] == [] || gdb[key] == 0) {
       sendString += '```  ```';
-      thisChannel.send(sendString).then( sent => {
-        gdb['dayid' + String(nextkey)] = sent.id;
-        nextkey++;
-        })
-      }
-      else {
-        sendString += '```';
-        //Map events for each day
+    } else {
+      sendString += '```';
+      //Map events for each day
         for (let m = 0; m < gdb[key].length; m++) {
           tempStartDate = new Date(gdb[key][m]["start"]["dateTime"]);
           tempStartDate = convertDate(tempStartDate,thisChannel.guild.id);
@@ -261,12 +268,12 @@ function createWeek(thisChannel) {
           sendString += gdb[key][m]["summary"];
         }
         sendString += '```';
-        thisChannel.send(sendString).then( sent => {
-          gdb['dayid' + String(nextkey)] = sent.id;
-          nextkey++;
-        })
       }
+      finalString += sendString;
     };
+    thisChannel.send(finalString).then( sent => {
+      gdb['msgid'] = sent.id;
+    })
     thisChannel.send({
         embed: new discord.RichEmbed()
             .setColor('BLUE')
@@ -289,43 +296,43 @@ function createWeek(thisChannel) {
   return c1.promise
 }
 
+//update the existing calendar
 function updateWeek(message) {
   guilddbString = 'D:/niles/stores/' + String(message.guild.id) + 'db.json';
   gdb = require(guilddbString);
   var dayMap = map_days(message.guild.id);
   var nextkey = 0;
+  var sendString = '';
+  var finalString = '';
+
   for (let i = 0; i < 7; i++) {
-    msgId = gdb['dayid'+String(i)];
-    message.channel.fetchMessage(msgId).then( m => {
-      sendString = '**' + checkDay(dayMap[i].getDay()) + ' : **' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
-      if (gdb['day'+String(i)] == '[]' || gdb['day'+String(i)] == [] || gdb['day'+String(i)] == 0) {
-        sendString += '```  ```';
-        m.edit(sendString);
-      }
-      else {
-        sendString += '```';
-        //Map events for each day
-        for (let m = 0; m < gdb['day'+String(i)].length; m++) {
-          tempDate = new Date(gdb['day'+String(i)][m]["start"]["dateTime"]);
-          tempStartDate = new Date(gdb['day'+String(i)][m]["start"]["dateTime"]);
+    var key = 'day' + String(i);
+    var sendString='';
+    sendString += '\n**' + checkDay(dayMap[i].getDay()) + ' : **' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
+    if (gdb[key] == '[]' || gdb[key] == [] || gdb[key] == 0) {
+      sendString += '```  ```';
+    } else {
+      sendString += '```';
+      //Map events for each day
+        for (let m = 0; m < gdb[key].length; m++) {
+          tempStartDate = new Date(gdb[key][m]["start"]["dateTime"]);
           tempStartDate = convertDate(tempStartDate,message.guild.id);
-          tempFinDate = new Date(gdb['day'+String(i)][m]["end"]["dateTime"]);
+          tempFinDate = new Date(gdb[key][m]["end"]["dateTime"]);
           tempFinDate = convertDate(tempFinDate,message.guild.id);
           sendString += '\n - ';
           sendString += stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()));
-          sendString += gdb['day'+String(i)][m]["summary"];
+          sendString += gdb[key][m]["summary"];
         }
         sendString += '```';
-        m.edit(sendString);
       }
+      finalString += sendString;
+    };
+    msgId = gdb['msgid'];
+    message.channel.fetchMessage(msgId).then( m => {
+      m.edit(finalString)
     }).catch (err => console.log(err));
-  }
-  message.channel.fetchMessage(message.id).then ( cmd => {
-    cmd.delete(3000);
-  }).catch (err => console.log(err));
-  console.log('calendarUpdate');
+    console.log('calendar updated');
 }
-
 //return the day in string
 function checkDay(number) {
   var days = ['Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
