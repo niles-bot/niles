@@ -47,7 +47,7 @@ Join the [Niles Discord server](https://discord.gg/jNyntBn) if you have issues o
 
 Sean Coffey ([GitHub](http://github.com/seanecoffey)).
 
-![Sean Coffey](https://static1.squarespace.com/static/5114c744e4b044f8ed62c985/t/57bd4b01f7e0ab7f8047e458/1485628111532/?format=500w?s=200)
+![Sean Coffey](https://puu.sh/wcgvn/5dd67ad9c9.png)
 
 ### License
 
