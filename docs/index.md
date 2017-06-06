@@ -2,7 +2,9 @@
 layout: default
 ---
 
-[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for interfacing with Google Calendar.
+[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for creating in-channel schedule calendars and interfacing with Google Calendar.
+
+![example](https://puu.sh/wcgpt/e209eef3ba.png)
 
 ## Niles can help you if...
 
@@ -14,7 +16,7 @@ This page itself is built with Solo. It's generated from [this markdown file](ht
 ## Setup
 
 First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
-Next either create a new Google calendar or use an existing one, and under **Settings > Calendars > 'Calendar Name'**, select 'Share This Calendar' and under 'Share with a specific person' add `niles-291@niles-169605.iam.gserviceaccount.com`.
+Next either create a new Google calendar or use an existing one, and under **Settings > Calendars > 'Calendar Name'**, select 'Share This Calendar' and under 'Share with a specific person' add `niles-291@niles-169605.iam.gserviceaccount.com` and make sure you give permission **Make changes to events**.
 
 Next head to 'Calendar details' and copy the **Calendar ID** - We'll use this when we setup Niles in your Discord Server.
 Run `!setup` in your `#general` to get started.
