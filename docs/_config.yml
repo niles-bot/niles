@@ -1,0 +1,10 @@
+# Site settings
+title: Niles, a simple Discord calendar bot
+tag_text: Niles
+description: Niles is a simple Discord bot for creating in-channel calendars and interfacing with Google Calendar
+
+# Build settings
+markdown: kramdown
+exclude: ["README.md"]
+sass:
+  style: compressed

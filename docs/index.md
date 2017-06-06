@@ -1,51 +1,53 @@
-# Niles Discord Bot
+---
+layout: default
+---
 
-** In Development **
+[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for interfacing with Google Calendar.
 
-NodeJS bot for interfacing with Google Calendars for eSports scheduling
+## Niles can help you if...
 
-## Getting Started
+* You want to create a single channel to manage events in your Discord server.
+* You want to sync events from ([Google Calendar](https://calendar.google.com)).
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+This page itself is built with Solo. It's generated from [this markdown file](https://github.com/chibicode/solo/blob/gh-pages/_includes/index.md).
 
-### Prerequisites
+## Setup
 
-* [Node.js](https://nodejs.org/en/) - v8 or higher
+First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
+Next either create a new Google calendar or use an existing one, and under **Settings > Calendars > 'Calendar Name'**, select 'Share This Calendar' and under 'Share with a specific person' add `niles-291@niles-169605.iam.gserviceaccount.com`.
 
-### Installing
+Next head to 'Calendar details' and copy the **Calendar ID** - We'll use this when we setup Niles in your Discord Server.
+Run `!setup` in your `#general` to get started.
 
-Setup your Discord app on the [Discord developers website](https://discordapp.com/developers/applications/me).
+## Usage
 
-Note: To add a development bot to your Discord server, visit https://discordapp.com/api/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot&permissions=0 replacing your app id in the URL.
+### Commands
 
-Set up your [Google Service Account](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
-For more information on setting up a Google Service Account, [see here](https://github.com/yuhong90/node-google-calendar/wiki#setup-service-accounts).
+* `!help`     - Get a DM of the list of commands and usage.
+* `!setup`    - Get instructions for setting Niles up for use in your Discord.
+* `!id`       - Set the Google Calendar ID for the calendar you want Niles to sync to.
+* `!tz`       - Set the preferred timezone of your Discord server, use format relative to GMT:`!tz GMT+10:00`
+* `!init`     - Cleans messages from the current channel (all) and displays a calendar message.
+* `!display`  - Prints a message with the calendar.
+* `!update`   - Checks for any new events and updates the last printed calendar, also works as `!sync`.
+* `!create`   - Create a new event: `!create 4legs friday 8pm-10pm`, also works with `!scrim`.
+* `!delete`   - Delete an event: `!delete <day> <start time>`, i.e. `!delete friday 8pm`.
+* `!clean`    - Deletes all messages in the current channel, also works as `!purge`.
+* `!invite`   - Get the invite link for the Niles.
+* `!stats`    - Display the stats for the bot.
+* `!ping`     - Pong!
+* `README.md` before pushing your code.
 
-Rename the `PUBLIC.ENV` file to `.ENV` and add the relevant variables.
+## Support
 
-To run and connect your bot
+Join the [Niles Discord server](https://discord.gg/jNyntBn) if you have issues or suggestions.
 
-```
-npm install
-```
+## Author
 
-```
-node bot.js
-```
+Sean Coffey ([GitHub](http://github.com/seanecoffey)).
 
-## Testing
+![Sean Coffey](https://static1.squarespace.com/static/5114c744e4b044f8ed62c985/t/57bd4b01f7e0ab7f8047e458/1485628111532/?format=500w?s=200)
 
-Absolutely nothing
+### License
 
-## Deployment
-
-Might eventually host this whom knows
-
-## Built With
-
-* [Discord.js](https://github.com/hydrabolt/discord.js/) - NodeJS library for interfacing with the Discord API
-* [node-google-calendar](https://github.com/yuhong90/node-google-calendar) - Simple Node module that supports Google Calendar API
-
-## License
-
-This project is licensed under the MIT License
+[MIT License](http://seanecoffey.mit-license.org/)
