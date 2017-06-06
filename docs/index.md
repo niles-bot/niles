@@ -38,7 +38,6 @@ Run `!setup` in your `#general` to get started.
 * `!invite`   - Get the invite link for the Niles.
 * `!stats`    - Display the stats for the bot.
 * `!ping`     - Pong!
-* `README.md` before pushing your code.
 
 ## Support
 
