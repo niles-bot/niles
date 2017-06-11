@@ -278,7 +278,7 @@ function clean(delChannel, number, rec) {
 
 //Create the list of events in the channel
 function createWeek(thisChannel, dayMap) {
-  guilddbString = 'D:/niles/stores/' + String(thisChannel.guild.id) + 'db.json';
+  guilddbString = '/niles/stores/' + String(thisChannel.guild.id) + 'db.json';
   gdb = require(guilddbString);
   var finalString = '';
 
@@ -291,14 +291,26 @@ function createWeek(thisChannel, dayMap) {
     } else {
       sendString += '```';
       //Map events for each day
+      let tempString = {};
         for (let m = 0; m < gdb[key].length; m++) {
+          let options = {
+            showHeaders : false,
+            columnSplitter: ' | ',
+            columns: ["time", "events"],
+            config: {
+              time: {minWidth: 11},
+              events: {minWidth: 11}
+            }
+          };
           tempStartDate = new Date(gdb[key][m]["start"]["dateTime"]);
           tempStartDate = convertDate(tempStartDate,thisChannel.guild.id);
           tempFinDate = new Date(gdb[key][m]["end"]["dateTime"]);
           tempFinDate = convertDate(tempFinDate,thisChannel.guild.id);
-          sendString += '\n - ';
-          sendString += stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()));
-          sendString += gdb[key][m]["summary"];
+          console.log(gdb[key][m]["summary"]);
+          tempString['\n - ' + stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()))] = gdb[key][m]["summary"];
+          sendString += columnify(tempString, options);
+          console.log(columnify(tempString, options));
+
         }
         sendString += '```';
       }
@@ -331,7 +343,7 @@ function createWeek(thisChannel, dayMap) {
 
 //update the existing calendar (only works after init)
 function updateWeek(message, dayMap) {
-  guilddbString = 'D:/niles/stores/' + String(message.guild.id) + 'db.json';
+  guilddbString = '/niles/stores/' + String(message.guild.id) + 'db.json';
   gdb = require(guilddbString);
   var nextkey = 0;
   var sendString = '';
@@ -346,14 +358,26 @@ function updateWeek(message, dayMap) {
     } else {
       sendString += '```';
       //Map events for each day
+      let tempString = {};
         for (let m = 0; m < gdb[key].length; m++) {
+          let options = {
+            showHeaders : false,
+            columnSplitter: ' | ',
+            columns: ["time", "events"],
+            config: {
+              time: {minWidth: 11},
+              events: {minWidth: 11}
+            }
+          };
           tempStartDate = new Date(gdb[key][m]["start"]["dateTime"]);
-          tempStartDate = convertDate(tempStartDate,message.guild.id);
+          tempStartDate = convertDate(tempStartDate,thisChannel.guild.id);
           tempFinDate = new Date(gdb[key][m]["end"]["dateTime"]);
-          tempFinDate = convertDate(tempFinDate,message.guild.id);
-          sendString += '\n - ';
-          sendString += stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()));
-          sendString += gdb[key][m]["summary"];
+          tempFinDate = convertDate(tempFinDate,thisChannel.guild.id);
+          console.log(gdb[key][m]["summary"]);
+          tempString['\n - ' + stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()))] = gdb[key][m]["summary"];
+          sendString += columnify(tempString, options);
+          console.log(columnify(tempString, options));
+
         }
         sendString += '```';
       }
@@ -412,7 +436,7 @@ function quickAddEvent(text, calendarId) {
 //Search for events on google calendar and push to JSON file
 function generateEvents(guild, calendarId, dayMap) {
   var g = defer();
-  guilddbString = 'D:/niles/stores/' + String(guild.id) + 'db.json';
+  guilddbString = '/niles/stores/' + String(guild.id) + 'db.json';
   gdb = require(guilddbString);
   let allEvents = [];
   tz = guilddb[guild.id]["timezone"];
@@ -469,7 +493,7 @@ return g.promise;
 function deleteFindEvent(message, calendarId, dayMap) {
   deleteMessages = [];
   deleteMessages.push(message.id);
-  guilddbString = 'D:/niles/stores/' + String(message.guild.id) + 'db.json';
+  guilddbString = '/niles/stores/' + String(message.guild.id) + 'db.json';
   gdb = require(guilddbString);
   var dayDate;
   var delDate;
@@ -604,8 +628,8 @@ function stringPrefix(hour) {
     return timePieces[hour];
 }
 function stringPrefixSuffix(hour) {
-  var timePieces = ['12 AM: | ','1 AM:  | ','2 AM:   | ','3 AM:   | ','4 AM:   | ','5 AM:   | ','6 AM:   | ','7 AM:   | ','8 AM:   | ','9 AM:   | ',
-  '10 AM:  | ','11 AM: | ','12 PM: | ','1 PM:  | ','2 PM:   | ','3 PM:   | ','4 PM:   | ','5 PM:   | ','6 PM:   | ','7 PM:   | ','8 PM:   | ','9 PM:   | ','10 PM:  | ','11 PM: | '];
+  var timePieces = ['12 AM:','1 AM:','2 AM:','3 AM:','4 AM:','5 AM:','6 AM:','7 AM:','8 AM:','9 AM:',
+  '10 AM:','11 AM:','12 PM:','1 PM:','2 PM:','3 PM:','4 PM:','5 PM:','6 PM:','7 PM:','8 PM:','9 PM:','10 PM:','11 PM:'];
     return timePieces[hour];
 }
 
