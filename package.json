@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "cluster": "^0.7.7",
+    "columnify": "^1.5.4",
     "discord.js": "^11.1.0",
     "dotenv": "^4.0.0",
     "fs": "0.0.1-security",

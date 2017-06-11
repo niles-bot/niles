@@ -2,16 +2,15 @@ const time = require('time-parser');
 const moment = require('moment');
 const fs = require('fs');
 require('moment-duration-format');
-
-//promises - need to deprecate
-var defer = require('promise-defer');
-//Niles specific settings & Google Calendar
+let columnify = require('columnify');
+const util = require('util');
+const setTimeoutPromise = util.promisify(setTimeout);
+let defer = require('promise-defer');
 const CONFIG = require('../settings.js');
 const CalendarAPI = require('node-google-calendar');
 let cal = new CalendarAPI(CONFIG);
-//Require other handlers and read the main list of guilds.
 const guilds = require('../handlers/guilds');
-guilddb = require('../stores/guilddb.json');
+let guilddb = require('../stores/guilddb.json');
 const init = require('../handlers/init.js');
 
 //handle and store temporary messages - will deprecate
@@ -47,19 +46,30 @@ exports.run = async function(message) {
     }
   //CLEAN
   if (['clean','purge'].includes(cmd)) {
-    message.channel.send('**WARNING** - This will delete all messages in this channel! Are you sure? (`y`/`n`)');
+    pieces = message.content.split(' ');
+    if (parseInt(pieces[1]) > 0 && parseInt(pieces[1]) < 100 ) {
+      message.channel.send('**WARNING** - This will delete ' + pieces[1] + ' messages in this channel! Are you sure? (`y`/`n`)');
+      number = parseInt(pieces[1]);
+      rec = 0;
+    } else {
+      message.channel.send('**WARNING** - This will delete all messages in this channel! Are you sure? (`y`/`n`)');
+      number = 97;
+      rec = 1;
+    }
     const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 30000});
     collector.on('collect', (m) => {
       if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
-        clean(message.channel)
+        clean(message.channel, number + 3, rec)
       } else {
         message.channel.send('Okay, I won\'t do that');
+        clean(message.channel, 3, 0)
       };
       return collector.stop();
     });
     collector.on('end', (collected, reason) => {
       if (reason === 'time')
         message.channel.send('Command response timeout');
+        clean(message.channel,3,0);
     });
   }
   //INVITE
@@ -81,9 +91,13 @@ exports.run = async function(message) {
   }
   //INITIALISE - Deprecate
   if (cmd === 'init' || mentioned(message, 'init')) {
-    await clean(message.channel);
-    await generateEvents(message.guild, calendarId);
-    await createWeek(message.channel);
+    await clean(message.channel, 100, 1);
+    await mapDays(message.guild).then(dayMap => {
+      generateEvents(message.guild,calendarId, dayMap)
+    });
+    await mapDays(message.guild).then(dayMap => {
+      createWeek(message.channel, dayMap)
+    })
     await console.log('command init finished running');
   }
   //STATS
@@ -117,16 +131,28 @@ exports.run = async function(message) {
       stringToSend += ' ';
     }
     console.log(stringToSend);
-    quickAddEvent(stringToSend, calendarId);
-    setTimeout(generateEvents(message.guild, calendarId), 30000)
-    .catch(e => {
-      console.log('timeout error: ' + e);
+    await quickAddEvent(stringToSend, calendarId).then( newevent => {
+      message.channel.send('Event `' + newevent.summary + '` on `' +  newevent.start.dateTime + '` has been created');
+    });
+    await mapDays(message.guild).then (dayMap => {
+      generateEvents(message.guild, calendarId, dayMap);
+    });
+    setTimeoutPromise(2000).then( wait => {
+      mapDays(message.guild).then(dayMap => {
+        updateWeek(message, dayMap);
+      });
     });
   }
   //UPDATE - Syncs Google Events to Local JSON
   if(['update', 'sync', 'refresh'].includes(cmd) || mentioned(message, ['update','sync', 'refresh'])) {
-    await generateEvents(message.guild, calendarId);
-    await updateWeek(message);
+    await mapDays(message.guild).then(dayMap => {
+      generateEvents(message.guild,calendarId, dayMap)
+    });
+    setTimeoutPromise(2000).then( wait => {
+      mapDays(message.guild).then(dayMap => {
+        updateWeek(message, dayMap);
+      });
+    });
     message.channel.fetchMessage(message.id).then( m => {
       m.delete(2500)
     }).catch( e => console.log(e));
@@ -134,14 +160,20 @@ exports.run = async function(message) {
   //DELETE
   if(cmd === 'delete') {
     if (message.content.split(' ').length === 3) {
-      deleteFindEvent(message, calendarId)
+      await mapDays(message.guild).then(dayMap => {
+        deleteFindEvent(message, calendarId, dayMap);
+      });
     } else {
-      message.channel.send('Hmm.. I can\'t process that request, delete using the format ``!delete <day> <start time>`` i.e. ``!delete tuesday 8pm``');
+      message.channel.send('Hmm.. I can\'t process that request, delete using the format ``!delete <day> <start time>`` i.e. ``!delete tuesday 8pm``').then(msg => {
+        msg.delete(10000);
+      });
     }
   }
   //DISPLAYS THE CALENDAR IN CURRENT CHANNEL
   if(cmd === 'display' || mentioned(message, 'display')) {
-    createWeek(message.channel);
+    await mapDays(message.guild).then( dayMap => {
+      createWeek(message.channel,dayMap)
+    });
     message.channel.fetchMessage(message.id).then( m => {
       m.delete(2000)
     }).catch( e => console.log(e));
@@ -153,6 +185,11 @@ exports.run = async function(message) {
     } catch (e) {
       console.log(e)
     }
+  }
+  if(cmd === 'all') {
+    mapDays(message.guild).then(dayMap => {
+    listAllEventsInCalendar(calendarId, message,dayMap);
+  });
   }
 };
 
@@ -172,19 +209,20 @@ const HELP_MESSAGE = "```\
 !help                -  Display this message\n\
 ```"
 
-//helper functions
-function mentioned(msg, x) {
-    if (!Array.isArray(x)) {
-        x = [x];
-    }
-    return msg.isMentioned(client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
-}
-
-//listallevents on the calendar
-function listAllEventsInCalendar(calendarId) {
-  let calDelay = defer();
+//listallevents on the calendar (date range)
+function listAllEventsInCalendar(calendarId, message, dayMap) {
 	let eventsArray = [];
-	let params = {};
+  tz = guilddb[message.guild.id]["timezone"];
+  var startDate = JSON.stringify(dayMap[0]).split('T')[0].split('"')[1] + 'T00:00:00' + tz.split('T')[1];
+  console.log(startDate);
+  var endDate = JSON.stringify(dayMap[6]).split('T')[0].split('"')[1] + 'T23:59:00' + tz.split('T')[1];
+  console.log(endDate);
+  let params = {
+    timeMin:startDate,
+    timeMax:endDate,
+    singleEvents: true,
+    orderBy: 'startTime'
+  };
 	cal.Events.list(calendarId, params)
 		.then(json => {
 			for (let i = 0; i < json.length; i++) {
@@ -199,24 +237,21 @@ function listAllEventsInCalendar(calendarId) {
 				eventsArray.push(event);
 			}
 			console.log('List of all events on calendar');
-			console.log(eventsArray);
-      console.log(eventsArray.length);
-      client.channels.get(general).send('List of all calendar events:');
+			console.log(JSON.stringify(eventsArray));
+      message.channel.send('List of all calendar events:');
       for (let i = 0; i < json.length; i++) {
-        client.channels.get(general).send('```'+JSON.stringify(eventsArray[i])+'```');
+        message.channel.send('```'+JSON.stringify(eventsArray[i])+'```');
       }
-      calDelay.resolve(eventsArray);
 		}).catch(err => {
 			console.log('Error: listAllEventsInCalendar -' + err);
-      client.channels.get(general).send('```'+String(err)+'```');
+      message.channel.send('```'+String(err)+'```');
 		});
-    return calDelay.promise
 }
 
 //Clean function deletes messages from channel
-function clean(delChannel) {
+function clean(delChannel, number, rec) {
   var deferred = defer();
-  delChannel.fetchMessages({ limit: 100 })
+  delChannel.fetchMessages({ limit: number })
   .then(messages => {
     console.log(`Deleting ${messages.size} messages`);
     if (messages.size < 2) {
@@ -224,7 +259,7 @@ function clean(delChannel) {
       deferred.resolve(2);
       clean(delChannel);
     }
-    if (messages.size == 100) { //maxes out at 50 (why?) so recursively delete in blocks of 50
+    if (messages.size == 100 && rec == 1) { //maxes out at 50 (why?) so recursively delete in blocks of 50
       delChannel.bulkDelete(messages); //need to wait for this for a while.
       deferred.resolve(3);
       clean(delChannel);
@@ -242,17 +277,15 @@ function clean(delChannel) {
 }
 
 //Create the list of events in the channel
-function createWeek(thisChannel) {
+function createWeek(thisChannel, dayMap) {
   guilddbString = 'D:/niles/stores/' + String(thisChannel.guild.id) + 'db.json';
   gdb = require(guilddbString);
-  var c1 = defer();
-  var dayMap = map_days(thisChannel.guild.id);
-  var finalString = ''
+  var finalString = '';
 
   for (let i = 0; i < 7; i++) {
     var key = 'day' + String(i);
     var sendString='';
-    sendString += '\n**' + checkDay(dayMap[i].getDay()) + ' : **' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
+    sendString += '\n**' + checkDay(dayMap[i].getDay()) + '** - ' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
     if (gdb[key] == '[]' || gdb[key] == [] || gdb[key] == 0) {
       sendString += '```  ```';
     } else {
@@ -271,17 +304,19 @@ function createWeek(thisChannel) {
       }
       finalString += sendString;
     };
-    thisChannel.send(finalString).then( sent => {
-      gdb['msgid'] = sent.id;
-    })
     thisChannel.send({
-        embed: new discord.RichEmbed()
-            .setColor('BLUE')
-            .setTitle('Use ``!create`` and ``!delete`` to add and remove events')
-            .setDescription('For more information use ``!help``')
-            .setFooter('Note: The calendar may not update properly, run ``!update`` and then ``!display`` to manually update the calendar')
-    })
-  .then(confirm => {
+      embed: new discord.RichEmbed()
+        .setTitle('CALENDAR')
+        .setURL('https://calendar.google.com/calendar/embed?src=' + guilddb[thisChannel.guild.id]["calendarID"])
+        .setColor('BLUE')
+        .setDescription(finalString)
+        .setFooter('Last update')
+        .addField('USING THIS CALENDAR', 'To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nYou will have to use ``!update`` to update this calendar, eventually you won\'t have to!\n\nEnter ``!help`` for a full list of commands.', false)
+        .setTimestamp()
+      }).then( sent => {
+      gdb['msgid'] = sent.id;
+      sent.pin();
+    }).then(confirm => {
     console.log('channel schedule updated');
     //write the init message IDs to the DB
     fs.writeFile(guilddbString, JSON.stringify(gdb, '', '\t'), (err) => {
@@ -291,16 +326,13 @@ function createWeek(thisChannel) {
   })
   .catch(err => {
     console.log(err);
-    c1.reject(new Error ('encountered an error in createWeek()'));
   })
-  return c1.promise
 }
 
-//update the existing calendar
-function updateWeek(message) {
+//update the existing calendar (only works after init)
+function updateWeek(message, dayMap) {
   guilddbString = 'D:/niles/stores/' + String(message.guild.id) + 'db.json';
   gdb = require(guilddbString);
-  var dayMap = map_days(message.guild.id);
   var nextkey = 0;
   var sendString = '';
   var finalString = '';
@@ -308,7 +340,7 @@ function updateWeek(message) {
   for (let i = 0; i < 7; i++) {
     var key = 'day' + String(i);
     var sendString='';
-    sendString += '\n**' + checkDay(dayMap[i].getDay()) + ' : **' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
+    sendString += '\n**' + checkDay(dayMap[i].getDay()) + '** - ' + checkMonth(dayMap[i].getMonth()) + ' ' + dayMap[i].getDate() + '\n';
     if (gdb[key] == '[]' || gdb[key] == [] || gdb[key] == 0) {
       sendString += '```  ```';
     } else {
@@ -329,58 +361,37 @@ function updateWeek(message) {
     };
     msgId = gdb['msgid'];
     message.channel.fetchMessage(msgId).then( m => {
-      m.edit(finalString)
+      m.edit({
+        embed: new discord.RichEmbed()
+          .setTitle('CALENDAR')
+          .setURL('https://calendar.google.com/calendar/embed?src=' + guilddb[message.guild.id]["calendarID"])
+          .setColor('BLUE')
+          .setDescription(finalString)
+          .setFooter('Last update')
+          .addField('USING THIS CALENDAR', 'To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nYou will have to use ``!update`` to update this calendar, eventually you won\'t have to!\n\nEnter ``!help`` for a full list of commands.', false)
+          .setTimestamp()
+        })
     }).catch (err => console.log(err));
     console.log('calendar updated');
 }
-//return the day in string
-function checkDay(number) {
-  var days = ['Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[number];
-}
-
-//return the month in string
-function checkMonth(number) {
-  var mths = ['January', 'February', 'March', 'April','May', 'June', 'July','August','September','October','November','December'];
-  return mths[number];
-}
 
 //map next 7 dates in array
-function map_days(guildid) {
+function mapDays(guild) {
+  let p = defer();
   var day_map = [];
   var d = new Date();
-  var nd = convertDate(d,guildid);
+  var nd = convertDate(d, guild.id);
   day_map[0] = new Date(nd);
   for (let i = 1; i < 7; i++) {
     day_map[i] = new Date(nd.setDate(nd.getDate() + 1));
   }
-  return day_map;
-}
-
-
-
-//create events using strict format - not working well - using google add
-function createEvent(name, day, time, calendarId) {
-  dateLookUp = upDays();
-  let newEvent = {
-    'start': { 'dateTime': String(dateLookUp[day.toLowerCase()]) + 'T' + time + ':00:00+' + process.env.TIMEZONE.split('+')[1] },
-    'start': { 'dateTime': String(dateLookUp[day.toLowerCase()]) + 'T' + (time+1) + ':00:00+' + process.env.TIMEZONE.split('+')[1] },
-    'summary': name
-  };
-  cal.Events.insert(calendarId, newEvent)
-  .then(resp => {
-    client.channels.get(general).send('inserted event:');
-    console.log('Event inserted: ' + resp);
-    client.channels.get(general).send(resp);
-  })
-  .catch(err => {
-    console.log('Error: insertEvent- ' + err);
-    client.channels.get(general).send('Could not insert event.')
-  })
+  p.resolve(day_map);
+  return p.promise;
 }
 
 //quick add event using google text processing
 function quickAddEvent(text, calendarId) {
+  var p = defer();
 	let params = {
 		'text': text
 	}
@@ -389,19 +400,29 @@ function quickAddEvent(text, calendarId) {
 			let json = resp;
 			console.log('inserted quickAddEvent:');
 			console.log(json);
+      p.resolve(resp);
 		})
 		.catch(err => {
 			console.log('Error: quickAddEvent-' + err);
+      p.reject(err);
 		});
+    return p.promise;
 }
 
 //Search for events on google calendar and push to JSON file
-function generateEvents(guild, calendarId) {
+function generateEvents(guild, calendarId, dayMap) {
+  var g = defer();
   guilddbString = 'D:/niles/stores/' + String(guild.id) + 'db.json';
   gdb = require(guilddbString);
-  var dayMap = map_days(guild.id);
   let allEvents = [];
+  tz = guilddb[guild.id]["timezone"];
+  var startDate = JSON.stringify(dayMap[0]).split('T')[0].split('"')[1] + 'T00:00:00' + tz.split('T')[1];
+  console.log(startDate);
+  var endDate = JSON.stringify(dayMap[6]).split('T')[0].split('"')[1] + 'T23:59:00' + tz.split('T')[1];
+  console.log(endDate);
   let params = {
+    timeMin:startDate,
+    timeMax:endDate,
     singleEvents: true,
     orderBy: 'startTime'
   };
@@ -420,30 +441,38 @@ function generateEvents(guild, calendarId) {
       var key = 'day' + String(day);
       var matches = [];
       for(let j = 0; j < json.length; j++) {
-        tempDate = new Date(allEvents[j].start['dateTime'].split('T')[0]);
-
+        tempDate = new Date(allEvents[j]["start"]["dateTime"]);
         if ((dayMap[day].getFullYear() == tempDate.getFullYear() && dayMap[day].getMonth() == tempDate.getMonth() && dayMap[day].getDate() == tempDate.getDate())) {
           matches.push(allEvents[j]);
+        }
+        if (allEvents[j]["start"]["date"]) {
+          allDayEvent = new Date(allEvents[j]["start"]["date"]);
+          if ((dayMap[day].getFullYear() == allDayEvent.getFullYear() && dayMap[day].getMonth() == allDayEvent.getMonth() && dayMap[day].getDate() == allDayEvent.getDate())) {
+            matches.push(allEvents[j]);
+          }
         }
       }
       gdb[key] = matches;
     }
+    g.resolve(dayMap);
     fs.writeFile(guilddbString, JSON.stringify(gdb, '', '\t'), (err) => {
       if (err)
         return console.log(Date() + 'createEvents() error: ' + err);
     })}).catch(err => {
   console.log('Error: createEvents -' + err);
 });
+return g.promise;
 }
 
 //Find eventId from search string
-//This needs better handling of incorrect commands, i.e. '8' instead of '8pm' does nothing
-function deleteFindEvent(message, calendarId) {
+//Need to improve handling of time formatting, i.e. '8' instead of '8pm' does nothing
+function deleteFindEvent(message, calendarId, dayMap) {
+  deleteMessages = [];
+  deleteMessages.push(message.id);
   guilddbString = 'D:/niles/stores/' + String(message.guild.id) + 'db.json';
   gdb = require(guilddbString);
   var dayDate;
   var delDate;
-  var days = map_days(message.guild.id);
   var dTime;
   var keyID;
   var gcalID;
@@ -452,8 +481,8 @@ function deleteFindEvent(message, calendarId) {
   var time = pieces[2].toLowerCase();
 
   for (let i = 0; i < 7; i++) {
-    if(checkDay(days[i].getDay()) === day) {
-      dayDate = new Date(days[i]);
+    if(checkDay(dayMap[i].getDay()) === day) {
+      dayDate = new Date(dayMap[i]);
       keyID = i;
     }
   }
@@ -469,11 +498,11 @@ function deleteFindEvent(message, calendarId) {
     if (time === '12am') {
       dTime = '00';
     }
-    if (time.trim('a')[0].length == 2) {
-      dTime = time.trim('a')[0];
+    if (time.split('a')[0].length == 2) {
+      dTime = time.split('a')[0];
     }
-    if (time.trim('a')[0].length == 1) {
-      dTime = '0' + time.trim('a')[0];
+    if (time.split('a')[0].length == 1) {
+      dTime = '0' + time.split('a')[0];
     }
   }
   //NEED TO SIMPLIFY THIS NOW THAT ITS A DATE COMPARISON
@@ -483,32 +512,52 @@ function deleteFindEvent(message, calendarId) {
   for (let j = 0; j < gdb[key].length; j++) {
     comp1 = new Date(gdb[key][j]["start"]["dateTime"]);
     comp2 = new Date(delDate);
-    if((comp1 - comp2) < 100) {
-      message.channel.send('Are you sure you want to delete the event: ' + '`'+ gdb[key][j]["summary"] + '` ' + 'on ' + day + ' at ' + time + ' ? **(y/n)**');
-      const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 30000 });
+    if(Math.abs((comp1 - comp2)) < 100) {
+      message.channel.send('Are you sure you want to delete the event: ' + '`'+ gdb[key][j]["summary"] + '` ' + 'on ' + day + ' at ' + time + ' ? **(y/n)**').then(res => {
+        res.delete(5000)
+      })
+      const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 5000 });
       collector.on('collect',(m) => {
+        deleteMessages.push(m.id);
         if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
-          deleteEvent(gdb[key][j]["id"], calendarId).then( del => {
-            message.channel.send('Event deleted');
-            generateEvents(message.guild, calendarId);
+          deleteEvent(gdb[key][j]["id"], calendarId, message, dayMap).then( del => {
+            message.channel.send('Event' + '`'+ gdb[key][j]["summary"] + '` ' + 'deleted').then(res => {
+              res.delete(5000);
+              mapDays(message.guild).then(dayMap => {
+                updateWeek(message, dayMap);
+              });
+            });
+
           })
         } else {
-          message.channel.send('Okay, I won\'t do that');
+          message.channel.send('Okay, I won\'t do that').then(res => {
+            res.delete(5000)
+            });
           };
+          console.log(JSON.stringify(deleteMessages));
+          for(let k = 0;k<deleteMessages.length;k++) {
+            message.channel.fetchMessage(deleteMessages[k]).then(msg => {
+              msg.delete(5000);
+            });
+          }
           return collector.stop();
         });
         collector.on('end', (collected, reason) => {
           if (reason === 'time')
-            message.channel.send('Command response timeout');
+            message.channel.send('Command response timeout').then(res => {
+              res.delete(5000);
+            });
           });
         return;
       }
     }
-    message.channel.send('I couldn\'t find that event, try again!');
+    message.channel.send('I couldn\'t find that event, try again!').then( res => {
+      res.delete(10000);
+    });
   }
 
 //delete gcal events by ID
-function deleteEvent(eventId, calendarId) {
+function deleteEvent(eventId, calendarId, message, dayMap) {
 	let params = {
 		sendNotifications: true
 	};
@@ -516,13 +565,39 @@ function deleteEvent(eventId, calendarId) {
 		.then(resp => {
 			console.log('Deleted Event Response: ');
 			console.log(resp);
+      generateEvents(message.guild, calendarId, dayMap);
+      setTimeoutPromise(2000).then( wait => {
+        mapDays(message.guild).then(dayMap => {
+          updateWeek(message, dayMap);
+        });
+      });
 		})
 		.catch(err => {
 			console.log('Error: deleteEvent-' + err);
 		});
 }
 
-// ********** HELPER FUNCTIONS ************ //
+// HELPER FUNCTIONS
+
+function mentioned(msg, x) {
+    if (!Array.isArray(x)) {
+        x = [x];
+    }
+    return msg.isMentioned(client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
+}
+
+//return the day in string
+function checkDay(number) {
+  var days = ['Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[number];
+}
+
+//return the month in string
+function checkMonth(number) {
+  var mths = ['January', 'February', 'March', 'April','May', 'June', 'July','August','September','October','November','December'];
+  return mths[number];
+}
+
 //functions for generating message formatting
 function stringPrefix(hour) {
   var timePieces = ['12','1','2','3','4','5','6','7','8','9','10','11','12','1','2','3','4','5','6','7','8','9','10','11'];
@@ -534,7 +609,6 @@ function stringPrefixSuffix(hour) {
     return timePieces[hour];
 }
 
-//make first letter uppercase
 function firstUpper(string)
 {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -567,4 +641,17 @@ function convertDate(date, guildid) {
   var utc = date.getTime() + (date.getTimezoneOffset() * 60000);
   var nd = new Date(utc + (3600000*offset));
   return nd;
+}
+
+function daysNoHours(message) {
+  var dayMap = mapDays(message.guild);
+  let days = {};
+  days['day0'] = JSON.stringify(dayMap[0]).split('T')[0];
+  days['day1'] = JSON.stringify(dayMap[1]).split('T')[0];
+  days['day2'] = JSON.stringify(dayMap[2]).split('T')[0];
+  days['day3'] = JSON.stringify(dayMap[3]).split('T')[0];
+  days['day4'] = JSON.stringify(dayMap[4]).split('T')[0];
+  days['day5'] = JSON.stringify(dayMap[5]).split('T')[0];
+  days['day6'] = JSON.stringify(dayMap[6]).split('T')[0];
+  return days;
 }

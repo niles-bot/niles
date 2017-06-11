@@ -31,7 +31,7 @@ if (cluster.isMaster) {
     client.user.setStatus('online');
     //client.user.setGame(); //can set game with !help or similar
     var d = new Date();
-    client.channels.get(nilesSupport).send('Niles is online');
+    //client.channels.get(nilesSupport).send('Niles is online');
   });
 
   client.on('guildCreate', (guild) => {
