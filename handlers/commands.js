@@ -13,10 +13,6 @@ const guilds = require('../handlers/guilds');
 let guilddb = require('../stores/guilddb.json');
 const init = require('../handlers/init.js');
 
-//handle and store temporary messages - will deprecate
-const tempMessage = require('./messages.js');
-tempMessagedb = require('../stores/tempMessages.json');
-
 //Handle Commands
 exports.run = async function(message) {
   var calendarId = guilddb[message.guild.id]["calendarID"];
@@ -34,8 +30,6 @@ exports.run = async function(message) {
       message.channel.send(`:ping_pong: Pong! ${client.pings[0]}ms`)
       .then( out => {
         name = 'ping';
-        tempMessage.createDayMessage(out, name);
-        //Testing temporary message storage and deletion
       })
   //HELP
   if (cmd === 'help' || mentioned(message, 'help')) {
@@ -679,3 +673,10 @@ function daysNoHours(message) {
   days['day6'] = JSON.stringify(dayMap[6]).split('T')[0];
   return days;
 }
+
+function writeGuilddb(guilddb) {
+  fs.writeFile('./stores/guilddb.json', JSON.stringify(guilddb, '','\t'), (err) => {
+    if (err)
+      return console.log(Date() + ' write tz error: ' + err);
+    });
+  }

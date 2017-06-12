@@ -1,6 +1,6 @@
 const fs = require('fs');
 guilddb = require('../stores/guilddb.json');
-const commands = require('./handlers/commands.js')
+const commands = require('./handlers/commands.js');
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\
@@ -51,7 +51,7 @@ exports.run = async function(message) {
         if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
           guilddb[message.guild.id]["calendarID"] = calID;
           message.channel.send('Okay, I\'m adding your calendar ID as ``' + calID + '``');
-          writeGuilddb(guilddb);
+          commands.writeGuilddb(guilddb);
         } else {
           message.channel.send('Okay, I won\'t do that');
         };
@@ -65,7 +65,7 @@ exports.run = async function(message) {
         calID = message.content.split(' ')[1];
         guilddb[message.guild.id]["calendarID"] = calID;
         message.channel.send('Okay, I\'m adding your calendar ID as ``' + calID + '``');
-        writeGuilddb(guilddb);
+        commands.writeGuilddb(guilddb);
       }
     }
     //Entering the Timezone
@@ -89,16 +89,8 @@ exports.run = async function(message) {
         } else {
           guilddb[message.guild.id]["timezone"] = tz;
           message.channel.send('Okay, I\'m adding your timezone as ``' + tz + '``');
-          writeGuilddb(guilddb);
+          commands.writeGuilddb(guilddb);
         }
       }
     }
   }
-
-  //helper
-  function writeGuilddb(guilddb) {
-    fs.writeFile('./stores/guilddb.json', JSON.stringify(guilddb, '','\t'), (err) => {
-      if (err)
-        return console.log(Date() + ' write tz error: ' + err);
-      });
-    }

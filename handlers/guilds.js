@@ -1,4 +1,5 @@
 const fs = require('fs');
+const commands = require('./handlers/commands.js');
 
 exports.create = (guild) => {
   guilddb[guild.id] = {'prefix': '!',
@@ -6,10 +7,7 @@ exports.create = (guild) => {
                         'calendarChannel': '',
                         'timezone': ''
                       };
-  fs.writeFile('./stores/guilddb.json', JSON.stringify(guilddb, '', '\t'), (err) => {
-    if (err)
-      return console.log(Date() + 'createGuild error: ' + err);
-});
+  commands.writeGuilddb(guilddb);
 console.log('guild.create guildb updated.');
 var emptyString = {
 	"day0": "[]",
@@ -32,10 +30,7 @@ console.log('welcome message sent');
 
 exports.delete = (guild) => {
   delete guilddb[guild.id];
-  fs.writeFile('./stores/guilddb.json', JSON.stringify(guilddb, '','\t'), (err) => {
-    if (err)
-      return console.log(Date() + ' deleteGuild error: ' + err);
-  });
+  commands.writeGuilddb(guilddb);
   guilddbString = './stores/' + String(guild.id) + 'db.json';
   empty = {};
   fs.writeFile(guilddbString, JSON.stringify(empty, '','\t'), (err) => {
