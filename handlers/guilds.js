@@ -1,5 +1,5 @@
 const fs = require('fs');
-const commands = require('./handlers/commands.js');
+const commands = require('../handlers/commands.js');
 
 exports.create = (guild) => {
   guilddb[guild.id] = {'prefix': '!',

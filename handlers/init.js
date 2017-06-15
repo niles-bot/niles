@@ -1,6 +1,6 @@
 const fs = require('fs');
 guilddb = require('../stores/guilddb.json');
-const commands = require('./handlers/commands.js');
+const commands = require('../handlers/commands.js');
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\

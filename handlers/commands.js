@@ -285,7 +285,6 @@ function createWeek(thisChannel, dayMap) {
     } else {
       sendString += '```';
       //Map events for each day
-      let tempString = {};
         for (let m = 0; m < gdb[key].length; m++) {
           let options = {
             showHeaders : false,
@@ -296,13 +295,14 @@ function createWeek(thisChannel, dayMap) {
               events: {minWidth: 11}
             }
           };
+          let tempString = {};
           tempStartDate = new Date(gdb[key][m]["start"]["dateTime"]);
           tempStartDate = convertDate(tempStartDate,thisChannel.guild.id);
           tempFinDate = new Date(gdb[key][m]["end"]["dateTime"]);
           tempFinDate = convertDate(tempFinDate,thisChannel.guild.id);
           console.log(gdb[key][m]["summary"]);
           tempString['\n - ' + stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()))] = gdb[key][m]["summary"];
-          sendString += columnify(tempString, options);
+          sendString += columnify(tempString, options) + '\n';
           console.log(columnify(tempString, options));
 
         }
@@ -342,7 +342,7 @@ function updateWeek(message, dayMap) {
   var nextkey = 0;
   var sendString = '';
   var finalString = '';
-
+  var timestamp = new Date();
   for (let i = 0; i < 7; i++) {
     var key = 'day' + String(i);
     var sendString='';
@@ -352,7 +352,6 @@ function updateWeek(message, dayMap) {
     } else {
       sendString += '```';
       //Map events for each day
-      let tempString = {};
         for (let m = 0; m < gdb[key].length; m++) {
           let options = {
             showHeaders : false,
@@ -363,14 +362,14 @@ function updateWeek(message, dayMap) {
               events: {minWidth: 11}
             }
           };
+          let tempString = {};
           tempStartDate = new Date(gdb[key][m]["start"]["dateTime"]);
-          tempStartDate = convertDate(tempStartDate,thisChannel.guild.id);
+          tempStartDate = convertDate(tempStartDate,message.guild.id);
           tempFinDate = new Date(gdb[key][m]["end"]["dateTime"]);
-          tempFinDate = convertDate(tempFinDate,thisChannel.guild.id);
+          tempFinDate = convertDate(tempFinDate,message.guild.id);
           console.log(gdb[key][m]["summary"]);
           tempString['\n - ' + stringPrefix(parseInt(tempStartDate.getHours())) + '-' + stringPrefixSuffix(parseInt(tempFinDate.getHours()))] = gdb[key][m]["summary"];
-          sendString += columnify(tempString, options);
-          console.log(columnify(tempString, options));
+          sendString += columnify(tempString, options) + '\n';
 
         }
         sendString += '```';
@@ -387,7 +386,7 @@ function updateWeek(message, dayMap) {
           .setDescription(finalString)
           .setFooter('Last update')
           .addField('USING THIS CALENDAR', 'To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nYou will have to use ``!update`` to update this calendar, eventually you won\'t have to!\n\nEnter ``!help`` for a full list of commands.', false)
-          .setTimestamp()
+          .setTimestamp(convertDate(timestamp, message.guild.id))
         })
     }).catch (err => console.log(err));
     console.log('calendar updated');
