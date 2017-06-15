@@ -12,6 +12,8 @@ let cal = new CalendarAPI(CONFIG);
 const guilds = require('../handlers/guilds');
 let guilddb = require('../stores/guilddb.json');
 const init = require('../handlers/init.js');
+var path = require('path');
+
 
 //Handle Commands
 exports.run = async function(message) {
@@ -272,8 +274,8 @@ function clean(delChannel, number, rec) {
 
 //Create the list of events in the channel
 function createWeek(thisChannel, dayMap) {
-  guilddbString = '/niles/stores/' + String(thisChannel.guild.id) + 'db.json';
-  gdb = require(guilddbString);
+  guilddbPath = path.join(__dirname, '..', 'stores', String(thisChannel.guild.id) + 'db.json');
+  gdb = require(guilddbPath);
   var finalString = '';
 
   for (let i = 0; i < 7; i++) {
@@ -325,7 +327,7 @@ function createWeek(thisChannel, dayMap) {
     }).then(confirm => {
     console.log('channel schedule updated');
     //write the init message IDs to the DB
-    fs.writeFile(guilddbString, JSON.stringify(gdb, '', '\t'), (err) => {
+    fs.writeFile(guilddbPath, JSON.stringify(gdb, '', '\t'), (err) => {
       if (err)
         return console.log(Date() + 'createGuild error: ' + err);
       });
@@ -337,8 +339,8 @@ function createWeek(thisChannel, dayMap) {
 
 //update the existing calendar (only works after init)
 function updateWeek(message, dayMap) {
-  guilddbString = '/niles/stores/' + String(message.guild.id) + 'db.json';
-  gdb = require(guilddbString);
+  guilddbPath = path.join(__dirname, '..', 'stores', String(message.guild.id) + 'db.json');
+  gdb = require(guilddbPath);
   var nextkey = 0;
   var sendString = '';
   var finalString = '';
@@ -429,8 +431,8 @@ function quickAddEvent(text, calendarId) {
 //Search for events on google calendar and push to JSON file
 function generateEvents(guild, calendarId, dayMap) {
   var g = defer();
-  guilddbString = '/niles/stores/' + String(guild.id) + 'db.json';
-  gdb = require(guilddbString);
+  guilddbPath = path.join(__dirname, '..', 'stores', String(guild.id) + 'db.json');
+  gdb = require(guilddbPath);
   let allEvents = [];
   tz = guilddb[guild.id]["timezone"];
   var startDate = JSON.stringify(dayMap[0]).split('T')[0].split('"')[1] + 'T00:00:00' + tz.split('T')[1];
@@ -472,7 +474,7 @@ function generateEvents(guild, calendarId, dayMap) {
       gdb[key] = matches;
     }
     g.resolve(dayMap);
-    fs.writeFile(guilddbString, JSON.stringify(gdb, '', '\t'), (err) => {
+    fs.writeFile(guilddbPath, JSON.stringify(gdb, '', '\t'), (err) => {
       if (err)
         return console.log(Date() + 'createEvents() error: ' + err);
     })}).catch(err => {
@@ -486,8 +488,8 @@ return g.promise;
 function deleteFindEvent(message, calendarId, dayMap) {
   deleteMessages = [];
   deleteMessages.push(message.id);
-  guilddbString = '/niles/stores/' + String(message.guild.id) + 'db.json';
-  gdb = require(guilddbString);
+  guilddbPath = path.join(__dirname, '..', 'stores', String(message.guild.id) + 'db.json');
+  gdb = require(guilddbPath);
   var dayDate;
   var delDate;
   var dTime;
@@ -595,8 +597,14 @@ function deleteEvent(eventId, calendarId, message, dayMap) {
 }
 
 // HELPER FUNCTIONS
-
 function mentioned(msg, x) {
+    if (!Array.isArray(x)) {
+        x = [x];
+    }
+    return msg.isMentioned(client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
+}
+
+exports.mentioned = function mentioned(msg, x) {
     if (!Array.isArray(x)) {
         x = [x];
     }
@@ -674,7 +682,7 @@ function daysNoHours(message) {
 }
 
 function writeGuilddb(guilddb) {
-  fs.writeFile('./stores/guilddb.json', JSON.stringify(guilddb, '','\t'), (err) => {
+  fs.writeFile('/niles/stores/guilddb.json', JSON.stringify(guilddb, '','\t'), (err) => {
     if (err)
       return console.log(Date() + ' write tz error: ' + err);
     });
