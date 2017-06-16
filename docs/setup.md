@@ -2,11 +2,7 @@
 layout: default
 ---
 
-[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for creating in-channel schedule calendars and interfacing with Google Calendar.
-
-![example](https://puu.sh/wcgpt/e209eef3ba.png)
-
-## Setup
+[Niles - Setup Guide](http://seanecoffey.github.io/Niles)
 
 First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
 
