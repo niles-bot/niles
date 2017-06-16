@@ -2,7 +2,7 @@
 layout: default
 ---
 
-##[Niles - Setup Guide](http://seanecoffey.github.io/Niles)
+## Setup Guide
 
 First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
 
