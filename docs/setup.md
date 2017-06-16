@@ -11,9 +11,11 @@ First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122
 
 Create or select a Google calendar, and then head to **Settings > Calendars > 'The calendar you want to use in Discord'**
 
-Now,  select 'Share This Calendar' and under 'Share with a specific person' add
+Now,  select 'Share This Calendar' and under 'Share with a specific person' add 
+
 
 `niles-291@niles-169605.iam.gserviceaccount.com`
+
 
 and make sure you give permission **Make changes to events**.
 
@@ -45,7 +47,7 @@ This can be done using `!tz` i.e.
 and must be formatted like this, with +/- GMT time, including `:00`.
 
 
-## 4. Run your calendar for the first time!
+### 4. Run your calendar for the first time!
 
 Great now we can tell Niles to pull events from our GCal, setting up the database and display our calendar.
 
@@ -59,7 +61,7 @@ Both methods pin the current calendar to the channel it was called in.
 The calendar will automatically check for updates once an hour, but you can manually use `!update` to pull any updates.
 
 
-## 5. Customise display options (optional)
+### 5. Customise display options (optional)
 
 By default Niles will append a quick help menu to your calendar.
 
