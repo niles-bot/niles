@@ -62,7 +62,7 @@ exports.run = function(message) {
 
 function logId(message) {
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarId = message.content.split(" ")[1];
     if(!calendarId && !guildSettings["calendarID"]) {
         message.channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
@@ -105,7 +105,7 @@ function logId(message) {
 
 function logTz(message) {
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     let tz = message.content.split(" ")[1].toUpperCase();
     if(!tz && !guildSettings["timezone"]) {
         message.channel.send("Enter a timezone using `!tz`");

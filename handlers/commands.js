@@ -31,7 +31,7 @@ Visit http://niles.seanecoffey.com for more info."
 
 exports.run = function (message) {
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarID = guildSettings["calendarID"];
     let dayMap = createDayMap(message);
     setTimeout(function func() {
@@ -200,9 +200,9 @@ function createDayMap(message) {
 
 function getEvents(message, calendarID, dayMap) {
     let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
-    let calendar = require(calendarPath);
+    let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     let events = [];
     let tz = guildSettings["timezone"];
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
@@ -251,9 +251,9 @@ function getEvents(message, calendarID, dayMap) {
 
 function postCalendar(message, dayMap) {
     let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
-    let calendar = require(calendarPath);
+    let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     let finalString = '';
 
     if (calendar["calendarMessageId"]) {
@@ -319,9 +319,9 @@ function postCalendar(message, dayMap) {
 function updateCalendar(message, dayMap) {
   let guildid = message.guild.id;
   let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
-  let calendar = require(calendarPath);
+  let calendar = helpers.readFile(calendarPath);
   let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
-  let guildSettings = require(guildSettingsPath);
+  let guildSettings = helpers.readFile(guildSettingsPath);
   let finalString = '';
   for (let i = 0; i < 7; i++) {
       let key = 'day' + String(i);
@@ -405,7 +405,7 @@ function quickAddEvent(message, calendarId) {
 function displayOptions(message) {
     let pieces = message.content.split(' ');
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     if (pieces[1] === 'help') {
         if (pieces[2] === '1') {
             guildSettings["helpmenu"] = '1';
@@ -428,9 +428,9 @@ function displayOptions(message) {
 
 function deleteEvent(message, calendarId, dayMap) {
     let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
-    let calendar = require(calendarPath);
+    let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     let deleteMessages = [];
     deleteMessages.push(message.id);
     let dayDate;

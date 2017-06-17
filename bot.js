@@ -28,34 +28,32 @@ client.on("message", (message) => {
     if (message.author.bot) {
         return;
     }
-    if (message.channel.type == "dm") {
+    if (message.channel.type === "dm") {
         return;
     }
     let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = helpers.readFile(guildSettingsPath);
     if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
         return;
     }
-    else {
-        if (!guildSettings.calendarID || !guildSettings.timezone) {
-            try {
-                init.run(message);
-            }
-            catch (err) {
-                console.log(err);
-                return message.channel.send("something went wrong");
-            }
+    if (!guildSettings.calendarID || !guildSettings.timezone) {
+        try {
+          init.run(message);
         }
-        else {
-            try {
-                commands.run(message);
-              }
-              catch (err) {
-                console.log(err);
-                return message.channel.send("something went wrong");
-              }
+        catch (err) {
+          console.log(err);
+          return message.channel.send("something went wrong");
         }
-    }
+      }
+      else {
+          try {
+            commands.run(message);
+          }
+          catch (err) {
+            console.log(err);
+            return message.channel.send("something went wrong");
+          }
+      }
     console.log(new Date().toUTCString() + ` : ${helpers.fullname(message.author)} : ${message.content} in guild ${message.guild.id}`);
 });
 

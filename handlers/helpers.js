@@ -143,3 +143,7 @@ function hourString(hour) {
     let hours = ['12','1','2','3','4','5','6','7','8','9','10','11','12','1','2','3','4','5','6','7','8','9','10','11'];
     return hours[hour];
 }
+
+exports.readFile = function(path) {
+    return JSON.parse(fs.readFileSync(path, 'utf8'));
+}
