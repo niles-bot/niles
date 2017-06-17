@@ -65,7 +65,7 @@ process.on('uncaughtException', err => {
     console.log(err);
 });
 
-process.on("SIGNIT", () => {
+process.on("SIGINT", () => {
     client.destroy();
     process.exit();
 });

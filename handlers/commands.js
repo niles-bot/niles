@@ -137,11 +137,11 @@ function deleteMessages(message) {
     let pieces = message.content.split(' ');
     let numberMessages = 0;
     let recurse = false;
-    if(parseInt(pieces[1]) > 0 && parseInt(pieces[1]) < 100 ) {
+    if(parseInt(pieces[1],10) > 0 && parseInt(pieces[1],10) < 100 ) {
         message.channel.send("**WARNING** - This will delete " + pieces[1] + " messages in this channel! Are you sure? **(y/n)**");
-        numberMessages = parseInt(pieces[1]);
+        numberMessages = parseInt(pieces[1],10);
     }
-    if(parseInt(pieces[1] === 100)) {
+    if(parseInt(pieces[1],10) === 100) {
         message.channel.send("**WARNING** - This will delete 100 messages in this channel! Are you sure? **(y/n)**");
         numberMessages = 97;
     }
@@ -219,7 +219,7 @@ function getEvents(message, calendarID, dayMap) {
                 id: json[i].id,
                 summary: json[i].summary,
                 start: json[i].start,
-                end: json[i].end,
+                end: json[i].end
             };
             events.push(event);
         }
@@ -295,7 +295,7 @@ function postCalendar(message, dayMap) {
             sendString += '```';
         }
         finalString += sendString;
-    };
+    }
     embed = new discord.RichEmbed();
     embed.setTitle('CALENDAR')
     embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
@@ -447,16 +447,16 @@ function deleteEvent(message, calendarId, dayMap) {
             keyID = i;
         }
     }
-    if (searchTime.indexOf('pm') != -1) {
+    if (searchTime.indexOf('pm') !== -1) {
         if (searchTime === '12pm') {
             dTime = '12'
         }
         else {
-            let temp = parseInt(searchTime.split('pm')[0]);
+            let temp = parseInt(searchTime.split('pm')[0],10);
             dTime = String((temp + 12));
         }
     }
-    if (searchTime.indexOf('am') != -1) {
+    if (searchTime.indexOf('am') !== -1) {
         if (searchTime === '12am') {
             dTime = '00';
         }
@@ -475,17 +475,17 @@ function deleteEvent(message, calendarId, dayMap) {
         let eventDate = new Date(calendar[key][j]["start"]["dateTime"]);
         let searchDate = new Date(delDate);
         if (Math.abs((eventDate - searchDate)) < 100) {
-            message.channel.send(`Are you sure you want to delete the event ``${calendar[key][j]["summary"]}`` on ``${searchDay}`` at ``${searchTime}``? **(y/n)**`)
+            message.channel.send(`Are you sure you want to delete the event **${calendar[key][j]["summary"]}** on ${searchDay} at ${searchTime}? **(y/n)**`)
             .then(res => {
                 res.delete(5000)
             });
-            const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 5000});
+            const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 10000});
             collector.on('collect', (m) => {
                 deleteMessages.push(m.id);
                 if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
                     deleteEventById(calendar[key][j]["id"], calendarId, dayMap, message).then(del => {
-                        message.channel.send('Event' + '`'+ calendar[key][j]["summary"] + '` ' + 'deleted').then(res => {
-                            res.delete(5000);
+                        message.channel.send(`Event **${calendar[key][j]["summary"]}** deleted`).then(res => {
+                            res.delete(10000);
                         });
                     });
                 }

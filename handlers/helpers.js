@@ -18,7 +18,7 @@ exports.deleteFolderRecursive = function(path) {
       });
       fs.rmdirSync(path);
   }
-};
+}
 
 exports.writeGuilddb = function writeGuilddb(guilddb) {
     let guilddatabase = path.join(__dirname, "..", "stores/guilddatabase.json");
@@ -53,22 +53,6 @@ exports.dayString = function(number) {
 exports.monthString = function(number) {
     let months = ['January', 'February', 'March', 'April','May', 'June', 'July','August','September','October','November','December'];
     return months[number];
-}
-
-exports.hourString = function(hour) {
-    let hours = ['12','1','2','3','4','5','6','7','8','9','10','11','12','1','2','3','4','5','6','7','8','9','10','11'];
-    return hours[hour];
-}
-
-function hourString(hour) {
-    let hours = ['12','1','2','3','4','5','6','7','8','9','10','11','12','1','2','3','4','5','6','7','8','9','10','11'];
-    return hours[hour];
-}
-
-exports.hourStringSuffix = function(hour) {
-    let hours = ['12 AM:','1 AM:','2 AM:','3 AM:','4 AM:','5 AM:','6 AM:','7 AM:','8 AM:','9 AM:',
-    '10 AM:','11 AM:','12 PM:','1 PM:','2 PM:','3 PM:','4 PM:','5 PM:','6 PM:','7 PM:','8 PM:','9 PM:','10 PM:','11 PM:'];
-    return hours[hour];
 }
 
 exports.firstUpper = function(string) {
@@ -109,7 +93,7 @@ exports.convertDate = function(dateToConvert, guildid) {
     }
     if (minutes == "30") {
         minutes = ".5";
-    };
+    }
     let offset = parseFloat(hour + minutes);
     let utc = dateToConvert.getTime() + (dateToConvert.getTimezoneOffset() * 60000);
     let utcdate = new Date(utc);
@@ -139,18 +123,23 @@ exports.getStringTime = function (date) {
     let minutes = prependZero(date.getMinutes());
     if (minutes == '00') {
         if (hour <= 11) {
-            return hourString(parseInt(date.getHours())) + 'AM';
+            return hourString(parseInt(date.getHours()), 10) + 'AM';
         }
         if (hour > 11) {
-            return hourString(parseInt(date.getHours())) + 'PM';
+            return hourString(parseInt(date.getHours()), 10) + 'PM';
         }
     }
     else {
         if (hour <= 11) {
-            return `${hourString(parseInt(date.getHours()))}:${minutes}AM`;
+            return `${hourString(parseInt(date.getHours()),10)}:${minutes}AM`;
         }
         if (hour > 11) {
-            return `${hourString(parseInt(date.getHours()))}:${minutes}PM`;
+            return `${hourString(parseInt(date.getHours()),10)}:${minutes}PM`;
         }
     }
+}
+
+function hourString(hour) {
+    let hours = ['12','1','2','3','4','5','6','7','8','9','10','11','12','1','2','3','4','5','6','7','8','9','10','11'];
+    return hours[hour];
 }

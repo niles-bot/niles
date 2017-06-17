@@ -76,7 +76,7 @@ function logId(message) {
         message.channel.send("I don\'t think that\'s a valid calendar ID.. try again");
         return;
     }
-    if(guildSettings["calendarID"] != "") {
+    if(guildSettings["calendarID"] !== "") {
         message.channel.send("I've already been setup to use ``" + guildSettings["calendarID"] + "`` as the calendar ID in this server, do you want to overwrite this and set the ID to `" + calendarId + "`? **(y/n)**");
         const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
         collector.on('collect', (m) => {
@@ -115,11 +115,11 @@ function logTz(message) {
         message.channel.send("You didn't enter a timezone, you are currently using `" + guildSettings["timezone"] + "`");
         return;
     }
-    if(tz.indexOf("GMT") == -1 || (tz.indexOf("+")==-1 && tz.indexOf("-")) || tz.length != 9 ) {
+    if(tz.indexOf("GMT") === -1 || (tz.indexOf("+") === -1 && tz.indexOf("-")) || tz.length !== 9 ) {
         message.channel.send('Please enter timezone in valid format, i.e. ``GMT+06:00``, please note this currently requires GMT');
         return;
     }
-    if(guildSettings["timezone"] != "") {
+    if(guildSettings["timezone"] !== "") {
         message.channel.send("I've already been setup to use `" + guildSettings["timezone"] + "`, do you want to overwrite this and use `" + tz + "`? **(y/n)** ");
         const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
         collector.on('collect', (m) => {
