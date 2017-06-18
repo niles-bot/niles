@@ -30,7 +30,7 @@ exports.create = (guild) => {
       helpers.writeGuildSpecific(guild.id, empty, "calendar");
       helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
       helpers.writeGuilddb(guilddatabase);
-      helpers.Log(`Guild ${guild.id} has been created`);
+      helpers.log(`Guild ${guild.id} has been created`);
   };
 
   exports.delete = (guild) => {
@@ -38,5 +38,5 @@ exports.create = (guild) => {
       helpers.deleteFolderRecursive(guildPath);
       delete guilddatabase[guild.id];
       helpers.writeGuilddb(guilddatabase);
-      helpers.Log(`Guild ${guild.id} has been deleted`);
+      helpers.log(`Guild ${guild.id} has been deleted`);
   };

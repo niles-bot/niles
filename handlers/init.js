@@ -34,7 +34,7 @@ exports.run = function(message) {
       message.author.send(HELP_MESSAGE);
       message.channel.fetchMessage(message.id).then((m) => {
           m.delete(1000);
-      }).catch((e) => helpers.LogError(e));
+      }).catch((e) => helpers.logError(e));
   }
 
   if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {

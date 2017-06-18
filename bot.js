@@ -14,7 +14,7 @@ let helpers = require("./handlers/helpers.js");
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-    console.log(new Date().toUTCString() + " : Bot is logged in");
+    helpers.log(" : Bot is logged in");
     client.user.setStatus("online");
 });
 
@@ -43,7 +43,7 @@ client.on("message", (message) => {
           init.run(message);
         }
         catch (err) {
-          helpers.LogError(err);
+          helpers.logError(err);
           return message.channel.send("something went wrong");
         }
       }
@@ -52,17 +52,17 @@ client.on("message", (message) => {
             commands.run(message);
           }
           catch (err) {
-            helpers.LogError(err);
+            helpers.logError(err);
             return message.channel.send("something went wrong");
           }
       }
-    helpers.Log(`${helpers.fullname(message.author)} : ${message.content} in guild ${message.guild.id}`);
+    helpers.log(`${helpers.fullname(message.author)} : ${message.content} in guild ${message.guild.id}`);
 });
 
 // ProcessListeners
 
 process.on("uncaughtException", (err) => {
-    helpers.LogError(err);
+    helpers.logError(err);
 });
 
 process.on("SIGINT", () => {

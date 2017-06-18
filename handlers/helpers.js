@@ -3,6 +3,15 @@ const path = require("path");
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 
+function log() {
+    let message = `[${new Date()}] ${Array.from(arguments).join(" ")}`;
+    console.log(message);
+}
+
+function logError() {
+    Log("[ERROR]", Array.from(arguments).slice(1).join(" "));
+}
+
 function fullname(user) {
   return `${user.username}#${user.discriminator}`;
 }
@@ -138,30 +147,21 @@ function readFile(path) {
     return JSON.parse(fs.readFileSync(path, "utf8"));
 }
 
-function Log() {
-    let message = `[${new Date()}] ${Array.from(arguments).join(" ")}`;
-    console.log(message);
-}
-
-function LogError() {
-    Log("[ERROR]", Array.from(arguments).slice(1).join(" "));
-}
-
 module.exports = {
-    fullname: fullname,
-    deleteFolderRecursive: deleteFolderRecursive,
-    writeGuilddb: writeGuilddb,
-    writeGuildSpecific: writeGuildSpecific,
-    mentioned: mentioned,
-    dayString: dayString,
-    monthString: monthString,
-    firstUpper: firstUpper,
-    Log: Log,
-    LogError: LogError,
-    readFile: readFile,
-    getStringTime: getStringTime,
-    stringDate: stringDate,
-    hourString: hourString,
-    convertDate: convertDate,
-    prependZero: prependZero
+    fullname,
+    deleteFolderRecursive,
+    writeGuilddb,
+    writeGuildSpecific,
+    mentioned,
+    dayString,
+    monthString,
+    firstUpper,
+    log,
+    logError,
+    readFile,
+    getStringTime,
+    stringDate,
+    hourString,
+    convertDate,
+    prependZero
 };
