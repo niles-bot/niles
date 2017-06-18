@@ -28,108 +28,25 @@ const HELP_MESSAGE = "```\
 ```\
 Visit http://niles.seanecoffey.com for more info.";
 
-// Message Listener
+//functions
 
-exports.run = function (message) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-    let guildSettings = helpers.readFile(guildSettingsPath);
-    let calendarID = guildSettings["calendarID"];
-    let dayMap = createDayMap(message);
-    //Check for updates before every command use.
-    setTimeout(function func() {
-        getEvents(message, calendarID, dayMap);
-    }, 2000);
-    //Pull updates every hour
-    let autoPullEvents = setInterval(function func() {
-        dayMap = createDayMap(message);
-        setTimeout(function func() {
-            getEvents(message, calendarID, dayMap);
-          }, 2000);
-        setTimeout(function func() {
-            updateCalendar(message, dayMap);
-        }, 4000);
-    }, settings.secrets.calendar_update_interval);
-
-    const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
-
-    if (cmd === "ping" || helpers.mentioned(message, "ping")) {
-        message.channel.send(`:ping_pong: !Pong! ${bot.client.pings[0]}ms`);
-    }
-
-    if (cmd === "help" || helpers.mentioned(message, "help")) {
-        message.author.send(HELP_MESSAGE);
-    }
-
-    if (cmd === "invite" || helpers.mentioned(message, "invite")) {
-      message.channel.send({
-        embed: new bot.discord.RichEmbed()
-            .setColor("#FFFFF")
-            .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
-      });
-    }
-
-    if (["setup", "start", "id", "tz"].includes(cmd) || helpers.mentioned(message, ["setup", "start", "id", "tz"])) {
-        try {
-            init.run(message);
+function clean(channel, numberMessages, recurse) {
+    channel.fetchMessages({ limit: numberMessages}).then((messages) => {
+        if(messages.size < 2) {
+            channel.send("cleaning"); //Send extra message to allow deletion of 1 message.
+            clean(channel, 2, false);
         }
-        catch (err) {
-            helpers.logError(err);
-        }
-    }
-
-    if (cmd === "init" || helpers.mentioned(message, "init")) {
-        guilds.create(message.guild);
-    }
-
-    if (["clean", "purge"].includes(cmd) || helpers.mentioned(message, ["clean", "purge"])) {
-        deleteMessages(message);
-    }
-
-    if (cmd === "display" || helpers.mentioned(message, "display")) {
-        getEvents(message, calendarID, dayMap);
-        setTimeout(function func() {
-            postCalendar(message, dayMap);
-          }, 2000);
-    }
-
-    if (cmd === "update" || helpers.mentioned(message, "update")) {
-        updateCalendar(message, dayMap);
-    }
-
-    if(["create", "scrim"].includes(cmd) || helpers.mentioned(message, ["create", "scrim"])) {
-        quickAddEvent(message, calendarID).then((resp) => {
-          getEvents(message, calendarID, dayMap);
-        }).then((resp) => {
-          setTimeout(function func() {
-              updateCalendar(message, dayMap);
-          }, 2000);
-        }).catch((err) => {
-            helpers.logError(err);
-        });
-    }
-    if (cmd === "delete" || helpers.mentioned(message, "delete")) {
-        if (message.content.split(" ").length === 3) {
-            deleteEvent(message, calendarID, dayMap);
+        if(messages.size === 100 && recurse) {
+            channel.bulkDelete(messages);
+            clean(channel, 100, true);
         }
         else {
-            message.channel.send("Hmm.. I can't process that request, delete using the format ``!delete <day> <start time>`` i.e ``!delete tuesday 8pm``")
-            .then((m) => {
-                m.delete(10000);
-            });
+            channel.bulkDelete(messages);
         }
-    }
-
-    if (cmd === "displayoptions" || helpers.mentioned(message, "displayoptions")) {
-        displayOptions(message);
-    }
-
-    if (["stats", "info"].includes(cmd) || helpers.mentioned(message, ["stats", "info"])) {
-        displayStats(message);
-    }
-    message.delete(5000);
-};
-
-//functions
+    }).catch((err) => {
+        helpers.logError(err);
+    });
+}
 
 function deleteMessages(message) {
     let pieces = message.content.split(" ");
@@ -164,24 +81,6 @@ function deleteMessages(message) {
             message.channel.send("Command response timeout");
             clean(message.channel, 3, 0);
         }
-    });
-}
-
-function clean(channel, numberMessages, recurse) {
-    channel.fetchMessages({ limit: numberMessages}).then((messages) => {
-        if(messages.size < 2) {
-            channel.send("cleaning"); //Send extra message to allow deletion of 1 message.
-            clean(channel, 2, false);
-        }
-        if(messages.size === 100 && recurse) {
-            channel.bulkDelete(messages);
-            clean(channel, 100, true);
-        }
-        else {
-            channel.bulkDelete(messages);
-        }
-    }).catch((err) => {
-        helpers.logError(err);
     });
 }
 
@@ -437,6 +336,20 @@ function displayOptions(message) {
     }
 }
 
+function deleteEventById(eventId, calendarId, dayMap, message) {
+    let params = {
+        sendNotifications: true
+      };
+    return cal.Events.delete(calendarId, eventId, params).then((resp) => {
+        getEvents(message, calendarId, dayMap);
+        setTimeout(function func() {
+            updateCalendar(message, dayMap);
+        }, 2000);
+    }).catch((err) => {
+        helpers.logError(err)
+    });
+}
+
 function deleteEvent(message, calendarId, dayMap) {
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
@@ -527,20 +440,6 @@ function deleteEvent(message, calendarId, dayMap) {
     });
 } // needs catches.
 
-function deleteEventById(eventId, calendarId, dayMap, message) {
-    let params = {
-        sendNotifications: true
-      };
-    return cal.Events.delete(calendarId, eventId, params).then((resp) => {
-        getEvents(message, calendarId, dayMap);
-        setTimeout(function func() {
-            updateCalendar(message, dayMap);
-        }, 2000);
-    }).catch((err) => {
-        helpers.logError(err)
-    });
-}
-
 function displayStats(message) {
     embed = new bot.discord.RichEmbed()
     .setColor("RED")
@@ -557,3 +456,104 @@ function displayStats(message) {
     .setFooter("Created by Sean#8856");
     message.channel.send({ embed: embed});
 }
+
+// Message Listener
+
+exports.run = function (message) {
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettings = helpers.readFile(guildSettingsPath);
+    let calendarID = guildSettings["calendarID"];
+    let dayMap = createDayMap(message);
+    //Check for updates before every command use.
+    setTimeout(function func() {
+        getEvents(message, calendarID, dayMap);
+    }, 2000);
+    //Pull updates every hour
+    let autoPullEvents = setInterval(function func() {
+        dayMap = createDayMap(message);
+        setTimeout(function func() {
+            getEvents(message, calendarID, dayMap);
+          }, 2000);
+        setTimeout(function func() {
+            updateCalendar(message, dayMap);
+        }, 4000);
+    }, settings.secrets.calendar_update_interval);
+
+    const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
+
+    if (cmd === "ping" || helpers.mentioned(message, "ping")) {
+        message.channel.send(`:ping_pong: !Pong! ${bot.client.pings[0]}ms`);
+    }
+
+    if (cmd === "help" || helpers.mentioned(message, "help")) {
+        message.author.send(HELP_MESSAGE);
+    }
+
+    if (cmd === "invite" || helpers.mentioned(message, "invite")) {
+      message.channel.send({
+        embed: new bot.discord.RichEmbed()
+            .setColor("#FFFFF")
+            .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
+      });
+    }
+
+    if (["setup", "start", "id", "tz"].includes(cmd) || helpers.mentioned(message, ["setup", "start", "id", "tz"])) {
+        try {
+            init.run(message);
+        }
+        catch (err) {
+            helpers.logError(err);
+        }
+    }
+
+    if (cmd === "init" || helpers.mentioned(message, "init")) {
+        guilds.create(message.guild);
+    }
+
+    if (["clean", "purge"].includes(cmd) || helpers.mentioned(message, ["clean", "purge"])) {
+        deleteMessages(message);
+    }
+
+    if (cmd === "display" || helpers.mentioned(message, "display")) {
+        getEvents(message, calendarID, dayMap);
+        setTimeout(function func() {
+            postCalendar(message, dayMap);
+          }, 2000);
+    }
+
+    if (cmd === "update" || helpers.mentioned(message, "update")) {
+        updateCalendar(message, dayMap);
+    }
+
+    if(["create", "scrim"].includes(cmd) || helpers.mentioned(message, ["create", "scrim"])) {
+        quickAddEvent(message, calendarID).then((resp) => {
+          getEvents(message, calendarID, dayMap);
+        }).then((resp) => {
+          setTimeout(function func() {
+              updateCalendar(message, dayMap);
+          }, 2000);
+        }).catch((err) => {
+            helpers.logError(err);
+        });
+    }
+    if (cmd === "delete" || helpers.mentioned(message, "delete")) {
+        if (message.content.split(" ").length === 3) {
+            deleteEvent(message, calendarID, dayMap);
+        }
+        else {
+            message.channel.send("Hmm.. I can't process that request, delete using the format ``!delete <day> <start time>`` i.e ``!delete tuesday 8pm``")
+            .then((m) => {
+                m.delete(10000);
+            });
+        }
+    }
+
+    if (cmd === "displayoptions" || helpers.mentioned(message, "displayoptions")) {
+        displayOptions(message);
+    }
+
+    if (["stats", "info"].includes(cmd) || helpers.mentioned(message, ["stats", "info"])) {
+        displayStats(message);
+    }
+    message.delete(5000);
+};

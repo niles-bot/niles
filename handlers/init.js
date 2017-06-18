@@ -28,36 +28,6 @@ Hi! Lets get me setup for use in this Discord. The steps are outlined below, but
 3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. `!tz gmt+10:00`, (Note: Must be formatted like this)\n\
 \n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
 
-exports.run = function(message) {
-  const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
-  if (cmd === "help" || helpers.mentioned(message, "help")) {
-      message.author.send(HELP_MESSAGE);
-      message.channel.fetchMessage(message.id).then((m) => {
-          m.delete(1000);
-      }).catch((e) => helpers.logError(e));
-  }
-
-  if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {
-      message.channel.send(SETUP_MESSAGE);
-  }
-
-  if(cmd === "id" || helpers.mentioned(message, "id")) {
-      logId(message);
-  }
-
-  if (cmd === "tz" || helpers.mentioned(message, "tz")) {
-      logTz(message);
-  }
-
-  if (cmd === "init" || helpers.mentioned(message, "init")) {
-      guilds.create(message.guild);
-  }
-
-  if (["display", "clean", "update", "sync", "invite", "stats", "create", "scrim", "delete"].includes(cmd)) {
-      message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
-  }
-};
-
 //functions
 
 function logId(message) {
@@ -145,3 +115,33 @@ function logTz(message) {
         helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
     }
 }
+
+exports.run = function(message) {
+  const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
+  if (cmd === "help" || helpers.mentioned(message, "help")) {
+      message.author.send(HELP_MESSAGE);
+      message.channel.fetchMessage(message.id).then((m) => {
+          m.delete(1000);
+      }).catch((e) => helpers.logError(e));
+  }
+
+  if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {
+      message.channel.send(SETUP_MESSAGE);
+  }
+
+  if(cmd === "id" || helpers.mentioned(message, "id")) {
+      logId(message);
+  }
+
+  if (cmd === "tz" || helpers.mentioned(message, "tz")) {
+      logTz(message);
+  }
+
+  if (cmd === "init" || helpers.mentioned(message, "init")) {
+      guilds.create(message.guild);
+  }
+
+  if (["display", "clean", "update", "sync", "invite", "stats", "create", "scrim", "delete"].includes(cmd)) {
+      message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
+  }
+};

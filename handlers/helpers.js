@@ -55,6 +55,11 @@ function mentioned(msg, x) {
     return msg.isMentioned(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
 }
 
+function hourString(hour) {
+    let hours = ["12","1","2","3","4","5","6","7","8","9","10","11","12","1","2","3","4","5","6","7","8","9","10","11"];
+    return hours[hour];
+}
+
 function dayString(number) {
     let days = ["Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[number];
@@ -87,10 +92,10 @@ function convertDate(dateToConvert, guildid) {
     let pieces = tz.split("GMT")[1];
     let hour = pieces.split(":")[0];
     let minutes = pieces.split(":")[1];
-    if (minutes == "00") {
+    if (minutes === "00") {
         minutes = ".";
     }
-    if (minutes == "30") {
+    if (minutes === "30") {
         minutes = ".5";
     }
     let offset = parseFloat(hour + minutes);
@@ -137,11 +142,6 @@ function getStringTime(date) {
         }
     }
 };
-
-function hourString(hour) {
-    let hours = ["12","1","2","3","4","5","6","7","8","9","10","11","12","1","2","3","4","5","6","7","8","9","10","11"];
-    return hours[hour];
-}
 
 function readFile(path) {
     return JSON.parse(fs.readFileSync(path, "utf8"));
