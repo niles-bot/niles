@@ -205,7 +205,7 @@ function postCalendar(message, dayMap) {
     embed.setColor("BLUE");
     embed.setDescription(finalString);
     embed.setFooter("Last update");
-    if (guildSettings["helpmenu"] === "1"); {
+    if (guildSettings["helpmenu"] == "1") {
       embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
     }
     embed.setTimestamp(helpers.convertDate(new Date(), message.guild.id));
@@ -266,7 +266,7 @@ function updateCalendar(message, dayMap) {
   embed.setColor("BLUE");
   embed.setDescription(finalString);
   embed.setFooter("Last update");
-  if (guildSettings["helpmenu"] === "1"); {
+  if (guildSettings["helpmenu"] === '1') {
     embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
   }
   embed.setTimestamp(helpers.convertDate(new Date(), guildid));
