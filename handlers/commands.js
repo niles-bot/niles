@@ -6,6 +6,7 @@ const columnify = require("columnify");
 const os = require("os");
 const moment = require("moment");
 require("moment-duration-format");
+let bot = require("../bot.js");
 let settings = require("../settings.js");
 let init = require("./init.js");
 let helpers = require("./helpers.js");
@@ -49,10 +50,10 @@ exports.run = function (message) {
         }, 4000);
     }, settings.secrets.calendar_update_interval);
 
-    const cmd = message.content.toLowerCase().substring(1).split(' ')[0];
+    const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
 
     if (cmd === "ping" || helpers.mentioned(message, "ping")) {
-        message.channel.send(`:ping_pong: !Pong! ${client.pings[0]}ms`);
+        message.channel.send(`:ping_pong: !Pong! ${bot.client.pings[0]}ms`);
     }
 
     if (cmd === "help" || helpers.mentioned(message, "help")) {
@@ -61,9 +62,9 @@ exports.run = function (message) {
 
     if (cmd === "invite" || helpers.mentioned(message, "invite")) {
       message.channel.send({
-        embed: new discord.RichEmbed()
+        embed: new bot.discord.RichEmbed()
             .setColor("#FFFFF")
-            .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + client.user.id + ") to invite me to your server")
+            .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
       });
     }
 
@@ -72,7 +73,7 @@ exports.run = function (message) {
             init.run(message);
         }
         catch (err) {
-            console.log(err);
+            helpers.LogError(err);
         }
     }
 
@@ -103,11 +104,11 @@ exports.run = function (message) {
               updateCalendar(message, dayMap);
           }, 2000);
         }).catch((err) => {
-            console.log(err);
+            helpers.LogError(err);
         });
     }
     if (cmd === "delete" || helpers.mentioned(message, "delete")) {
-        if (message.content.split(' ').length === 3) {
+        if (message.content.split(" ").length === 3) {
             deleteEvent(message, calendarID, dayMap);
         }
         else {
@@ -131,7 +132,7 @@ exports.run = function (message) {
 //functions
 
 function deleteMessages(message) {
-    let pieces = message.content.split(' ');
+    let pieces = message.content.split(" ");
     let numberMessages = 0;
     let recurse = false;
     if(parseInt(pieces[1],10) > 0 && parseInt(pieces[1],10) < 100 ) {
@@ -159,7 +160,7 @@ function deleteMessages(message) {
         return collector.stop();
     });
     collector.on("end", (collected, reason) => {
-        if (reason === 'time') {
+        if (reason === "time") {
             message.channel.send("Command response timeout");
             clean(message.channel, 3, 0);
         }
@@ -180,7 +181,7 @@ function clean(channel, numberMessages, recurse) {
             channel.bulkDelete(messages);
         }
     }).catch((err) => {
-        console.log(err);
+        helpers.LogError(err);
     });
 }
 
@@ -242,7 +243,7 @@ function getEvents(message, calendarID, dayMap) {
         calendar["lastUpdate"] = d;
         helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     }).catch((err) => {
-        console.log("getEvents error " + err);
+        helpers.LogError("getEvents error " + err);
     });
 }
 
@@ -251,7 +252,7 @@ function postCalendar(message, dayMap) {
     let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
-    let finalString = '';
+    let finalString = "";
 
     if (calendar["calendarMessageId"]) {
         message.channel.fetchMessage(calendar["calendarMessageId"]).then((message) => {
@@ -259,20 +260,20 @@ function postCalendar(message, dayMap) {
         }).catch((err) => {
             if (err.code === 10008) {
                 delete calendar["calendarMessageId"];
-                console.log(err);
+                helpers.LogError(err);
             }
             else {
-                console.log(err);
+                helpers.LogError(err);
             }
         });
     }
 
     for (let i = 0; i < 7; i++) {
         let key = "day" + String(i);
-        let sendString = '';
+        let sendString = "";
         sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
         if (calendar[key].length === 0) {
-            sendString += '``` ```';
+            sendString += "``` ```";
         }
         else {
             sendString += '```';
@@ -295,11 +296,11 @@ function postCalendar(message, dayMap) {
                 tempString[helpers.getStringTime(tempStartDate) + ' - ' + helpers.getStringTime(tempFinDate)] = calendar[key][m]["summary"];
                 sendString += columnify(tempString, options) + '\n';
             }
-            sendString += '```';
+            sendString += "```";
         }
         finalString += sendString;
     }
-    embed = new discord.RichEmbed();
+    embed = new bot.discord.RichEmbed();
     embed.setTitle("CALENDAR")
     embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
     embed.setColor("BLUE")
@@ -316,7 +317,7 @@ function postCalendar(message, dayMap) {
         setTimeout(function func() {
             helpers.writeGuildSpecific(message.guild.id, calendar, "calendar")}, 2000);
     }).catch((err) => {
-        console.log(err);
+        helpers.LogError(err);
     });
 }
 
@@ -360,7 +361,7 @@ function updateCalendar(message, dayMap) {
       finalString += sendString;
   };
   let messageId = calendar["calendarMessageId"];
-  embed = new discord.RichEmbed();
+  embed = new bot.discord.RichEmbed();
   embed.setTitle("CALENDAR")
   embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
   embed.setColor("BLUE")
@@ -374,11 +375,11 @@ function updateCalendar(message, dayMap) {
       m.edit({embed})
   }).catch((err) => {
       if (err.code === 1008) {
-          console.log(err);
+          helpers.LogError(err);
           return;
       }
       else {
-        console.log(err);
+        helpers.LogError(err);
       }
   });
 }
@@ -406,7 +407,7 @@ function quickAddEvent(message, calendarId) {
         });
         p.resolve(resp);
     }).catch((err) => {
-        console.log("Error: quickAddEvent - " + err);
+        helpers.LogError("Error: quickAddEvent - " + err);
         p.reject(err);
     })
     return p.promise;
@@ -536,23 +537,23 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
             updateCalendar(message, dayMap);
         }, 2000);
     }).catch((err) => {
-        console.log(err)
+        helpers.LogError(err)
     });
 }
 
 function displayStats(message) {
-    embed = new discord.RichEmbed()
+    embed = new bot.discord.RichEmbed()
     .setColor("RED")
     .setTitle(`Niles Bot ${settings.secrets.current_version}`)
     .setURL('https://github.com/seanecoffey/Niles')
-    .addField("Servers", client.guilds.size, true)
+    .addField("Servers", bot.client.guilds.size, true)
     .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
-    .addField("Ping", `${(client.ping).toFixed(0)} ms`, true)
+    .addField("Ping", `${(bot.client.ping).toFixed(0)} ms`, true)
     .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed() + ' MB')}
     (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
     .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed(2) + ' MB')}`, true)
-    .addField("Libraries", `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
-    .addField("Links", '[Bot invite](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=' + client.user.id + ') | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)', true)
+    .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
+    .addField("Links", '[Bot invite](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=' + bot.client.user.id + ') | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)', true)
     .setFooter("Created by Sean#8856");
     message.channel.send({ embed: embed});
 }

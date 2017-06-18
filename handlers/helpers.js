@@ -1,12 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 let settings = require("../settings.js");
+let bot = require("../bot.js");
 
-exports.fullname = function(user) {
+function fullname(user) {
   return `${user.username}#${user.discriminator}`;
-};
+}
 
-exports.deleteFolderRecursive = function(path) {
+function deleteFolderRecursive(path) {
   if( fs.existsSync(path) ) {
       fs.readdirSync(path).forEach(function(file,index){
         var curPath = path + "/" + file;
@@ -18,46 +19,46 @@ exports.deleteFolderRecursive = function(path) {
       });
       fs.rmdirSync(path);
   }
-};
+}
 
-exports.writeGuilddb = function writeGuilddb(guilddb) {
+function writeGuilddb(guilddb) {
     let guilddatabase = path.join(__dirname, "..", "stores/guilddatabase.json");
-    fs.writeFile(guilddatabase, JSON.stringify(guilddb, '','\t'), (err) => {
+    fs.writeFile(guilddatabase, JSON.stringify(guilddb, "","\t"), (err) => {
       if(err) {
-          return console.log(Date() + " error writing the guild database" + err);
+          return LogError("error writing the guild database" + err);
       }
     });
-};
+}
 
-exports.writeGuildSpecific = function(guildid, json, file) {
+function writeGuildSpecific(guildid, json, file) {
     let fullPath = path.join(__dirname,"..", "stores", guildid, file + ".json");
-    fs.writeFile(fullPath, JSON.stringify(json, '', '\t'), (err) => {
+    fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
         if(err) {
-            return console.log(Date() + "error writing guild specific database: " + err);
+            return LogError("error writing guild specific database: " + err);
         }
     });
-};
+}
 
-exports.mentioned = function(msg, x) {
+function mentioned(msg, x) {
     if(!Array.isArray(x)) {
         x = [x];
     }
-    return msg.isMentioned(client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
-};
+    return msg.isMentioned(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
+}
 
-exports.dayString = function(number) {
+function dayString(number) {
     let days = ["Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[number];
-};
+}
 
-exports.monthString = function(number) {
+function monthString(number) {
     let months = ["January", "February", "March", "April","May", "June", "July","August","September","October","November","December"];
     return months[number];
-};
+}
 
-exports.firstUpper = function(string) {
+function firstUpper(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
-};
+}
 
 function prependZero(item) {
     let converted = "";
@@ -70,18 +71,7 @@ function prependZero(item) {
     }
 }
 
-exports.prependZero = function(item)  {
-    let converted = "";
-    if (String(item).length<2) {
-        converted = "0" + String(item);
-        return converted;
-      }
-      else {
-        return String(item);
-      }
-};
-
-exports.convertDate = function(dateToConvert, guildid) {
+function convertDate(dateToConvert, guildid) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
     let guildSettings = require(guildSettingsPath);
     let tz = guildSettings["timezone"];
@@ -99,12 +89,12 @@ exports.convertDate = function(dateToConvert, guildid) {
     let utcdate = new Date(utc);
     let nd = new Date(utc + (3600000*offset));
     return nd;
-};
+}
 
-exports.stringDate = function(date, guildid, hour) {
+function stringDate(date, guildid, hour) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
     let guildSettings = require(guildSettingsPath);
-    let offset = guildSettings["timezone"].split('+')[1];
+    let offset = guildSettings["timezone"].split("+")[1];
     let year = date.getFullYear();
     let month = prependZero(date.getMonth() + 1);
     let day = prependZero(date.getDate());
@@ -118,7 +108,7 @@ exports.stringDate = function(date, guildid, hour) {
     return dateString;
 };
 
-exports.getStringTime = function (date) {
+function getStringTime(date) {
     let hour = date.getHours();
     let minutes = prependZero(date.getMinutes());
     if (minutes == "00") {
@@ -144,6 +134,34 @@ function hourString(hour) {
     return hours[hour];
 }
 
-exports.readFile = function(path) {
+function readFile(path) {
     return JSON.parse(fs.readFileSync(path, "utf8"));
+}
+
+function Log() {
+    let message = `[${new Date()}] ${Array.from(arguments).join(" ")}`;
+    console.log(message);
+}
+
+function LogError() {
+    Log("[ERROR]", Array.from(arguments).slice(1).join(" "));
+}
+
+module.exports = {
+    fullname: fullname,
+    deleteFolderRecursive: deleteFolderRecursive,
+    writeGuilddb: writeGuilddb,
+    writeGuildSpecific: writeGuildSpecific,
+    mentioned: mentioned,
+    dayString: dayString,
+    monthString: monthString,
+    firstUpper: firstUpper,
+    Log: Log,
+    LogError: LogError,
+    readFile: readFile,
+    getStringTime: getStringTime,
+    stringDate: stringDate,
+    hourString: hourString,
+    convertDate: convertDate,
+    prependZero: prependZero
 };

@@ -29,12 +29,12 @@ Hi! Lets get me setup for use in this Discord. The steps are outlined below, but
 \n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
 
 exports.run = function(message) {
-  const cmd = message.content.toLowerCase().substring(1).split(' ')[0];
+  const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
   if (cmd === "help" || helpers.mentioned(message, "help")) {
       message.author.send(HELP_MESSAGE);
       message.channel.fetchMessage(message.id).then((m) => {
           m.delete(1000);
-      }).catch((e) => console.log(e));
+      }).catch((e) => helpers.LogError(e));
   }
 
   if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {

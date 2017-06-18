@@ -1,7 +1,9 @@
-discord = require("discord.js");
-client = new discord.Client();
+let discord = require("discord.js");
+let client = new discord.Client();
+exports.discord = discord;
+exports.client = client;
 
-const path = require('path');
+const path = require("path");
 
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
@@ -41,7 +43,7 @@ client.on("message", (message) => {
           init.run(message);
         }
         catch (err) {
-          console.log(err);
+          helpers.LogError(err);
           return message.channel.send("something went wrong");
         }
       }
@@ -50,17 +52,17 @@ client.on("message", (message) => {
             commands.run(message);
           }
           catch (err) {
-            console.log(err);
+            helpers.LogError(err);
             return message.channel.send("something went wrong");
           }
       }
-    console.log(new Date().toUTCString() + ` : ${helpers.fullname(message.author)} : ${message.content} in guild ${message.guild.id}`);
+    helpers.Log(`${helpers.fullname(message.author)} : ${message.content} in guild ${message.guild.id}`);
 });
 
 // ProcessListeners
 
 process.on("uncaughtException", (err) => {
-    console.log(err);
+    helpers.LogError(err);
 });
 
 process.on("SIGINT", () => {
