@@ -258,7 +258,7 @@ function updateCalendar(message, dayMap) {
           sendString += '```';
       }
       finalString += sendString;
-  };
+  }
   let messageId = calendar["calendarMessageId"];
   let embed = new bot.discord.RichEmbed();
   embed.setTitle("CALENDAR");

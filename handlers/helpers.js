@@ -12,6 +12,10 @@ function logError() {
     log("[ERROR]", Array.from(arguments).slice(1).join(" "));
 }
 
+function readFile(path) {
+    return JSON.parse(fs.readFileSync(path, "utf8"));
+}
+
 function fullname(user) {
   return `${user.username}#${user.discriminator}`;
 }
@@ -87,7 +91,7 @@ function prependZero(item) {
 
 function convertDate(dateToConvert, guildid) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = readFile(guildSettingsPath);
     let tz = guildSettings["timezone"];
     let pieces = tz.split("GMT")[1];
     let hour = pieces.split(":")[0];
@@ -107,7 +111,7 @@ function convertDate(dateToConvert, guildid) {
 
 function stringDate(date, guildid, hour) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
-    let guildSettings = require(guildSettingsPath);
+    let guildSettings = readFile(guildSettingsPath);
     let offset = guildSettings["timezone"].split("+")[1];
     let year = date.getFullYear();
     let month = prependZero(date.getMonth() + 1);
@@ -120,31 +124,27 @@ function stringDate(date, guildid, hour) {
         dateString += `${year}-${month}-${day}T23:59:00+${offset}`;
     }
     return dateString;
-};
+}
 
 function getStringTime(date) {
     let hour = date.getHours();
     let minutes = prependZero(date.getMinutes());
     if (minutes === "00") {
         if (hour <= 11) {
-            return hourString(parseInt(date.getHours()), 10) + "AM";
+            return hourString(parseInt(date.getHours(), 10)) + "AM";
         }
         if (hour > 11) {
-            return hourString(parseInt(date.getHours()), 10) + "PM";
+            return hourString(parseInt(date.getHours(), 10)) + "PM";
         }
     }
     else {
         if (hour <= 11) {
-            return `${hourString(parseInt(date.getHours()),10)}:${minutes}AM`;
+            return `${hourString(parseInt(date.getHours(),10))}:${minutes}AM`;
         }
         if (hour > 11) {
-            return `${hourString(parseInt(date.getHours()),10)}:${minutes}PM`;
+            return `${hourString(parseInt(date.getHours(),10))}:${minutes}PM`;
         }
     }
-};
-
-function readFile(path) {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
 }
 
 module.exports = {
