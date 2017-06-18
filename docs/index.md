@@ -21,6 +21,8 @@ Next either create a new Google calendar or use an existing one, and under **Set
 Next head to 'Calendar details' and copy the **Calendar ID** - We'll use this when we setup Niles in your Discord Server.
 Run `!setup` in your `#general` to get started.
 
+Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed setup information.
+
 ## Usage
 
 ### Commands
