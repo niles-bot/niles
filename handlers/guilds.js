@@ -4,6 +4,7 @@ let commands = require("./commands.js");
 let settings = require("../settings.js");
 let guilddatabase = require("../stores/guilddatabase.json");
 let helpers = require("./helpers.js");
+let bot = require("../bot.js");
 
 exports.create = (guild) => {
       let guildPath = path.join(__dirname, "..", "stores", guild.id);
@@ -31,6 +32,7 @@ exports.create = (guild) => {
       helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
       helpers.writeGuilddb(guilddatabase);
       helpers.log(`Guild ${guild.id} has been created`);
+      guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.");
   };
 
   exports.delete = (guild) => {

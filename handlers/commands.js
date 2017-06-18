@@ -44,7 +44,7 @@ function clean(channel, numberMessages, recurse) {
             channel.bulkDelete(messages);
         }
     }).catch((err) => {
-        helpers.logError(err);
+        helpers.log(err);
     });
 }
 
@@ -142,7 +142,7 @@ function getEvents(message, calendarID, dayMap) {
         calendar["lastUpdate"] = d;
         helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     }).catch((err) => {
-        helpers.logError("getEvents error " + err);
+        helpers.log(err);
     });
 }
 
@@ -159,10 +159,10 @@ function postCalendar(message, dayMap) {
         }).catch((err) => {
             if (err.code === 10008) {
                 delete calendar["calendarMessageId"];
-                helpers.logError(err);
+                helpers.log(err);
             }
             else {
-                helpers.logError(err);
+                helpers.log(err);
             }
         });
     }
@@ -216,7 +216,7 @@ function postCalendar(message, dayMap) {
         setTimeout(function func() {
             helpers.writeGuildSpecific(message.guild.id, calendar, "calendar")}, 2000);
     }).catch((err) => {
-        helpers.logError(err);
+        helpers.log(err);
     });
 }
 
@@ -274,11 +274,11 @@ function updateCalendar(message, dayMap) {
       m.edit({embed})
   }).catch((err) => {
       if (err.code === 1008) {
-          helpers.logError(err);
+          helpers.log(err);
           return;
       }
       else {
-        helpers.logError(err);
+        helpers.log(err);
       }
   });
 }
@@ -306,7 +306,7 @@ function quickAddEvent(message, calendarId) {
         });
         p.resolve(resp);
     }).catch((err) => {
-        helpers.logError("Error: quickAddEvent - " + err);
+        helpers.log(err);
         p.reject(err);
     })
     return p.promise;
@@ -346,7 +346,7 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
             updateCalendar(message, dayMap);
         }, 2000);
     }).catch((err) => {
-        helpers.logError(err)
+        helpers.log(err)
     });
 }
 
@@ -502,7 +502,7 @@ exports.run = function (message) {
             init.run(message);
         }
         catch (err) {
-            helpers.logError(err);
+            helpers.log(err);
         }
     }
 
@@ -533,7 +533,7 @@ exports.run = function (message) {
               updateCalendar(message, dayMap);
           }, 2000);
         }).catch((err) => {
-            helpers.logError(err);
+            helpers.log(err);
         });
     }
     if (cmd === "delete" || helpers.mentioned(message, "delete")) {

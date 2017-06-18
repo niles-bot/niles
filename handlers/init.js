@@ -23,8 +23,8 @@ Visit http://niles.seanecoffey.com/setup for more info.";
 
 const SETUP_MESSAGE = "\
 Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/setup \n\
-\n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to \'manage events\' on the Google Calendar you want to use with Niles\n\
-2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id qb9t3fb6mn9p52a4re0hc067d8@group.calendar.google.com`\n\
+\n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to \'Make changes to events\' under the Permission Settings on the Google Calendar you want to use with Niles\n\
+2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id 123abc@123abc.com`\n\
 3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. `!tz gmt+10:00`, (Note: Must be formatted like this)\n\
 \n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
 
@@ -76,17 +76,18 @@ function logId(message) {
 function logTz(message) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
-    let tz = message.content.split(" ")[1].toUpperCase();
+    let tz = message.content.split(" ")[1];
     if(!tz && !guildSettings["timezone"]) {
-        message.channel.send("Enter a timezone using `!tz`");
+        message.channel.send("Enter a timezone using `!tz`, i.e. `!tz GMT+10:00` (Must be formatted like this.)");
         return;
     }
     if(!tz) {
         message.channel.send("You didn't enter a timezone, you are currently using `" + guildSettings["timezone"] + "`");
         return;
     }
-    if(tz.indexOf("GMT") === -1 || (tz.indexOf("+") === -1 && tz.indexOf("-")) || tz.length !== 9 ) {
-        message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00``, please note this currently requires GMT");
+    tz = tz.toUpperCase();
+    if(tzindexOf("GMT") === -1 || (tz.indexOf("+") === -1 && tz.indexOf("-")) || tz.length !== 9 ) {
+        message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00`` (must be formatted like this)");
         return;
     }
     if(guildSettings["timezone"] !== "") {
@@ -122,7 +123,7 @@ exports.run = function(message) {
       message.author.send(HELP_MESSAGE);
       message.channel.fetchMessage(message.id).then((m) => {
           m.delete(1000);
-      }).catch((e) => helpers.logError(e));
+      }).catch((e) => helpers.log(e));
   }
 
   if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {

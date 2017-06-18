@@ -1,12 +1,17 @@
 # Niles Discord Bot
 
-** In Development **
-
-NodeJS bot for interfacing with Google Calendars for eSports scheduling
+A [Discord](https://discordapp.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
+Targeted towards eSports event scheduling (scrims, PCWs).
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+[Invite the hosted bot to your Discord here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=320434122344366082).
+
+Join the [Niles Discord server](https://discord.gg/jNyntBn) for support, bug reporting and feature requests.
+
+Visit the Niles [website](http://niles.seanecoffey.com/) or [setup guide](http://niles.seanecoffey.com/setup) for more detailed use and setup descriptions.
+
+If you wanted to host your own version or similar, these instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -16,12 +21,12 @@ These instructions will get you a copy of the project up and running on your loc
 
 Setup your Discord app on the [Discord developers website](https://discordapp.com/developers/applications/me).
 
-Note: To add a development bot to your Discord server, visit https://discordapp.com/api/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot&permissions=0 replacing your app id in the URL.
+Note: To add a development bot to your Discord server, visit https://discordapp.com/api/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot&permissions=97344 replacing your app id in the URL.
 
-Set up your [Google Service Account](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
+Set up a [Google Service Account](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
 For more information on setting up a Google Service Account, [see here](https://github.com/yuhong90/node-google-calendar/wiki#setup-service-accounts).
 
-Rename the `PUBLIC.ENV` file to `.ENV` and add the relevant variables.
+Create your own `secrets.json` file in `/config`, using the appropriate values, making sure you also place a copy of your Google Service Account JSON security file somewhere and referencing in `secrets`.
 
 To run and connect your bot
 
@@ -32,14 +37,6 @@ npm install
 ```
 node bot.js
 ```
-
-## Testing
-
-Absolutely nothing
-
-## Deployment
-
-Might eventually host this whom knows
 
 ## Built With
 

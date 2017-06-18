@@ -38,7 +38,7 @@ function writeGuilddb(guilddb) {
     let guilddatabase = path.join(__dirname, "..", "stores/guilddatabase.json");
     fs.writeFile(guilddatabase, JSON.stringify(guilddb, "","\t"), (err) => {
       if(err) {
-          return logError("error writing the guild database" + err);
+          return log("error writing the guild database" + err);
       }
     });
 }
@@ -47,7 +47,7 @@ function writeGuildSpecific(guildid, json, file) {
     let fullPath = path.join(__dirname,"..", "stores", guildid, file + ".json");
     fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
         if(err) {
-            return logError("error writing guild specific database: " + err);
+            return log("error writing guild specific database: " + err);
         }
     });
 }

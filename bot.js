@@ -43,7 +43,7 @@ client.on("message", (message) => {
           init.run(message);
         }
         catch (err) {
-          helpers.logError(err);
+          helpers.log(err);
           return message.channel.send("something went wrong");
         }
       }
@@ -52,7 +52,7 @@ client.on("message", (message) => {
             commands.run(message);
           }
           catch (err) {
-            helpers.logError(err);
+            helpers.log(err);
             return message.channel.send("something went wrong");
           }
       }
@@ -62,7 +62,7 @@ client.on("message", (message) => {
 // ProcessListeners
 
 process.on("uncaughtException", (err) => {
-    helpers.logError(err);
+    helpers.log(err);
 });
 
 process.on("SIGINT", () => {
