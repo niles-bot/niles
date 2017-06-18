@@ -125,7 +125,7 @@ function stringDate(date, guildid, hour) {
 function getStringTime(date) {
     let hour = date.getHours();
     let minutes = prependZero(date.getMinutes());
-    if (minutes == "00") {
+    if (minutes === "00") {
         if (hour <= 11) {
             return hourString(parseInt(date.getHours()), 10) + "AM";
         }

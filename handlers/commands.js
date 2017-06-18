@@ -132,7 +132,7 @@ function getEvents(message, calendarID, dayMap) {
                 if (events[j]["start"]["date"]) {
                     let allDayEvent = new Date(events[j]["start"]["date"]);
                     if (dayMap[day].getFullYear() === allDayEvent.getFullYear() && dayMap[day].getMonth() === allDayEvent.getMonth() && dayMap[day].getDate() === allDayEvent.getDate()) {
-                        matches.push(allEvents[j]);
+                        matches.push(events[j]);
                     }
                 }
             }
@@ -199,16 +199,16 @@ function postCalendar(message, dayMap) {
         }
         finalString += sendString;
     }
-    embed = new bot.discord.RichEmbed();
-    embed.setTitle("CALENDAR")
-    embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
-    embed.setColor("BLUE")
-    embed.setDescription(finalString)
-    embed.setFooter("Last update")
-    if (guildSettings["helpmenu"] === "1") {
-      embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false)
+    let embed = new bot.discord.RichEmbed();
+    embed.setTitle("CALENDAR");
+    embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings["calendarID"]);
+    embed.setColor("BLUE");
+    embed.setDescription(finalString);
+    embed.setFooter("Last update");
+    if (guildSettings["helpmenu"] === "1"); {
+      embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
     }
-    embed.setTimestamp(helpers.convertDate(new Date(), message.guild.id))
+    embed.setTimestamp(helpers.convertDate(new Date(), message.guild.id));
     message.channel.send({embed}).then((sent) => {
         calendar["calendarMessageId"] = sent.id;
         sent.pin();
@@ -226,13 +226,13 @@ function updateCalendar(message, dayMap) {
   let calendar = helpers.readFile(calendarPath);
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  let finalString = '';
+  let finalString = "";
   for (let i = 0; i < 7; i++) {
       let key = "day" + String(i);
       let sendString = "";
       sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
       if (calendar[key].length === 0) {
-          sendString += '``` ```';
+          sendString += "``` ```";
       }
       else {
           sendString += '```';
@@ -260,16 +260,16 @@ function updateCalendar(message, dayMap) {
       finalString += sendString;
   };
   let messageId = calendar["calendarMessageId"];
-  embed = new bot.discord.RichEmbed();
-  embed.setTitle("CALENDAR")
-  embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
-  embed.setColor("BLUE")
-  embed.setDescription(finalString)
-  embed.setFooter("Last update")
-  if (guildSettings["helpmenu"] === "1") {
-    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false)
+  let embed = new bot.discord.RichEmbed();
+  embed.setTitle("CALENDAR");
+  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings["calendarID"]);
+  embed.setColor("BLUE");
+  embed.setDescription(finalString);
+  embed.setFooter("Last update");
+  if (guildSettings["helpmenu"] === "1"); {
+    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
   }
-  embed.setTimestamp(helpers.convertDate(new Date(), guildid))
+  embed.setTimestamp(helpers.convertDate(new Date(), guildid));
   message.channel.fetchMessage(messageId).then((m) => {
       m.edit({embed})
   }).catch((err) => {
@@ -285,7 +285,7 @@ function updateCalendar(message, dayMap) {
 
 function quickAddEvent(message, calendarId) {
     let p = defer();
-    let pieces = message.content.split(' ');
+    let pieces = message.content.split(" ");
     if (!pieces[1]) {
       return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
         .then((m) => {
@@ -441,10 +441,10 @@ function deleteEvent(message, calendarId, dayMap) {
 } // needs catches.
 
 function displayStats(message) {
-    embed = new bot.discord.RichEmbed()
+    let embed = new bot.discord.RichEmbed()
     .setColor("RED")
     .setTitle(`Niles Bot ${settings.secrets.current_version}`)
-    .setURL('https://github.com/seanecoffey/Niles')
+    .setURL("https://github.com/seanecoffey/Niles")
     .addField("Servers", bot.client.guilds.size, true)
     .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
     .addField("Ping", `${(bot.client.ping).toFixed(0)} ms`, true)
