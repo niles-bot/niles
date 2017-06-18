@@ -175,7 +175,7 @@ function postCalendar(message, dayMap) {
             sendString += "``` ```";
         }
         else {
-            sendString += '```';
+            sendString += "```";
             // Map events for each day
             for (let m = 0; m < calendar[key].length; m++) {
                 let options = {
@@ -192,8 +192,8 @@ function postCalendar(message, dayMap) {
                 tempStartDate = helpers.convertDate(tempStartDate, message.guild.id);
                 let tempFinDate = new Date(calendar[key][m]["end"]["dateTime"]);
                 tempFinDate = helpers.convertDate(tempFinDate, message.guild.id);
-                tempString[helpers.getStringTime(tempStartDate) + ' - ' + helpers.getStringTime(tempFinDate)] = calendar[key][m]["summary"];
-                sendString += columnify(tempString, options) + '\n';
+                tempString[helpers.getStringTime(tempStartDate) + " - " + helpers.getStringTime(tempFinDate)] = calendar[key][m]["summary"];
+                sendString += columnify(tempString, options) + "\n";
             }
             sendString += "```";
         }
@@ -214,7 +214,8 @@ function postCalendar(message, dayMap) {
         sent.pin();
     }).then((confirm) => {
         setTimeout(function func() {
-            helpers.writeGuildSpecific(message.guild.id, calendar, "calendar")}, 2000);
+            helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
+            }, 2000);
     }).catch((err) => {
         helpers.log(err);
     });
@@ -266,12 +267,12 @@ function updateCalendar(message, dayMap) {
   embed.setColor("BLUE");
   embed.setDescription(finalString);
   embed.setFooter("Last update");
-  if (guildSettings["helpmenu"] === '1') {
+  if (guildSettings["helpmenu"] === "1") {
     embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
   }
   embed.setTimestamp(helpers.convertDate(new Date(), guildid));
   message.channel.fetchMessage(messageId).then((m) => {
-      m.edit({embed})
+      m.edit({embed});
   }).catch((err) => {
       if (err.code === 1008) {
           helpers.log(err);
@@ -289,12 +290,12 @@ function quickAddEvent(message, calendarId) {
     if (!pieces[1]) {
       return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
         .then((m) => {
-            m.delete(5000)
+            m.delete(5000);
         });
     }
-    let text = '';
+    let text = ;
     for (let i = 1; i < pieces.length; i++) {
-        text += pieces[i] + ' ';
+        text += pieces[i] + " ";
     }
     let params = {
         "text": text
@@ -308,7 +309,7 @@ function quickAddEvent(message, calendarId) {
     }).catch((err) => {
         helpers.log(err);
         p.reject(err);
-    })
+    });
     return p.promise;
 }
 
@@ -322,7 +323,7 @@ function displayOptions(message) {
             helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
             message.channel.send("Okay I've turned the calendar help menu on");
         }
-        else if (pieces[2] === '0') {
+        else if (pieces[2] === "0") {
             guildSettings["helpmenu"] = "0";
             helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
             message.channel.send("Okay I've turned the calendar help menu off");
@@ -373,7 +374,7 @@ function deleteEvent(message, calendarId, dayMap) {
     }
     if (searchTime.indexOf("pm") !== -1) {
         if (searchTime === "12pm") {
-            dTime = "12"
+            dTime = "12";
         }
         else {
             let temp = parseInt(searchTime.split("pm")[0],10);
