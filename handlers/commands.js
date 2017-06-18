@@ -1,12 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-const CalendarAPI = require('node-google-calendar');
-const columnify = require('columnify');
-const os = require('os');
-const moment = require('moment');
-require('moment-duration-format');
-let settings = require('../settings.js');
+const CalendarAPI = require("node-google-calendar");
+const columnify = require("columnify");
+const os = require("os");
+const moment = require("moment");
+require("moment-duration-format");
+let settings = require("../settings.js");
 let init = require("./init.js");
 let helpers = require("./helpers.js");
 let guilds = require("./guilds.js");
@@ -25,15 +25,16 @@ const HELP_MESSAGE = "```\
 !invite              -  Get the invite link for Niles to join your server!\n\
 !help                -  Display this message\n\
 ```\
-Visit http://niles.seanecoffey.com for more info."
+Visit http://niles.seanecoffey.com for more info.";
 
 // Message Listener
 
 exports.run = function (message) {
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarID = guildSettings["calendarID"];
     let dayMap = createDayMap(message);
+    //Check for updates before every command use.
     setTimeout(function func() {
         getEvents(message, calendarID, dayMap);
     }, 2000);
@@ -43,27 +44,30 @@ exports.run = function (message) {
         setTimeout(function func() {
             getEvents(message, calendarID, dayMap);
           }, 2000);
-    }, 3600000);
+        setTimeout(function func() {
+            updateCalendar(message, dayMap);
+        }, 4000);
+    }, settings.secrets.calendar_update_interval);
 
     const cmd = message.content.toLowerCase().substring(1).split(' ')[0];
 
-    if (cmd === 'ping' || helpers.mentioned(message, 'ping')) {
+    if (cmd === "ping" || helpers.mentioned(message, "ping")) {
         message.channel.send(`:ping_pong: !Pong! ${client.pings[0]}ms`);
     }
 
-    if (cmd === 'help' || helpers.mentioned(message, 'help')) {
+    if (cmd === "help" || helpers.mentioned(message, "help")) {
         message.author.send(HELP_MESSAGE);
     }
 
-    if (cmd === 'invite' || helpers.mentioned(message, 'invite')) {
+    if (cmd === "invite" || helpers.mentioned(message, "invite")) {
       message.channel.send({
         embed: new discord.RichEmbed()
-            .setColor('#FFFFF')
-            .setDescription('Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=' + client.user.id + ') to invite me to your server')
+            .setColor("#FFFFF")
+            .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + client.user.id + ") to invite me to your server")
       });
     }
 
-    if (['setup', 'start', 'id', 'tz'].includes(cmd) || helpers.mentioned(message, ['setup', 'start', 'id', 'tz'])) {
+    if (["setup", "start", "id", "tz"].includes(cmd) || helpers.mentioned(message, ["setup", "start", "id", "tz"])) {
         try {
             init.run(message);
         }
@@ -72,64 +76,57 @@ exports.run = function (message) {
         }
     }
 
-    if (cmd === 'init' || helpers.mentioned(message, 'init')) {
+    if (cmd === "init" || helpers.mentioned(message, "init")) {
         guilds.create(message.guild);
     }
 
-    if (['clean', 'purge'].includes(cmd) || helpers.mentioned(message, ['clean', 'purge'])) {
+    if (["clean", "purge"].includes(cmd) || helpers.mentioned(message, ["clean", "purge"])) {
         deleteMessages(message);
     }
 
-    if (cmd === 'display' || helpers.mentioned(message, 'display')) {
+    if (cmd === "display" || helpers.mentioned(message, "display")) {
         getEvents(message, calendarID, dayMap);
         setTimeout(function func() {
             postCalendar(message, dayMap);
           }, 2000);
-        //Update the calendar every hour
-        let updateCalendarAuto = setInterval(function func() {
-            updateCalendar(message, dayMap)
-        }, 360000);
     }
 
-    if (cmd === 'update' || helpers.mentioned(message, 'update')) {
+    if (cmd === "update" || helpers.mentioned(message, "update")) {
         updateCalendar(message, dayMap);
-        let updateCalendarAuto = setInterval(function func() {
-            updateCalendar(message, dayMap)
-        }, 360000);
     }
 
-    if(['create', 'scrim'].includes(cmd) || helpers.mentioned(message, ['create', 'scrim'])) {
-        quickAddEvent(message, calendarID).then(resp => {
-          getEvents(message, calendarID, dayMap)
-        }).then(resp => {
+    if(["create", "scrim"].includes(cmd) || helpers.mentioned(message, ["create", "scrim"])) {
+        quickAddEvent(message, calendarID).then((resp) => {
+          getEvents(message, calendarID, dayMap);
+        }).then((resp) => {
           setTimeout(function func() {
-              updateCalendar(message, dayMap)
+              updateCalendar(message, dayMap);
           }, 2000);
-        }).catch(err => {
+        }).catch((err) => {
             console.log(err);
         });
     }
-    if (cmd === 'delete' || helpers.mentioned(message, 'delete')) {
+    if (cmd === "delete" || helpers.mentioned(message, "delete")) {
         if (message.content.split(' ').length === 3) {
             deleteEvent(message, calendarID, dayMap);
         }
         else {
             message.channel.send("Hmm.. I can't process that request, delete using the format ``!delete <day> <start time>`` i.e ``!delete tuesday 8pm``")
-            .then(m => {
+            .then((m) => {
                 m.delete(10000);
             });
         }
     }
 
-    if (cmd === 'displayoptions' || helpers.mentioned(message, 'displayoptions')) {
+    if (cmd === "displayoptions" || helpers.mentioned(message, "displayoptions")) {
         displayOptions(message);
     }
 
-    if (['stats', 'info'].includes(cmd) || helpers.mentioned(message, ['stats', 'info'])) {
+    if (["stats", "info"].includes(cmd) || helpers.mentioned(message, ["stats", "info"])) {
         displayStats(message);
     }
     message.delete(5000);
-}
+};
 
 //functions
 
@@ -152,7 +149,7 @@ function deleteMessages(message) {
     }
     const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
     collector.on("collect", (m) => {
-        if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
+        if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
             clean(message.channel, numberMessages + 3, recurse);
         }
         else {
@@ -161,7 +158,7 @@ function deleteMessages(message) {
         }
         return collector.stop();
     });
-    collector.on('end', (collected, reason) => {
+    collector.on("end", (collected, reason) => {
         if (reason === 'time') {
             message.channel.send("Command response timeout");
             clean(message.channel, 3, 0);
@@ -170,7 +167,7 @@ function deleteMessages(message) {
 }
 
 function clean(channel, numberMessages, recurse) {
-    channel.fetchMessages({ limit: numberMessages}).then(messages => {
+    channel.fetchMessages({ limit: numberMessages}).then((messages) => {
         if(messages.size < 2) {
             channel.send("cleaning"); //Send extra message to allow deletion of 1 message.
             clean(channel, 2, false);
@@ -182,7 +179,7 @@ function clean(channel, numberMessages, recurse) {
         else {
             channel.bulkDelete(messages);
         }
-    }).catch(err => {
+    }).catch((err) => {
         console.log(err);
     });
 }
@@ -199,9 +196,9 @@ function createDayMap(message) {
 }
 
 function getEvents(message, calendarID, dayMap) {
-    let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
+    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let events = [];
     let tz = guildSettings["timezone"];
@@ -211,9 +208,9 @@ function getEvents(message, calendarID, dayMap) {
         timeMin:startDate,
         timeMax:endDate,
         singleEvents: true,
-        orderBy: 'startTime'
+        orderBy: "startTime"
         };
-    cal.Events.list(calendarID, params).then(json => {
+    cal.Events.list(calendarID, params).then((json) => {
         for(let i = 0; i < json.length; i++) {
             let event = {
                 id: json[i].id,
@@ -224,7 +221,7 @@ function getEvents(message, calendarID, dayMap) {
             events.push(event);
         }
         for(let day = 0; day < 7; day++) {
-            let key = 'day' + String(day);
+            let key = "day" + String(day);
             let matches = [];
             for (let j = 0; j < json.length; j++) {
                 let tempDate = new Date(events[j]["start"]["dateTime"]);
@@ -244,31 +241,37 @@ function getEvents(message, calendarID, dayMap) {
         let d = new Date();
         calendar["lastUpdate"] = d;
         helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-    }).catch(err => {
-        console.log('getEvents error ' + err);
+    }).catch((err) => {
+        console.log("getEvents error " + err);
     });
 }
 
 function postCalendar(message, dayMap) {
-    let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
+    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let finalString = '';
 
     if (calendar["calendarMessageId"]) {
-        message.channel.fetchMessage(calendar["calendarMessageId"]).then(message => {
+        message.channel.fetchMessage(calendar["calendarMessageId"]).then((message) => {
             message.delete();
-        }).catch(err => {
-            console.log(err);
+        }).catch((err) => {
+            if (err.code === 10008) {
+                delete calendar["calendarMessageId"];
+                console.log(err);
+            }
+            else {
+                console.log(err);
+            }
         });
     }
 
     for (let i = 0; i < 7; i++) {
-        let key = 'day' + String(i);
+        let key = "day" + String(i);
         let sendString = '';
         sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
-        if (calendar[key] == '[]' || calendar[key] == [] || calendar[key] == 0) {
+        if (calendar[key].length === 0) {
             sendString += '``` ```';
         }
         else {
@@ -277,10 +280,10 @@ function postCalendar(message, dayMap) {
             for (let m = 0; m < calendar[key].length; m++) {
                 let options = {
                     showHeaders: false,
-                    columnSplitter: ' | ',
+                    columnSplitter: " | ",
                     columns: ["time", "events"],
                     config: {
-                        time: {minWidth: 17, align: 'center'},
+                        time: {minWidth: 17, align: "center"},
                         events: {minWidth: 20}
                     }
                 };
@@ -297,37 +300,38 @@ function postCalendar(message, dayMap) {
         finalString += sendString;
     }
     embed = new discord.RichEmbed();
-    embed.setTitle('CALENDAR')
+    embed.setTitle("CALENDAR")
     embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
-    embed.setColor('BLUE')
+    embed.setColor("BLUE")
     embed.setDescription(finalString)
-    embed.setFooter('Last update')
-    if (guildSettings["helpmenu"] === '1') {
-      embed.addField('USING THIS CALENDAR', 'To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.', false)
+    embed.setFooter("Last update")
+    if (guildSettings["helpmenu"] === "1") {
+      embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false)
     }
     embed.setTimestamp(helpers.convertDate(new Date(), message.guild.id))
-    message.channel.send({embed}).then(sent => {
-        calendar['calendarMessageId'] = sent.id;
+    message.channel.send({embed}).then((sent) => {
+        calendar["calendarMessageId"] = sent.id;
         sent.pin();
-    }).then(confirm => {
-        helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-    }).catch(err => {
+    }).then((confirm) => {
+        setTimeout(function func() {
+            helpers.writeGuildSpecific(message.guild.id, calendar, "calendar")}, 2000);
+    }).catch((err) => {
         console.log(err);
     });
 }
 
 function updateCalendar(message, dayMap) {
   let guildid = message.guild.id;
-  let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
+  let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
   let calendar = helpers.readFile(calendarPath);
-  let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
+  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
   let finalString = '';
   for (let i = 0; i < 7; i++) {
-      let key = 'day' + String(i);
-      let sendString = '';
+      let key = "day" + String(i);
+      let sendString = "";
       sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
-      if (calendar[key] == '[]' || calendar[key] == [] || calendar[key] == 0) {
+      if (calendar[key].length === 0) {
           sendString += '``` ```';
       }
       else {
@@ -336,10 +340,10 @@ function updateCalendar(message, dayMap) {
           for (let m = 0; m < calendar[key].length; m++) {
               let options = {
                   showHeaders: false,
-                  columnSplitter: ' | ',
+                  columnSplitter: " | ",
                   columns: ["time", "events"],
                   config: {
-                      time: {minWidth: 17, align: 'center'},
+                      time: {minWidth: 17, align: "center"},
                       events: {minWidth: 20}
                   }
               };
@@ -355,21 +359,27 @@ function updateCalendar(message, dayMap) {
       }
       finalString += sendString;
   };
-  let messageId = calendar['calendarMessageId'];
+  let messageId = calendar["calendarMessageId"];
   embed = new discord.RichEmbed();
-  embed.setTitle('CALENDAR')
+  embed.setTitle("CALENDAR")
   embed.setURL('https://calendar.google.com/calendar/embed?src=' + guildSettings["calendarID"])
-  embed.setColor('BLUE')
+  embed.setColor("BLUE")
   embed.setDescription(finalString)
-  embed.setFooter('Last update')
-  if (guildSettings["helpmenu"] === '1') {
-    embed.addField('USING THIS CALENDAR', 'To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.', false)
+  embed.setFooter("Last update")
+  if (guildSettings["helpmenu"] === "1") {
+    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false)
   }
   embed.setTimestamp(helpers.convertDate(new Date(), guildid))
-  message.channel.fetchMessage(messageId).then(m => {
+  message.channel.fetchMessage(messageId).then((m) => {
       m.edit({embed})
-  }).catch(err => {
-      console.log(err);
+  }).catch((err) => {
+      if (err.code === 1008) {
+          console.log(err);
+          return;
+      }
+      else {
+        console.log(err);
+      }
   });
 }
 
@@ -377,8 +387,8 @@ function quickAddEvent(message, calendarId) {
     let p = defer();
     let pieces = message.content.split(' ');
     if (!pieces[1]) {
-      return message.channel.send('You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`')
-        .then(m => {
+      return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
+        .then((m) => {
             m.delete(5000)
         });
     }
@@ -387,49 +397,49 @@ function quickAddEvent(message, calendarId) {
         text += pieces[i] + ' ';
     }
     let params = {
-        'text': text
+        "text": text
       };
-    cal.Events.quickAdd(calendarId, params).then(resp => {
+    cal.Events.quickAdd(calendarId, params).then((resp) => {
         let json = resp;
-        message.channel.send('Event `' + resp.summary + '` on `' +  resp.start.dateTime + '` has been created').then(m => {
+        message.channel.send("Event `" + resp.summary + "` on `" +  resp.start.dateTime + "` has been created").then((m) => {
             m.delete(5000);
         });
         p.resolve(resp);
-    }).catch(err => {
-        console.log('Error: quickAddEvent - ' + err);
+    }).catch((err) => {
+        console.log("Error: quickAddEvent - " + err);
         p.reject(err);
     })
     return p.promise;
 }
 
 function displayOptions(message) {
-    let pieces = message.content.split(' ');
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, 'settings.json');
+    let pieces = message.content.split(" ");
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
-    if (pieces[1] === 'help') {
-        if (pieces[2] === '1') {
-            guildSettings["helpmenu"] = '1';
+    if (pieces[1] === "help") {
+        if (pieces[2] === "1") {
+            guildSettings["helpmenu"] = "1";
             helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
-            message.channel.send('Okay I\'ve turned the calendar help menu on');
+            message.channel.send("Okay I've turned the calendar help menu on");
         }
         else if (pieces[2] === '0') {
-            guildSettings["helpmenu"] = '0';
+            guildSettings["helpmenu"] = "0";
             helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
-            message.channel.send('Okay I\'ve turned the calendar help menu off');
+            message.channel.send("Okay I've turned the calendar help menu off");
         }
         else {
-            message.channel.send ('Please only use 0 or 1 for the calendar help menu options, (off or on)')
+            message.channel.send ("Please only use 0 or 1 for the calendar help menu options, (off or on)")
         }
     }
     else {
-        message.channel.send('I don\'t think thats a valid display option, sorry!');
+        message.channel.send("I don't think thats a valid display option, sorry!");
     }
 }
 
 function deleteEvent(message, calendarId, dayMap) {
-    let calendarPath = path.join(__dirname, '..', 'stores', message.guild.id, 'calendar.json');
+    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let deleteMessages = [];
     deleteMessages.push(message.id);
@@ -447,63 +457,63 @@ function deleteEvent(message, calendarId, dayMap) {
             keyID = i;
         }
     }
-    if (searchTime.indexOf('pm') !== -1) {
-        if (searchTime === '12pm') {
-            dTime = '12'
+    if (searchTime.indexOf("pm") !== -1) {
+        if (searchTime === "12pm") {
+            dTime = "12"
         }
         else {
-            let temp = parseInt(searchTime.split('pm')[0],10);
+            let temp = parseInt(searchTime.split("pm")[0],10);
             dTime = String((temp + 12));
         }
     }
-    if (searchTime.indexOf('am') !== -1) {
-        if (searchTime === '12am') {
-            dTime = '00';
+    if (searchTime.indexOf("am") !== -1) {
+        if (searchTime === "12am") {
+            dTime = "00";
         }
-        if (searchTime.split('a')[0].length == 2) {
-            dTime = searchTime.split('a')[0];
+        if (searchTime.split("a")[0].length == 2) {
+            dTime = searchTime.split("a")[0];
         }
-        if (searchTime.split('a')[0].length == 1) {
-            dTime = '0' + searchTime.split('a')[0];
+        if (searchTime.split("a")[0].length == 1) {
+            dTime = "0" + searchTime.split("a")[0];
         }
     }
-    let tz = guildSettings["timezone"].split('T')[1];
-    let delDate = dayDate.getFullYear() + '-' + helpers.prependZero(dayDate.getMonth() + 1) + '-' + helpers.prependZero(dayDate.getDate()) + 'T' + dTime + ':00:00' + tz;
-    let key = 'day' + String(keyID);
+    let tz = guildSettings["timezone"].split("T")[1];
+    let delDate = dayDate.getFullYear() + "-" + helpers.prependZero(dayDate.getMonth() + 1) + "-" + helpers.prependZero(dayDate.getDate()) + "T" + dTime + ":00:00" + tz;
+    let key = "day" + String(keyID);
 
     for (let j = 0; j < calendar[key].length; j++) {
         let eventDate = new Date(calendar[key][j]["start"]["dateTime"]);
         let searchDate = new Date(delDate);
         if (Math.abs((eventDate - searchDate)) < 100) {
             message.channel.send(`Are you sure you want to delete the event **${calendar[key][j]["summary"]}** on ${searchDay} at ${searchTime}? **(y/n)**`)
-            .then(res => {
+            .then((res) => {
                 res.delete(5000)
             });
             const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 10000});
-            collector.on('collect', (m) => {
+            collector.on("collect", (m) => {
                 deleteMessages.push(m.id);
-                if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
-                    deleteEventById(calendar[key][j]["id"], calendarId, dayMap, message).then(del => {
-                        message.channel.send(`Event **${calendar[key][j]["summary"]}** deleted`).then(res => {
+                if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
+                    deleteEventById(calendar[key][j]["id"], calendarId, dayMap, message).then((del) => {
+                        message.channel.send(`Event **${calendar[key][j]["summary"]}** deleted`).then((res) => {
                             res.delete(10000);
                         });
                     });
                 }
                 else {
-                    message.channel.send("Okay, I won't do that").then(res => {
+                    message.channel.send("Okay, I won't do that").then((res) => {
                         res.delete(5000);
                     });
                 }
                 for(let k = 0; k < deleteMessages.length; k++) {
-                    message.channel.fetchMessage(deleteMessages[k]).then(m => {
+                    message.channel.fetchMessage(deleteMessages[k]).then((m) => {
                         m.delete(5000);
                     });
                 }
                 return collector.stop();
             });
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') {
-                    message.channel.send("command response timeout").then(res => {
+            collector.on("end", (collected, reason) => {
+                if (reason === "time") {
+                    message.channel.send("command response timeout").then((res) => {
                         res.delete(5000);
                     });
                 }
@@ -511,7 +521,7 @@ function deleteEvent(message, calendarId, dayMap) {
             return;
         }
     }
-    message.channel.send("I couldn't find that event, try again").then(res => {
+    message.channel.send("I couldn't find that event, try again").then((res) => {
         res.delete(10000);
     });
 } // needs catches.
@@ -520,29 +530,29 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
     let params = {
         sendNotifications: true
       };
-    return cal.Events.delete(calendarId, eventId, params).then(resp => {
+    return cal.Events.delete(calendarId, eventId, params).then((resp) => {
         getEvents(message, calendarId, dayMap);
         setTimeout(function func() {
-            updateCalendar(message, dayMap)
+            updateCalendar(message, dayMap);
         }, 2000);
-    }).catch(err => {
+    }).catch((err) => {
         console.log(err)
     });
 }
 
 function displayStats(message) {
     embed = new discord.RichEmbed()
-    .setColor('RED')
+    .setColor("RED")
     .setTitle(`Niles Bot ${settings.secrets.current_version}`)
     .setURL('https://github.com/seanecoffey/Niles')
-    .addField('Servers', client.guilds.size, true)
-    .addField('Uptime', moment.duration(process.uptime(), 'seconds').format('dd:hh:mm:ss'), true)
-    .addField('Ping', `${(client.ping).toFixed(0)} ms`, true)
-    .addField('RAM Usage', `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed() + ' MB')}
+    .addField("Servers", client.guilds.size, true)
+    .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
+    .addField("Ping", `${(client.ping).toFixed(0)} ms`, true)
+    .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed() + ' MB')}
     (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
-    .addField('System Info', `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed(2) + ' MB')}`, true)
-    .addField('Libraries', `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
-    .addField('Links', '[Bot invite](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=' + client.user.id + ') | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)', true)
-    .setFooter('Created by Sean#8856');
+    .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + ' GB' : (os.totalmem() / 1048576).toFixed(2) + ' MB')}`, true)
+    .addField("Libraries", `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
+    .addField("Links", '[Bot invite](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=' + client.user.id + ') | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)', true)
+    .setFooter("Created by Sean#8856");
     message.channel.send({ embed: embed});
 }

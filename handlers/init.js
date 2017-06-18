@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const commands = require("./commands.js");
 const helpers = require("./helpers.js");
-const guilds = require("./guilds.js")
+const guilds = require("./guilds.js");
 
 
 const HELP_MESSAGE = "```\
@@ -19,49 +19,49 @@ NOTE - THE FULL LIST OF COMMANDS WILL NOT FUNCTION UNTIL GOOGLE CALENDAR ID IS E
 !invite              -  Get the invite link for Niles to join your server!\n\
 !help                -  Display this message\n\
 ```\n\
-Visit http://niles.seanecoffey.com/setup for more info."
+Visit http://niles.seanecoffey.com/setup for more info.";
 
 const SETUP_MESSAGE = "\
 Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/setup \n\
 \n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to \'manage events\' on the Google Calendar you want to use with Niles\n\
 2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id qb9t3fb6mn9p52a4re0hc067d8@group.calendar.google.com`\n\
 3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. `!tz gmt+10:00`, (Note: Must be formatted like this)\n\
-\n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!"
+\n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
 
 exports.run = function(message) {
   const cmd = message.content.toLowerCase().substring(1).split(' ')[0];
-  if (cmd === 'help') {
+  if (cmd === "help" || helpers.mentioned(message, "help")) {
       message.author.send(HELP_MESSAGE);
-      message.channel.fetchMessage(message.id).then(m => {
+      message.channel.fetchMessage(message.id).then((m) => {
           m.delete(1000);
-      }).catch(e => console.log(e));
+      }).catch((e) => console.log(e));
   }
 
-  if(['setup', 'start'].includes(cmd) || helpers.mentioned(message, ['setup', 'start'])) {
+  if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {
       message.channel.send(SETUP_MESSAGE);
   }
 
-  if(cmd === 'id' || helpers.mentioned(message, 'id')) {
+  if(cmd === "id" || helpers.mentioned(message, "id")) {
       logId(message);
   }
 
-  if (cmd === 'tz' || helpers.mentioned(message, 'tz')) {
+  if (cmd === "tz" || helpers.mentioned(message, "tz")) {
       logTz(message);
   }
 
-  if (cmd === 'init' || helpers.mentioned(message, 'init')) {
+  if (cmd === "init" || helpers.mentioned(message, "init")) {
       guilds.create(message.guild);
   }
 
-  if (['display', 'clean', 'update', 'sync', 'invite', 'stats', 'create', 'scrim', 'delete'].includes(cmd)) {
+  if (["display", "clean", "update", "sync", "invite", "stats", "create", "scrim", "delete"].includes(cmd)) {
       message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
   }
-}
+};
 
 //functions
 
 function logId(message) {
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarId = message.content.split(" ")[1];
     if(!calendarId && !guildSettings["calendarID"]) {
@@ -79,8 +79,8 @@ function logId(message) {
     if(guildSettings["calendarID"] !== "") {
         message.channel.send("I've already been setup to use ``" + guildSettings["calendarID"] + "`` as the calendar ID in this server, do you want to overwrite this and set the ID to `" + calendarId + "`? **(y/n)**");
         const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
-        collector.on('collect', (m) => {
-            if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
+        collector.on("collect", (m) => {
+            if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
                 guildSettings["calendarID"] = calendarId;
                 message.channel.send("Okay, I'm adding your calendar ID as ``" + calendarId + "``");
                 helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
@@ -90,8 +90,8 @@ function logId(message) {
             }
             return collector.stop();
         });
-      collector.on('end', (collected, reason) => {
-          if(reason === 'time') {
+      collector.on("end", (collected, reason) => {
+          if(reason === "time") {
               message.channel.send("Command response timeout");
           }
       });
@@ -104,7 +104,7 @@ function logId(message) {
 }
 
 function logTz(message) {
-    let guildSettingsPath = path.join(__dirname, '..', 'stores', message.guild.id, "settings.json");
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let tz = message.content.split(" ")[1].toUpperCase();
     if(!tz && !guildSettings["timezone"]) {
@@ -116,14 +116,14 @@ function logTz(message) {
         return;
     }
     if(tz.indexOf("GMT") === -1 || (tz.indexOf("+") === -1 && tz.indexOf("-")) || tz.length !== 9 ) {
-        message.channel.send('Please enter timezone in valid format, i.e. ``GMT+06:00``, please note this currently requires GMT');
+        message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00``, please note this currently requires GMT");
         return;
     }
     if(guildSettings["timezone"] !== "") {
         message.channel.send("I've already been setup to use `" + guildSettings["timezone"] + "`, do you want to overwrite this and use `" + tz + "`? **(y/n)** ");
         const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
-        collector.on('collect', (m) => {
-            if(m.content.toLowerCase() === 'y' || m.content.toLowerCase() === 'yes') {
+        collector.on("collect", (m) => {
+            if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
                 guildSettings["timezone"] = tz;
                 message.channel.send("Okay I'm adding your timezone as `" + tz + "`");
                 helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
@@ -133,7 +133,7 @@ function logTz(message) {
             }
             return collector.stop();
         });
-      collector.on('end', (collected, reason) => {
+      collector.on("end", (collected, reason) => {
           if(reason === "time") {
               message.channel.send("Command response timeout");
           }

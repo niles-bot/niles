@@ -12,9 +12,9 @@ let helpers = require("./handlers/helpers.js");
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-    console.log(new Date().toUTCString() + ' : Bot is logged in');
+    console.log(new Date().toUTCString() + " : Bot is logged in");
     client.user.setStatus("online");
-})
+});
 
 client.on("guildCreate", (guild) => {
     guilds.create(guild);
@@ -59,7 +59,7 @@ client.on("message", (message) => {
 
 // ProcessListeners
 
-process.on('uncaughtException', err => {
+process.on("uncaughtException", (err) => {
     console.log(err);
 });
 

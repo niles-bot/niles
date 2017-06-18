@@ -1,10 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-let settings = require("../settings.js")
+let settings = require("../settings.js");
 
 exports.fullname = function(user) {
   return `${user.username}#${user.discriminator}`;
-}
+};
 
 exports.deleteFolderRecursive = function(path) {
   if( fs.existsSync(path) ) {
@@ -18,16 +18,16 @@ exports.deleteFolderRecursive = function(path) {
       });
       fs.rmdirSync(path);
   }
-}
+};
 
 exports.writeGuilddb = function writeGuilddb(guilddb) {
     let guilddatabase = path.join(__dirname, "..", "stores/guilddatabase.json");
     fs.writeFile(guilddatabase, JSON.stringify(guilddb, '','\t'), (err) => {
       if(err) {
-          return console.log(Date() + ' error writing the guild database' + err);
+          return console.log(Date() + " error writing the guild database" + err);
       }
     });
-}
+};
 
 exports.writeGuildSpecific = function(guildid, json, file) {
     let fullPath = path.join(__dirname,"..", "stores", guildid, file + ".json");
@@ -36,28 +36,28 @@ exports.writeGuildSpecific = function(guildid, json, file) {
             return console.log(Date() + "error writing guild specific database: " + err);
         }
     });
-}
+};
 
 exports.mentioned = function(msg, x) {
     if(!Array.isArray(x)) {
         x = [x];
     }
     return msg.isMentioned(client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
-}
+};
 
 exports.dayString = function(number) {
-    let days = ['Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let days = ["Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[number];
-}
+};
 
 exports.monthString = function(number) {
-    let months = ['January', 'February', 'March', 'April','May', 'June', 'July','August','September','October','November','December'];
+    let months = ["January", "February", "March", "April","May", "June", "July","August","September","October","November","December"];
     return months[number];
-}
+};
 
 exports.firstUpper = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
-}
+};
 
 function prependZero(item) {
     let converted = "";
@@ -79,16 +79,16 @@ exports.prependZero = function(item)  {
       else {
         return String(item);
       }
-}
+};
 
 exports.convertDate = function(dateToConvert, guildid) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
     let guildSettings = require(guildSettingsPath);
     let tz = guildSettings["timezone"];
     let pieces = tz.split("GMT")[1];
-    let hour = pieces.split(':')[0];
-    let minutes = pieces.split(':')[1];
-    if (minutes == '00') {
+    let hour = pieces.split(":")[0];
+    let minutes = pieces.split(":")[1];
+    if (minutes == "00") {
         minutes = ".";
     }
     if (minutes == "30") {
@@ -99,7 +99,7 @@ exports.convertDate = function(dateToConvert, guildid) {
     let utcdate = new Date(utc);
     let nd = new Date(utc + (3600000*offset));
     return nd;
-}
+};
 
 exports.stringDate = function(date, guildid, hour) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
@@ -108,25 +108,25 @@ exports.stringDate = function(date, guildid, hour) {
     let year = date.getFullYear();
     let month = prependZero(date.getMonth() + 1);
     let day = prependZero(date.getDate());
-    let dateString = '';
-    if (hour === 'start') {
+    let dateString = "";
+    if (hour === "start") {
         dateString += `${year}-${month}-${day}T00:00:00+${offset}`;
     }
-    if (hour === 'end') {
+    if (hour === "end") {
         dateString += `${year}-${month}-${day}T23:59:00+${offset}`;
     }
     return dateString;
-}
+};
 
 exports.getStringTime = function (date) {
     let hour = date.getHours();
     let minutes = prependZero(date.getMinutes());
-    if (minutes == '00') {
+    if (minutes == "00") {
         if (hour <= 11) {
-            return hourString(parseInt(date.getHours()), 10) + 'AM';
+            return hourString(parseInt(date.getHours()), 10) + "AM";
         }
         if (hour > 11) {
-            return hourString(parseInt(date.getHours()), 10) + 'PM';
+            return hourString(parseInt(date.getHours()), 10) + "PM";
         }
     }
     else {
@@ -137,13 +137,13 @@ exports.getStringTime = function (date) {
             return `${hourString(parseInt(date.getHours()),10)}:${minutes}PM`;
         }
     }
-}
+};
 
 function hourString(hour) {
-    let hours = ['12','1','2','3','4','5','6','7','8','9','10','11','12','1','2','3','4','5','6','7','8','9','10','11'];
+    let hours = ["12","1","2","3","4","5","6","7","8","9","10","11","12","1","2","3","4","5","6","7","8","9","10","11"];
     return hours[hour];
 }
 
 exports.readFile = function(path) {
-    return JSON.parse(fs.readFileSync(path, 'utf8'));
-}
+    return JSON.parse(fs.readFileSync(path, "utf8"));
+};
