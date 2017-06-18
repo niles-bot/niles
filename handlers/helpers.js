@@ -9,7 +9,7 @@ function log() {
 }
 
 function logError() {
-    Log("[ERROR]", Array.from(arguments).slice(1).join(" "));
+    log("[ERROR]", Array.from(arguments).slice(1).join(" "));
 }
 
 function fullname(user) {
