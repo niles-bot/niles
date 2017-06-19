@@ -293,7 +293,7 @@ function quickAddEvent(message, calendarId) {
             m.delete(5000);
         });
     }
-    let text = ;
+    let text = "";
     for (let i = 1; i < pieces.length; i++) {
         text += pieces[i] + " ";
     }
