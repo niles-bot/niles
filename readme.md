@@ -1,4 +1,5 @@
 # Niles Discord Bot
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a1440f5f9d23451a867348e5f9c1724e)](https://www.codacy.com/app/seanecoffey/Niles?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=seanecoffey/Niles&amp;utm_campaign=Badge_Grade)
 
 A [Discord](https://discordapp.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
 Targeted towards eSports event scheduling (scrims, PCWs).
