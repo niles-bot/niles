@@ -514,7 +514,7 @@ function displayStats(message) {
     .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
     .addField("Links", "[Bot invite](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)", true)
     .setFooter("Created by Sean#8856");
-    message.channel.send({ embed: embed}).catch((err) => {
+    message.channel.send({ embed }).catch((err) => {
         helpers.log(err);
     });
 }
