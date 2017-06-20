@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-let commands = require("./commands.js");
 let settings = require("../settings.js");
 let guilddatabase = require("../stores/guilddatabase.json");
 let helpers = require("./helpers.js");
@@ -12,7 +11,17 @@ exports.create = (guild) => {
       if(!fs.existsSync(guildPath)) {
           fs.mkdirSync(guildPath);
       }
-      let empty = {};
+      let emptyCal = {
+          "day0": [],
+          "day1": [],
+          "day2": [],
+          "day3": [],
+          "day4": [],
+          "day5": [],
+          "day6": [],
+          "lastUpdate": "",
+          "calendarMessageId": ""
+      };
       let defaultSettings = {
           "prefix": "!",
           "calendarID": "",
@@ -28,7 +37,7 @@ exports.create = (guild) => {
           "ownerId": guild.ownerID,
           "timeAdded": d
       };
-      helpers.writeGuildSpecific(guild.id, empty, "calendar");
+      helpers.writeGuildSpecific(guild.id, emptyCal, "calendar");
       helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
       helpers.writeGuilddb(guilddatabase);
       helpers.log(`Guild ${guild.id} has been created`);

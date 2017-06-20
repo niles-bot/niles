@@ -2,9 +2,7 @@ let discord = require("discord.js");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-
 const path = require("path");
-
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
@@ -14,7 +12,7 @@ let helpers = require("./handlers/helpers.js");
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-    helpers.log(" : Bot is logged in");
+    helpers.log("Bot is logged in");
     client.user.setStatus("online");
 });
 
@@ -31,6 +29,7 @@ client.on("message", (message) => {
         return;
     }
     if (message.channel.type === "dm") {
+        // Handle direct messages
         return;
     }
     let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
@@ -38,12 +37,16 @@ client.on("message", (message) => {
     if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
         return;
     }
+    helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
+    if(!helpers.checkPermissions(message)) {
+        return;
+    }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
         try {
           init.run(message);
         }
         catch (err) {
-          helpers.log(err);
+          helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
           return message.channel.send("something went wrong");
         }
       }
@@ -52,17 +55,16 @@ client.on("message", (message) => {
             commands.run(message);
           }
           catch (err) {
-            helpers.log(err);
+            helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
             return message.channel.send("something went wrong");
           }
       }
-    helpers.log(`${helpers.fullname(message.author)} : ${message.content} in guild ${message.guild.id}`);
 });
 
 // ProcessListeners
 
 process.on("uncaughtException", (err) => {
-    helpers.log(err);
+    helpers.log("uncaughtException error" + err);
 });
 
 process.on("SIGINT", () => {

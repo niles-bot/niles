@@ -1,10 +1,13 @@
 const fs = require("fs");
 const path = require("path");
+const defer = require("promise-defer");
 let settings = require("../settings.js");
 let bot = require("../bot.js");
+let commands = require("./commands.js");
 
 function log() {
-    let message = `[${new Date()}] ${Array.from(arguments).join(" ")}`;
+    let message = `\`\`\`[${new Date().toUTCString()}] ${Array.from(arguments).join(" ")}\`\`\``;
+    bot.client.channels.get(settings.secrets.log_discord_channel).send(message);
     console.log(message);
 }
 
@@ -147,6 +150,31 @@ function getStringTime(date) {
     }
 }
 
+function sendMessageHandler(message, err) {
+    if (err.message === "Missing Permissions") {
+        return message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in! Toggle on all of the 'text permissions' for the **Niles** role");
+    }
+    else {
+        return log(err);
+    }
+}
+
+function checkPermissions(message) {
+    let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
+    let minimumPermissions = ["READ_MESSAGES", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
+    let missingPermissions = "";
+    minimumPermissions.forEach(function(permission) {
+        if(!botPermissions[permission]) {
+            missingPermissions += "\n" + String(permission);
+        }
+    });
+    if (missingPermissions !== "") {
+        message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in. I'm missing the following minimum permissions:```" + missingPermissions + "```");
+        return false;
+    }
+    return true;
+}
+
 module.exports = {
     fullname,
     deleteFolderRecursive,
@@ -163,5 +191,7 @@ module.exports = {
     stringDate,
     hourString,
     convertDate,
-    prependZero
+    prependZero,
+    sendMessageHandler,
+    checkPermissions
 };
