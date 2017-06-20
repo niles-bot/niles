@@ -169,7 +169,7 @@ function checkPermissions(message) {
         }
     });
     if (missingPermissions !== "") {
-        message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in. I'm missing the following minimum permissions:```" + missingPermissions + "```");
+        //log(fullname(message.author) + "in guild" + message.guild.id + "missing permissions:" +  missingPermissions);
         return false;
     }
     return true;
