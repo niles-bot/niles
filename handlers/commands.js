@@ -12,7 +12,7 @@ let init = require("./init.js");
 let helpers = require("./helpers.js");
 let guilds = require("./guilds.js");
 let cal = new CalendarAPI(settings.calendarConfig);
-let autoUpdater = setInterval(function func() {}, 0);
+let autoUpdater = [];
 
 const HELP_MESSAGE = "```\
         Niles Usage\n\
@@ -48,7 +48,7 @@ function clean(channel, numberMessages, recurse) {
             if(message.id === calendar["calendarMessageId"]) {
                 calendar["calendarMessageId"] = "";
                 helpers.writeGuildSpecific(channel.guild.id, calendar, "calendar");
-                clearInterval(autoUpdater);
+                clearInterval(autoUpdater[channel.guild.id]);
             }
         });
         if(messages.size < 2) {
@@ -172,10 +172,12 @@ function getEvents(message, calendarID, dayMap) {
         if(err.message.includes("notFound")) {
             helpers.log("function getEvents error in guild: " + message.guild.id + " : 404 error can't find calendar");
             message.channel.send(NO_CALENDAR_MESSAGE);
+            clearInterval(autoUpdater[message.guild.id]);
             return;
         }
         else {
             helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err.message.includes("notFound"));
+            clearInterval(autoUpdater[message.guild.id]);
         }
     });
 }
@@ -261,7 +263,7 @@ function updateCalendar(message, dayMap) {
   let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
   let calendar = helpers.readFile(calendarPath);
   if (calendar["calendarMessageId"] === "") {
-      clearInterval(autoUpdater);
+      clearInterval(autoUpdater[message.guild.id]);
       message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.").then((m) => {});
       return;
   }
@@ -497,7 +499,7 @@ function calendarUpdater(message, calendarId, dayMap) {
         }, 4000);
     } catch (err) {
         helpers.log("error in autoupdater in guild: " + message.guild.id + ": " + err);
-        clearInterval(autoUpdater);
+        clearInterval(autoUpdater[message.guild.id]);
     }
 }
 
@@ -536,9 +538,10 @@ function run(message) {
     let calendar = helpers.readFile(calendarPath);
     let dayMap = createDayMap(message);
     //Pull updates on set interval
-    if (autoUpdater["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
+    autoUpdater[message.guild.id] = setInterval(function func() {}, 0);
+    if (autoUpdater[message.guild.id]["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
       try {
-          autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
+          autoUpdater[message.guild.id] = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
         } catch (err) {
             helpers.log("error starting the autoupdater" + err);
         }
@@ -583,15 +586,15 @@ function run(message) {
         delayGetEvents(message, calendarID, dayMap);
         setTimeout(function func() {
             postCalendar(message, dayMap);
-            if (autoUpdater["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
-                autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
+            if (autoUpdater[message.guild.id]["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
+                autoUpdater[message.guild.id] = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
             }
         }, 2000);
         message.delete(5000);
     }
     if (cmd === "update" || helpers.mentioned(message, "update")) {
         if (calendar["calendarMessageId"] === "") {
-          clearInterval(autoUpdater);
+          clearInterval(autoUpdater[message.guild.id]);
           message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.").then((m) => {});
           message.delete(5000);
           return;
