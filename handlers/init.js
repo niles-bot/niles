@@ -6,17 +6,13 @@ const guilds = require("./guilds.js");
 
 
 const HELP_MESSAGE = "```\
-        Niles Usage\n\
+        Niles Usage - SETUP MODE\n\
 ---------------------------\n\
-NOTE - THE FULL LIST OF COMMANDS WILL NOT FUNCTION UNTIL GOOGLE CALENDAR ID IS ENTERED\n\
-!display             -  Displays the calendar (chat prompts), without deleting any messages\n\
-!init                -  Deletes all messages and displays the calendar\n\
-!clean / !purge      -  Deletes all the messages in current channel\n\
-!update / !sync      -  Sync Google calendar events with backend database\n\
-!create / !scrim     -  Create events using GCal's default interpreter - works best like ``!scrim xeno June 5 8pm - 9pm``\n\
-!delete              -  Delete an event using the form ``!delete Friday 8pm``, only works in this form i.e. ONE day and START time\n\
-!stats / !info       -  Display list of statistics and information about the Niles bot\n\
-!invite              -  Get the invite link for Niles to join your server!\n\
+NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
+!setup               -  Get details on how to setup Niles for use.\n\
+!prefix              -  View or change the prefix for Niles\n\
+!id                  -  Set the Google calendar ID for the guild\n\
+!tz                  -  Set the timezone for the guild\n\
 !help                -  Display this message\n\
 ```\n\
 Visit http://niles.seanecoffey.com/setup for more info.";
@@ -117,31 +113,64 @@ function logTz(message) {
     }
 }
 
+function setPrefix(message) {
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettings = helpers.readFile(guildSettingsPath);
+    let pieces = message.content.split(" ");
+    let newPrefix = pieces[1];
+    if(!newPrefix) {
+        message.channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
+        return
+    }
+    if(newPrefix) {
+        message.channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
+        const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
+        collector.on("collect", (m) => {
+            if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
+                guildSettings["prefix"] = newPrefix;
+                message.channel.send(`Okay I've set your prefix to \`${newPrefix}\``);
+                helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+            }
+            else {
+                message.channel.send("Okay I won't do that.");
+            }
+            return collector.stop();
+        });
+        collector.on("end", (collected, reason) => {
+            if(reason === "time") {
+                message.channel.send("Command response timeout");
+            }
+        });
+    }
+}
+
 exports.run = function(message) {
-  const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
+  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+  let guildSettings = helpers.readFile(guildSettingsPath);
+  const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
   if (cmd === "help" || helpers.mentioned(message, "help")) {
       message.author.send(HELP_MESSAGE);
       message.channel.fetchMessage(message.id).then((m) => {
           m.delete(1000);
-      }).catch((e) => helpers.log(e));
+      }).catch((e) => {
+        helpers.log("error in init help catcher in guild:" + message.guild.id + ": " + e);
+      });
   }
-
   if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {
       message.channel.send(SETUP_MESSAGE);
   }
-
   if(cmd === "id" || helpers.mentioned(message, "id")) {
       logId(message);
   }
-
   if (cmd === "tz" || helpers.mentioned(message, "tz")) {
       logTz(message);
   }
-
   if (cmd === "init" || helpers.mentioned(message, "init")) {
       guilds.create(message.guild);
   }
-
+  if (cmd === "prefix" || helpers.mentioned(message, "prefix")) {
+      setPrefix(message);
+  }
   if (["display", "clean", "update", "sync", "invite", "stats", "create", "scrim", "delete"].includes(cmd)) {
       message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
   }
