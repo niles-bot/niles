@@ -50,15 +50,15 @@ function clean(channel, numberMessages, recurse) {
                 helpers.writeGuildSpecific(channel.guild.id, calendar, "calendar");
                 clearInterval(autoUpdater);
             }
-        })
+        });
         if(messages.size < 2) {
             channel.send("cleaning"); //Send extra message to allow deletion of 1 message.
             clean(channel, 2, false);
         }
         if(messages.size === 100 && recurse) {
             channel.bulkDelete(messages).catch((err) => {
-                helpers.log("clean error in guild " + channel.guild.id + err)
-            });;
+                helpers.log("clean error in guild " + channel.guild.id + err);
+            });
             clean(channel, 100, true);
         }
         else {
@@ -262,7 +262,7 @@ function updateCalendar(message, dayMap) {
   let calendar = helpers.readFile(calendarPath);
   if (calendar["calendarMessageId"] === "") {
       clearInterval(autoUpdater);
-      message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.").then((m) => {})
+      message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.").then((m) => {});
       return;
   }
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
@@ -537,7 +537,7 @@ function run(message) {
     //Pull updates on set interval
     if (autoUpdater["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
       try {
-          autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap)}, settings.secrets.calendar_update_interval);
+          autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
         } catch (err) {
             helpers.log("error starting the autoupdater" + err);
         }

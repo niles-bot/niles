@@ -167,7 +167,7 @@ function checkPermissions(message) {
         if(!botPermissions[permission]) {
             missingPermissions += "\n" + String(permission);
         }
-    })
+    });
     if (missingPermissions !== "") {
         message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in. I'm missing the following minimum permissions:```" + missingPermissions + "```");
         return false;
@@ -193,5 +193,5 @@ module.exports = {
     convertDate,
     prependZero,
     sendMessageHandler,
-    checkPermissions,
+    checkPermissions
 };

@@ -119,8 +119,7 @@ function setPrefix(message) {
     let pieces = message.content.split(" ");
     let newPrefix = pieces[1];
     if(!newPrefix) {
-        message.channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
-        return
+        return message.channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
     }
     if(newPrefix) {
         message.channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
