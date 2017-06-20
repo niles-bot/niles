@@ -75,7 +75,7 @@ function deleteMessages(message) {
     let pieces = message.content.split(" ");
     let numberMessages = 0;
     let recurse = false;
-    if (pieces[1] && !Number.isInteger(pieces[1])) {
+    if (pieces[1] && !Number.isInteger(parseInt(pieces[1]))) {
         message.channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
         return;
     }
