@@ -497,6 +497,7 @@ function calendarUpdater(message, calendarId, dayMap) {
         }, 4000);
     } catch (err) {
         helpers.log("error in autoupdater in guild: " + message.guild.id + ": " + err);
+        clearInterval(autoUpdater);
     }
 }
 
