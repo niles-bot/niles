@@ -63,7 +63,7 @@ function clean(channel, numberMessages, recurse) {
         }
         else {
             channel.bulkDelete(messages).catch((err) => {
-                helpers.log("clean error in guild " + channel.guild.id + err)
+                helpers.log("clean error in guild " + channel.guild.id + err);
             });
         }
     }).catch((err) => {
@@ -583,7 +583,7 @@ function run(message) {
         setTimeout(function func() {
             postCalendar(message, dayMap);
             if (autoUpdater["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
-                autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap)}, settings.secrets.calendar_update_interval);
+                autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
             }
         }, 2000);
         message.delete(5000);
