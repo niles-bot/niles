@@ -534,6 +534,7 @@ function run(message) {
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
     let dayMap = createDayMap(message);
+    //Pull updates on set interval
     if (autoUpdater["_idleTimeout"] !== settings.secrets.calendar_update_interval) {
       try {
           autoUpdater = setInterval(function func() {calendarUpdater(message, calendarID, dayMap)}, settings.secrets.calendar_update_interval);
