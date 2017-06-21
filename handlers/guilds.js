@@ -1,9 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-let settings = require("../settings.js");
-let guilddatabase = require("../stores/guilddatabase.json");
-let helpers = require("./helpers.js");
-let bot = require("../bot.js");
+const settings = require("../settings.js");
+const guilddatabase = require("../stores/guilddatabase.json");
+const helpers = require("./helpers.js");
+const commands = require("./commands.js");
+const bot = require("../bot.js");
 
 exports.create = (guild) => {
       let guildPath = path.join(__dirname, "..", "stores", guild.id);
@@ -49,5 +50,6 @@ exports.create = (guild) => {
       helpers.deleteFolderRecursive(guildPath);
       delete guilddatabase[guild.id];
       helpers.writeGuilddb(guilddatabase);
+      clearInterval(commands.deleteUpdater(guild.id));
       helpers.log(`Guild ${guild.id} has been deleted`);
   };

@@ -32,7 +32,7 @@ const HELP_MESSAGE = "```\
 Visit http://niles.seanecoffey.com for more info.";
 const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.\n\
 You should also check that you have entered the correct calendar id using `!id`.\n\
-\nIf you are still getting this error join the Discord support server (https://discord.gg/jNyntBn)";
+\nIf you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn";
 exports.helpmessage = HELP_MESSAGE;
 
 //functions
@@ -519,6 +519,10 @@ function displayStats(message) {
     });
 }
 
+exports.deleteUpdater = function(guildid) {
+    clearInterval(autoUpdater[guildid]);
+}
+
 function delayGetEvents(message, calendarId, dayMap) {
     setTimeout(function func() {
         getEvents(message, calendarId, dayMap);
@@ -640,4 +644,6 @@ function run(message) {
     }
 }
 
-module.exports = {run};
+module.exports = {
+    run
+  };
