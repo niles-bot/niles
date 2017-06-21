@@ -4,6 +4,7 @@ const defer = require("promise-defer");
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let commands = require("./commands.js");
+let minimumPermissions = settings.secrets.minimumPermissions;
 
 function log() {
     let message = `\`\`\`[${new Date().toUTCString()}] ${Array.from(arguments).join(" ")}\`\`\``;
@@ -161,7 +162,6 @@ function sendMessageHandler(message, err) {
 
 function checkPermissions(message) {
     let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-    let minimumPermissions = ["READ_MESSAGES", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
     let missingPermissions = "";
     minimumPermissions.forEach(function(permission) {
         if(!botPermissions[permission]) {
@@ -173,6 +173,20 @@ function checkPermissions(message) {
         return false;
     }
     return true;
+}
+
+function checkPermissionsManual(message, cmd) {
+  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
+  let missingPermissions = "";
+  minimumPermissions.forEach(function(permission) {
+      if(!botPermissions[permission]) {
+          missingPermissions += "\n" + String(permission);
+      }
+  });
+  if(missingPermissions != "") {
+      return message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
+  }
+  return message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
 }
 
 module.exports = {
@@ -193,5 +207,6 @@ module.exports = {
     convertDate,
     prependZero,
     sendMessageHandler,
-    checkPermissions
+    checkPermissions,
+    checkPermissionsManual
 };

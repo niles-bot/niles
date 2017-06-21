@@ -3,11 +3,14 @@ let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
 const path = require("path");
+const users = require("./stores/users.json");
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
 let helpers = require("./handlers/helpers.js");
+let restricted = require("./handlers/nopermissions.js");
+let dm = require("./handlers/dm.js");
 
 client.login(settings.secrets.bot_token);
 
@@ -29,7 +32,11 @@ client.on("message", (message) => {
         return;
     }
     if (message.channel.type === "dm") {
-        // Handle direct messages
+        try {
+            dm.run(message);
+        } catch (err) {
+            helpers.log("error in dm channel" + err);
+        }
         return;
     }
     let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
@@ -38,7 +45,14 @@ client.on("message", (message) => {
         return;
     }
     helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
-    if(!helpers.checkPermissions(message)) {
+    if(!helpers.checkPermissions(message) && (users[message.author.id] === undefined || users[message.author.id]["permissionChecker"] === "1" || users[message.author.id]["permissionChecker"] === undefined)) {
+        try {
+            restricted.run(message)
+          } catch (err) {
+              helpers.log("error in restricted permissions " + err)
+          }
+        return;
+    } else if (!helpers.checkPermissions(message)) {
         return;
     }
     if (!guildSettings.calendarID || !guildSettings.timezone) {

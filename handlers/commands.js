@@ -13,7 +13,6 @@ let helpers = require("./helpers.js");
 let guilds = require("./guilds.js");
 let cal = new CalendarAPI(settings.calendarConfig);
 let autoUpdater = [];
-
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\
@@ -31,12 +30,10 @@ const HELP_MESSAGE = "```\
 !help                -  Display this message\n\
 ```\
 Visit http://niles.seanecoffey.com for more info.";
-
-const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar!\n\
-This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed step 1.\n\
-You should also check that you have entered the right calendar id using `!id`.\n\
-If you are still getting this error join the Discord support server.\n\
-https://discord.gg/jNyntBn";
+const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.\n\
+You should also check that you have entered the correct calendar id using `!id`.\n\
+\nIf you are still getting this error join the Discord support server (https://discord.gg/jNyntBn)";
+exports.helpmessage = HELP_MESSAGE;
 
 //functions
 
@@ -544,6 +541,7 @@ function run(message) {
           autoUpdater[message.guild.id] = setInterval(function func() {calendarUpdater(message, calendarID, dayMap);}, settings.secrets.calendar_update_interval);
         } catch (err) {
             helpers.log("error starting the autoupdater" + err);
+            clearInterval(autoUpdater[message.guild.id]);
         }
     }
     const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
