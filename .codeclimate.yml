@@ -17,7 +17,11 @@ ratings:
     - handlers/**
     - "**.js"
   exclude_paths:
-    - config/
+    - config/**
+    - docs/**
+    - **.md
+    - **.json
+    - LICENSE
 
 parserOptions:
   sourceType: module

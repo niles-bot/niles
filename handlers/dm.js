@@ -26,7 +26,7 @@ function permissionDMChanger(message) {
     if (!pieces[1]) {
         return message.author.send("You didn't enter an argument. Use `!permissions 0`");
     }
-    if (pieces[1] && !Number.isInteger(parseInt(pieces[1]),10)) {
+    if (pieces[1] && !Number.isInteger(parseInt(pieces[1],10))) {
         return message.author.send("You can only use a number i.e. `!permissions 0`");
     }
     if (["0", "1"].includes(pieces[1])) {

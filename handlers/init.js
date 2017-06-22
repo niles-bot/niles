@@ -141,7 +141,7 @@ exports.run = function(message) {
       "create": restricted,
       "scrim": restricted,
       "delete": restricted,
-      "info": restricted,
+      "info": restricted
   };
 
   let cmdFn = cmdFns[cmd];

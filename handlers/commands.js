@@ -177,7 +177,7 @@ function getEvents(message, calendarID, dayMap) {
             return;
         }
         //Catching periodic google rejections;
-        if (err.message.includes("Invalid Credentials") {
+        if (err.message.includes("Invalid Credentials")) {
             return helpers.log("function getEvents error in guild: " + message.guild.id + " : 401 invalid credentials");
         }
         else {
