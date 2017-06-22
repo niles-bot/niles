@@ -19,8 +19,8 @@ ratings:
   exclude_paths:
     - config/**
     - docs/**
-    - **.md
-    - **.json
+    - "**.md"
+    - "**.json"
     - LICENSE
 
 parserOptions:
