@@ -119,6 +119,10 @@ function createDayMap(message) {
     return dayMap;
 }
 
+function checkDateMatch (date1, date2) {
+    return (date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate())
+}
+
 function getEvents(message, calendarID, dayMap) {
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
@@ -150,12 +154,12 @@ function getEvents(message, calendarID, dayMap) {
             for (let j = 0; j < json.length; j++) {
                 let tempDate = new Date(events[j]["start"]["dateTime"]);
                 tempDate = helpers.convertDate(tempDate, message.guild.id);
-                if (dayMap[day].getFullYear() === tempDate.getFullYear() && dayMap[day].getMonth() === tempDate.getMonth() && dayMap[day].getDate() === tempDate.getDate()) {
+                if (checkDateMatch(dayMap[day], tempDate)) {
                     matches.push(events[j]);
                 }
                 if (events[j]["start"]["date"]) {
                     let allDayEvent = new Date(events[j]["start"]["date"]);
-                    if (dayMap[day].getFullYear() === allDayEvent.getFullYear() && dayMap[day].getMonth() === allDayEvent.getMonth() && dayMap[day].getDate() === allDayEvent.getDate()) {
+                    if (checkDateMatch(dayMap[day], allDayEvent)) {
                         matches.push(events[j]);
                     }
                 }
@@ -179,28 +183,13 @@ function getEvents(message, calendarID, dayMap) {
     });
 }
 
-function postCalendar(message, dayMap) {
+function generateCalendar (message, dayMap) {
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
+    let p = defer();
     let finalString = "";
-
-    if (calendar["calendarMessageId"]) {
-        message.channel.fetchMessage(calendar["calendarMessageId"]).then((message) => {
-            message.delete();
-        }).catch((err) => {
-            if (err.code === 10008) {
-                calendar["calendarMessageId"] = "";
-                helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-                helpers.log("error fetching previous calendar in guild: " + message.guild.id + ":" + err);
-            }
-            else {
-                helpers.log("error fetching previous calendar in guild: " + message.guild.id + ":" + err);
-            }
-        });
-    }
-
     for (let i = 0; i < 7; i++) {
         let key = "day" + String(i);
         let sendString = "";
@@ -243,20 +232,47 @@ function postCalendar(message, dayMap) {
       embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
     }
     embed.setTimestamp(helpers.convertDate(new Date(), message.guild.id));
-    message.channel.send({embed}).then((sent) => {
-        calendar["calendarMessageId"] = sent.id;
-        sent.pin();
+    p.resolve(embed);
+    return p.promise;
+}
+
+function postCalendar(message, dayMap) {
+    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
+    let calendar = helpers.readFile(calendarPath);
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettings = helpers.readFile(guildSettingsPath);
+
+    if (calendar["calendarMessageId"]) {
+        message.channel.fetchMessage(calendar["calendarMessageId"]).then((message) => {
+            message.delete();
+        }).catch((err) => {
+            if (err.code === 10008) {
+                calendar["calendarMessageId"] = "";
+                helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
+                return helpers.log("error fetching previous calendar in guild: " + message.guild.id + ":" + err);
+            }
+            else {
+                return helpers.log("error fetching previous calendar in guild: " + message.guild.id + ":" + err);
+            }
+        });
+    }
+    generateCalendar (message, dayMap).then((embed) => {
+        message.channel.send({embed}).then((sent) => {
+          calendar["calendarMessageId"] = sent.id;
+          sent.pin();
+        })
     }).then((confirm) => {
         setTimeout(function func() {
             helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-            }, 2000);
+        }, 2000);
     }).catch((err) => {
         helpers.log("funtion postCalendar error in guild: " + message.guild.id + ": " + err);
     });
 }
 
 function updateCalendar(message, dayMap) {
-  let guildid = message.guild.id;
+  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+  let guildSettings = helpers.readFile(guildSettingsPath);
   let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
   let calendar = helpers.readFile(calendarPath);
   if (calendar["calendarMessageId"] === "") {
@@ -264,54 +280,11 @@ function updateCalendar(message, dayMap) {
       message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.").then((m) => {});
       return;
   }
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
-  let finalString = "";
-  for (let i = 0; i < 7; i++) {
-      let key = "day" + String(i);
-      let sendString = "";
-      sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
-      if (calendar[key].length === 0) {
-          sendString += "``` ```";
-      }
-      else {
-          sendString += "```";
-          // Map events for each day
-          for (let m = 0; m < calendar[key].length; m++) {
-              let options = {
-                  showHeaders: false,
-                  columnSplitter: " | ",
-                  columns: ["time", "events"],
-                  config: {
-                      time: {minWidth: 17, align: "center"},
-                      events: {minWidth: 20}
-                  }
-              };
-              let tempString = {};
-              let tempStartDate = new Date(calendar[key][m]["start"]["dateTime"]);
-              tempStartDate = helpers.convertDate(tempStartDate, message.guild.id);
-              let tempFinDate = new Date(calendar[key][m]["end"]["dateTime"]);
-              tempFinDate = helpers.convertDate(tempFinDate, message.guild.id);
-              tempString[helpers.getStringTime(tempStartDate) + " - " + helpers.getStringTime(tempFinDate)] = calendar[key][m]["summary"];
-              sendString += columnify(tempString, options) + "\n";
-          }
-          sendString += "```";
-      }
-      finalString += sendString;
-  }
   let messageId = calendar["calendarMessageId"];
-  let embed = new bot.discord.RichEmbed();
-  embed.setTitle("CALENDAR");
-  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings["calendarID"]);
-  embed.setColor("BLUE");
-  embed.setDescription(finalString);
-  embed.setFooter("Last update");
-  if (guildSettings["helpmenu"] === "1") {
-    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
-  }
-  embed.setTimestamp(helpers.convertDate(new Date(), guildid));
   message.channel.fetchMessage(messageId).then((m) => {
-      m.edit({embed});
+      generateCalendar(message, dayMap).then((embed) => {
+          m.edit({embed});
+      })
   }).catch((err) => {
       if (err.code === 1008) {
           helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
@@ -342,7 +315,7 @@ function quickAddEvent(message, calendarId) {
         text += pieces[i] + " ";
     }
     let params = {
-        "text": text
+        text
       };
     cal.Events.quickAdd(calendarId, params).then((resp) => {
         let json = resp;

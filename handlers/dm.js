@@ -32,7 +32,7 @@ function permissionDMChanger(message) {
     if (["0", "1"].includes(pieces[1])) {
         let settings = {
             "permissionChecker": pieces[1]
-        }
+        };
         users[message.author.id] = settings;
         fs.writeFile(usersPath, JSON.stringify(users, "","\t"), (err) => {
           if(err) {
