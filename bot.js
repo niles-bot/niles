@@ -39,17 +39,18 @@ client.on("message", (message) => {
         }
         return;
     }
+    //only load guild settings after checking that message is not direct message.
     let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
         return;
     }
     helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
-    if(!helpers.checkPermissions(message) && (users[message.author.id] === undefined || users[message.author.id]["permissionChecker"] === "1" || users[message.author.id]["permissionChecker"] === undefined)) {
+    if(!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id]["permissionChecker"] === "1" || !users[message.author.id]["permissionChecker"])) {
         try {
-            restricted.run(message)
+            restricted.run(message);
           } catch (err) {
-              helpers.log("error in restricted permissions " + err)
+              helpers.log("error in restricted permissions " + err);
           }
         return;
     } else if (!helpers.checkPermissions(message)) {

@@ -3,7 +3,7 @@ const path = require("path");
 const commands = require("./commands.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
-
+const defer = require("promise-defer");
 
 const HELP_MESSAGE = "```\
         Niles Usage - SETUP MODE\n\
@@ -26,6 +26,14 @@ Hi! Lets get me setup for use in this Discord. The steps are outlined below, but
 
 //functions
 
+function writeSetting(message, value, setting) {
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettings = helpers.readFile(guildSettingsPath);
+    guildSettings[setting] = value;
+    message.channel.send("Okay I'm adding your " + setting + " as `" + value + "`");
+    helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+}
+
 function logId(message) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
@@ -44,28 +52,14 @@ function logId(message) {
     }
     if(guildSettings["calendarID"] !== "") {
         message.channel.send("I've already been setup to use ``" + guildSettings["calendarID"] + "`` as the calendar ID in this server, do you want to overwrite this and set the ID to `" + calendarId + "`? **(y/n)**");
-        const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
-        collector.on("collect", (m) => {
-            if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-                guildSettings["calendarID"] = calendarId;
-                message.channel.send("Okay, I'm adding your calendar ID as ``" + calendarId + "``");
-                helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
-            }
-            else {
-                message.channel.send("Okay I won't do that");
-            }
-            return collector.stop();
+        helpers.yesThenCollector(message).then(() => {
+            writeSetting(message, calendarId, "calendarID");
+        }).catch((err) => {
+            helpers.log(err);
         });
-      collector.on("end", (collected, reason) => {
-          if(reason === "time") {
-              message.channel.send("Command response timeout");
-          }
-      });
     }
     else {
-      guildSettings["calendarID"] = calendarId;
-      message.channel.send("Okay I'm adding your calendar ID as `" + calendarId + "`");
-      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      writeSettings(message, calendarId, "calendarID");
     }
 }
 
@@ -88,57 +82,30 @@ function logTz(message) {
     }
     if(guildSettings["timezone"] !== "") {
         message.channel.send("I've already been setup to use `" + guildSettings["timezone"] + "`, do you want to overwrite this and use `" + tz + "`? **(y/n)** ");
-        const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
-        collector.on("collect", (m) => {
-            if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-                guildSettings["timezone"] = tz;
-                message.channel.send("Okay I'm adding your timezone as `" + tz + "`");
-                helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
-            }
-            else {
-                message.channel.send("Okay I won't do that.");
-            }
-            return collector.stop();
+        helpers.yesThenCollector(message).then(() => {
+            writeSetting(message, tz, "timezone");
+        }).catch((err) => {
+            helpers.log(err);
         });
-      collector.on("end", (collected, reason) => {
-          if(reason === "time") {
-              message.channel.send("Command response timeout");
-          }
-      });
     }
     else {
-        guildSettings["timezone"] = tz;
-        message.channel.send("Okay I'm adding your timezone as `" + tz + "`");
-        helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+        writeSetting(message, tz, "timezone");
     }
 }
 
 function setPrefix(message) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
-    let pieces = message.content.split(" ");
-    let newPrefix = pieces[1];
+    let newPrefix = message.content.split(" ")[1];
     if(!newPrefix) {
         return message.channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
     }
     if(newPrefix) {
         message.channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
-        const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
-        collector.on("collect", (m) => {
-            if(m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-                guildSettings["prefix"] = newPrefix;
-                message.channel.send(`Okay I've set your prefix to \`${newPrefix}\``);
-                helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
-            }
-            else {
-                message.channel.send("Okay I won't do that.");
-            }
-            return collector.stop();
-        });
-        collector.on("end", (collected, reason) => {
-            if(reason === "time") {
-                message.channel.send("Command response timeout");
-            }
+        helpers.yesThenCollector(message).then(() => {
+          writeSetting(message, newPrefix, "prefix")
+        }).catch((err) => {
+            helpers.log(err);
         });
     }
 }
@@ -147,30 +114,38 @@ exports.run = function(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
-  if (cmd === "help" || helpers.mentioned(message, "help")) {
-      message.author.send(HELP_MESSAGE);
-      message.channel.fetchMessage(message.id).then((m) => {
-          m.delete(1000);
-      }).catch((e) => {
-        helpers.log("error in init help catcher in guild:" + message.guild.id + ": " + e);
-      });
+
+  // Function Mapping
+  setup = () => message.channel.send(SETUP_MESSAGE);
+  id = () => logId(message);
+  tz = () => logTz(message);
+  init = () => guilds.create(message.guild);
+  prefix = () => setPrefix(message);
+  restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
+  help = () => message.author.send(HELP_MESSAGE)
+
+  cmdFns = {
+      "setup": setup,
+      "start": setup,
+      "id": id,
+      "tz": tz,
+      "init": init,
+      "prefix": prefix,
+      "display": restricted,
+      "clean": restricted,
+      "update": restricted,
+      "sync": restricted,
+      "invite": restricted,
+      "stats": restricted,
+      "create": restricted,
+      "scrim": restricted,
+      "delete": restricted,
+      "info": restricted,
+      "help": help
   }
-  if(["setup", "start"].includes(cmd) || helpers.mentioned(message, ["setup", "start"])) {
-      message.channel.send(SETUP_MESSAGE);
-  }
-  if(cmd === "id" || helpers.mentioned(message, "id")) {
-      logId(message);
-  }
-  if (cmd === "tz" || helpers.mentioned(message, "tz")) {
-      logTz(message);
-  }
-  if (cmd === "init" || helpers.mentioned(message, "init")) {
-      guilds.create(message.guild);
-  }
-  if (cmd === "prefix" || helpers.mentioned(message, "prefix")) {
-      setPrefix(message);
-  }
-  if (["display", "clean", "update", "sync", "invite", "stats", "create", "scrim", "delete"].includes(cmd)) {
-      message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
+
+  cmdFn = cmdFns[cmd];
+  if (cmdFn) {
+      cmdFn();
   }
 };

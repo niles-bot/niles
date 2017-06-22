@@ -72,7 +72,7 @@ function deleteMessages(message) {
     let pieces = message.content.split(" ");
     let numberMessages = 0;
     let recurse = false;
-    if (pieces[1] && !Number.isInteger(parseInt(pieces[1]))) {
+    if (pieces[1] && !Number.isInteger(parseInt(pieces[1],10))) {
         message.channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
         return;
     }
@@ -173,7 +173,7 @@ function getEvents(message, calendarID, dayMap) {
             return;
         }
         else {
-            helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err.message.includes("notFound"));
+            helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err);
             clearInterval(autoUpdater[message.guild.id]);
         }
     });
@@ -521,7 +521,7 @@ function displayStats(message) {
 
 exports.deleteUpdater = function(guildid) {
     clearInterval(autoUpdater[guildid]);
-}
+};
 
 function delayGetEvents(message, calendarId, dayMap) {
     setTimeout(function func() {

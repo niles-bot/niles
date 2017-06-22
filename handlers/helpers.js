@@ -169,7 +169,6 @@ function checkPermissions(message) {
         }
     });
     if (missingPermissions !== "") {
-        //log(fullname(message.author) + "in guild" + message.guild.id + "missing permissions:" +  missingPermissions);
         return false;
     }
     return true;
@@ -183,10 +182,31 @@ function checkPermissionsManual(message, cmd) {
           missingPermissions += "\n" + String(permission);
       }
   });
-  if(missingPermissions != "") {
+  if(missingPermissions !== "") {
       return message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
   }
   return message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
+}
+
+function yesThenCollector(message) {
+    let p = defer();
+    const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000})
+    collector.on("collect", (m) => {
+      if(["y","yes"].includes(m.content.toLowerCase())) {
+          p.resolve();
+      }
+      else {
+          message.channel.send("Okay, I won't do that");
+          p.reject();
+      }
+      collector.stop();
+    });
+    collector.on("end", (collected, reason) => {
+        if(reason === "time") {
+            return message.channel.send("Command response timeout");
+        }
+    });
+    return p.promise;
 }
 
 module.exports = {
@@ -208,5 +228,6 @@ module.exports = {
     prependZero,
     sendMessageHandler,
     checkPermissions,
-    checkPermissionsManual
+    checkPermissionsManual,
+    yesThenCollector
 };

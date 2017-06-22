@@ -26,43 +26,40 @@ function permissionDMChanger(message) {
     if (!pieces[1]) {
         return message.author.send("You didn't enter an argument. Use `!permissions 0`");
     }
-    if (pieces[1] && !Number.isInteger(parseInt(pieces[1]))) {
+    if (pieces[1] && !Number.isInteger(parseInt(pieces[1]),10)) {
         return message.author.send("You can only use a number i.e. `!permissions 0`");
     }
-    if (pieces[1] === "0") {
+    if (["0", "1"].includes(pieces[1])) {
         let settings = {
-            "permissionChecker": "0"
+            "permissionChecker": pieces[1]
         }
         users[message.author.id] = settings;
         fs.writeFile(usersPath, JSON.stringify(users, "","\t"), (err) => {
           if(err) {
-              return log("error writing the users database" + err);
+              return helpers.log("error writing the users database" + err);
           }
         });
-        return message.author.send("okay I won't send these messages anymore.");
+        return message.author.send("okay I've changed that setting.");
     }
-    if (pieces[1] === "1") {
-        let settings = {
-            "permissionChecker": "1"
-        }
-        users[message.author.id] = settings;
-        fs.writeFile(usersPath, JSON.stringify(users, "","\t"), (err) => {
-          if(err) {
-              return log("error writing the users database" + err);
-          }
-        });
-        return message.author.send("okay I'll check permissions for your commands.");
-    }
+    return message.author.send("I didn't change anything, use `!permissions 0` or `!permissions 1`");
 }
 
 function run (message) {
     const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
-    if (cmd === "permissions") {
-        permissionDMChanger(message);
-    }
-    if (cmd === "help" || message.content === "help") {
-        message.author.send(HELP_MESSAGE);
-    }
+    //Command to function mappings
+    help = () => message.author.send(HELP_MESSAGE);
+    permissions = () => permissionDMChanger(message);
+    cmdFns = {
+        "permissions": permissions,
+        "help": help
+      }
+      cmdFn = cmdFns[cmd];
+      if (cmdFn) {
+        cmdFn();
+      }
+      if (message.content === "help") {
+          message.author.send(HELP_MESSAGE);
+      }
 }
 
 module.exports = {run};
