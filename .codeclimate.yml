@@ -1,13 +1,17 @@
+---
 engines:
+  rubocop:
+    enabled: true
   duplication:
     enabled: true
-      config:
-        languages:
-          javascript
-        eslint:
-          enabled: true
-        fixme:
-          enabled: true
+    config:
+      languages:
+      - "javascript"
+  fixme:
+    enabled: true
+  eslint:
+    enabled: true
+
 ratings:
   paths:
     - handlers/**

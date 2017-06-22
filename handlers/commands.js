@@ -176,6 +176,10 @@ function getEvents(message, calendarID, dayMap) {
             clearInterval(autoUpdater[message.guild.id]);
             return;
         }
+        //Catching periodic google rejections;
+        if (err.message.includes("Invalid Credentials") {
+            return helpers.log("function getEvents error in guild: " + message.guild.id + " : 401 invalid credentials");
+        }
         else {
             helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err);
             clearInterval(autoUpdater[message.guild.id]);
