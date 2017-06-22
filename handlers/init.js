@@ -116,15 +116,15 @@ exports.run = function(message) {
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
 
   // Function Mapping
-  setup = () => message.channel.send(SETUP_MESSAGE);
-  id = () => logId(message);
-  tz = () => logTz(message);
-  init = () => guilds.create(message.guild);
-  prefix = () => setPrefix(message);
-  restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
-  help = () => message.author.send(HELP_MESSAGE)
+  let setup = () => message.channel.send(SETUP_MESSAGE);
+  let id = () => logId(message);
+  let tz = () => logTz(message);
+  let init = () => guilds.create(message.guild);
+  let prefix = () => setPrefix(message);
+  let restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
+  let help = () => message.author.send(HELP_MESSAGE)
 
-  cmdFns = {
+  let cmdFns = {
       "setup": setup,
       "start": setup,
       "id": id,
@@ -142,9 +142,9 @@ exports.run = function(message) {
       "delete": restricted,
       "info": restricted,
       "help": help
-  }
+  };
 
-  cmdFn = cmdFns[cmd];
+  let cmdFn = cmdFns[cmd];
   if (cmdFn) {
       cmdFn();
   }

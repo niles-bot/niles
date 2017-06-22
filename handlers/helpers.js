@@ -190,7 +190,7 @@ function checkPermissionsManual(message, cmd) {
 
 function yesThenCollector(message) {
     let p = defer();
-    const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000})
+    const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {time: 30000});
     collector.on("collect", (m) => {
       if(["y","yes"].includes(m.content.toLowerCase())) {
           p.resolve();

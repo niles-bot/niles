@@ -47,13 +47,13 @@ function permissionDMChanger(message) {
 function run (message) {
     const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
     //Command to function mappings
-    help = () => message.author.send(HELP_MESSAGE);
-    permissions = () => permissionDMChanger(message);
-    cmdFns = {
-        "permissions": permissions,
-        "help": help
-      }
-      cmdFn = cmdFns[cmd];
+    let help = () => message.author.send(HELP_MESSAGE);
+    let permissions = () => permissionDMChanger(message);
+    let cmdFns = {
+        let "permissions": permissions,
+        let "help": help
+      };
+      let cmdFn = cmdFns[cmd];
       if (cmdFn) {
         cmdFn();
       }
