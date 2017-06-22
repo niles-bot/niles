@@ -50,8 +50,8 @@ function run (message) {
     let help = () => message.author.send(HELP_MESSAGE);
     let permissions = () => permissionDMChanger(message);
     let cmdFns = {
-        let "permissions": permissions,
-        let "help": help
+        "permissions": permissions,
+        "help": help
       };
       let cmdFn = cmdFns[cmd];
       if (cmdFn) {
