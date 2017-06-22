@@ -59,7 +59,7 @@ function logId(message) {
         });
     }
     else {
-      writeSettings(message, calendarId, "calendarID");
+      writeSetting(message, calendarId, "calendarID");
     }
 }
 
@@ -103,7 +103,7 @@ function setPrefix(message) {
     if(newPrefix) {
         message.channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
         helpers.yesThenCollector(message).then(() => {
-          writeSetting(message, newPrefix, "prefix")
+          writeSetting(message, newPrefix, "prefix");
         }).catch((err) => {
             helpers.log(err);
         });
@@ -122,15 +122,16 @@ exports.run = function(message) {
   let init = () => guilds.create(message.guild);
   let prefix = () => setPrefix(message);
   let restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
-  let help = () => message.author.send(HELP_MESSAGE)
+  let help = () => message.author.send(HELP_MESSAGE);
 
   let cmdFns = {
-      "setup": setup,
+      setup,
+      id,
+      tz,
+      init,
+      prefix,
+      help,
       "start": setup,
-      "id": id,
-      "tz": tz,
-      "init": init,
-      "prefix": prefix,
       "display": restricted,
       "clean": restricted,
       "update": restricted,
@@ -141,7 +142,6 @@ exports.run = function(message) {
       "scrim": restricted,
       "delete": restricted,
       "info": restricted,
-      "help": help
   };
 
   let cmdFn = cmdFns[cmd];
