@@ -111,6 +111,9 @@ function setPrefix(message) {
 }
 
 exports.run = function(message) {
+  if (!helpers.checkPermissions(message)) {
+    return helpers.log("no permission to send messages.");
+  }
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
@@ -122,7 +125,7 @@ exports.run = function(message) {
   let init = () => guilds.create(message.guild);
   let prefix = () => setPrefix(message);
   let restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
-  let help = () => message.author.send(HELP_MESSAGE);
+  let help = () => message.channel.send(HELP_MESSAGE);
 
   let cmdFns = {
       setup,

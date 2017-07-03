@@ -532,7 +532,7 @@ function run(message) {
         });
     }
     if (cmd === "help" || helpers.mentioned(message, "help")) {
-        message.author.send(HELP_MESSAGE);
+        message.channel.send(HELP_MESSAGE);
         message.delete(5000);
     }
     if (cmd === "invite" || helpers.mentioned(message, "invite")) {

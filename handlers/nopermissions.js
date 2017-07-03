@@ -21,6 +21,16 @@ const HELP_MESSAGE = "```\
 Visit http://niles.seanecoffey.com for more info.";
 
 function run(message) {
+    //remove later
+    if (!helpers.checkPermissions(message)) {
+        if (helpers.mentioned(message, "help")) {
+            message.author.send(HELP_MESSAGE);
+            helpers.checkPermissionsManual(message, "help");
+            return helpers.log("help & permissions DM sent");
+          }
+      return helpers.log("no permission to send messages.");
+    }
+    //remove later^^
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
@@ -28,7 +38,7 @@ function run(message) {
         helpers.checkPermissionsManual(message, cmd);
     }
     if (cmd === "help" || helpers.mentioned(message, "help")) {
-        message.author.send(HELP_MESSAGE);
+        message.channel.send(HELP_MESSAGE);
     }
 }
 
