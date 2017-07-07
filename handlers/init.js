@@ -76,7 +76,7 @@ function logTz(message) {
         return;
     }
     tz = tz.toUpperCase();
-    if(tz.indexOf("GMT") === -1 || (tz.indexOf("+") === -1 && tz.indexOf("-")) === -1 || tz.length !== 9 ) {
+    if(tz.indexOf("GMT") === -1 || ((tz.indexOf("+") === -1) && (tz.indexOf("-") === -1)) || tz.length !== 9 ) {
         message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00`` (must be formatted like this)");
         return;
     }
