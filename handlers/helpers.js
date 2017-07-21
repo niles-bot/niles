@@ -116,16 +116,30 @@ function convertDate(dateToConvert, guildid) {
 function stringDate(date, guildid, hour) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
     let guildSettings = readFile(guildSettingsPath);
-    let offset = guildSettings["timezone"].split("+")[1];
+    let offset;
+    if (guildSettings["timezone"].indexOf("-") === -1) {
+        offset = guildSettings["timezone"].split("+")[1];
+    } else {
+        offset = guildSettings["timezone"].split("-")[1];
+    }
     let year = date.getFullYear();
     let month = prependZero(date.getMonth() + 1);
     let day = prependZero(date.getDate());
     let dateString = "";
-    if (hour === "start") {
-        dateString += `${year}-${month}-${day}T00:00:00+${offset}`;
-    }
-    if (hour === "end") {
-        dateString += `${year}-${month}-${day}T23:59:00+${offset}`;
+    if (guildSettings["timezone"].indexOf("-") === -1) {
+        if (hour === "start") {
+            dateString += `${year}-${month}-${day}T00:00:00+${offset}`;
+        }
+        if (hour === "end") {
+            dateString += `${year}-${month}-${day}T23:59:00+${offset}`;
+        }
+    } else {
+        if (hour === "start") {
+            dateString += `${year}-${month}-${day}T00:00:00-${offset}`;
+        }
+        if (hour === "end") {
+            dateString += `${year}-${month}-${day}T23:59:00-${offset}`;
+        }
     }
     return dateString;
 }
