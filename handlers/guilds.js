@@ -50,6 +50,6 @@ exports.create = (guild) => {
       helpers.deleteFolderRecursive(guildPath);
       delete guilddatabase[guild.id];
       helpers.writeGuilddb(guilddatabase);
-      clearInterval(commands.deleteUpdater(guild.id));
+      commands.deleteUpdater(guild.id);
       helpers.log(`Guild ${guild.id} has been deleted`);
   };
