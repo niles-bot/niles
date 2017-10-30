@@ -42,7 +42,7 @@ exports.create = (guild) => {
       helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
       helpers.writeGuilddb(guilddatabase);
       helpers.log(`Guild ${guild.id} has been created`);
-      guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.  **NOTE**: Make sure I have the right permissions in the channel you try and use me in!");
+      //guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.  **NOTE**: Make sure I have the right permissions in the channel you try and use me in!");
   };
 
   exports.delete = (guild) => {
