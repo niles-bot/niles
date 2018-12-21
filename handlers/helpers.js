@@ -17,7 +17,11 @@ function logError() {
 }
 
 function readFile(path) {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
+    try {
+      return JSON.parse(fs.readFileSync(path, "utf8"));
+    } catch (err) {
+      return log ("error reading file " + err);
+    }
 }
 
 function fullname(user) {

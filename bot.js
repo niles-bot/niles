@@ -28,9 +28,9 @@ client.on("guildDelete", (guild) => {
 });
 
 client.on("message", (message) => {
-    if (message.author.bot) {
+    /*if (message.author.bot) {
         return;
-    }
+    }*/
     if (message.channel.type === "dm") {
         try {
             dm.run(message);
@@ -41,7 +41,20 @@ client.on("message", (message) => {
     }
     //only load guild settings after checking that message is not direct message.
     let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
-    let guildSettings = helpers.readFile(guildSettingsPath);
+    try {
+      var guildSettings = helpers.readFile(guildSettingsPath);
+    } catch (err) {
+      return helpers.log(err);
+    }
+
+    try {
+      (guildSettings.prefix)
+    } catch (err) {
+      guilds.create(message.guild);
+      message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
+      return helpers.log("settings file not created properly ");
+    }
+
     if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
         return;
     }
@@ -90,4 +103,8 @@ process.on("SIGINT", () => {
 process.on("exit", () => {
     client.destroy();
     process.exit();
+});
+
+process.on('unhandledRejection', err => {
+    helpers.log("unhandled promise rejection " + err);
 });

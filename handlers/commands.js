@@ -212,7 +212,7 @@ function generateCalendar (message, dayMap) {
                     columns: ["time", "events"],
                     config: {
                         time: {minWidth: 17, align: "center"},
-                        events: {minWidth: 20}
+                        events: {minWidth: 30}
                     }
                 };
                 let tempString = {};
