@@ -1,7 +1,7 @@
 const path = require("path");
 const helpers = require("./helpers.js");
 const commands = require("./commands.js");
-let allCommands = ["clean", "purge", "init", "update", "sync", "display", "create", "scrim", "delete", "stats", "info", "id", "tz", "invite", "prefix", "setup"];
+let allCommands = ["help", "clean", "purge", "init", "update", "sync", "display", "create", "scrim", "delete", "stats", "info", "id", "tz", "invite", "prefix", "setup"];
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\
@@ -23,9 +23,11 @@ Visit http://niles.seanecoffey.com for more info.";
 function run(message) {
     //remove later
     if (!helpers.checkPermissions(message)) {
-        if (helpers.mentioned(message, "help")) {
-            message.author.send(HELP_MESSAGE);
-            helpers.checkPermissionsManual(message, "help");
+
+	let cmd = message.content.toLowerCase().substring(1).split(" ")[0];
+	
+        if (allCommands.includes(cmd)) {
+            helpers.checkPermissionsManual(message, cmd);
             return helpers.log("help & permissions DM sent");
           }
       return helpers.log("no permission to send messages.");
