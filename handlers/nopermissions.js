@@ -21,6 +21,7 @@ const HELP_MESSAGE = "```\
 Visit http://niles.seanecoffey.com for more info.";
 
 function run(message) {
+<<<<<<< HEAD
   //remove later
   if (!helpers.checkPermissions(message)) {
 
@@ -47,3 +48,29 @@ function run(message) {
 module.exports = {
   run
 };
+=======
+    //remove later
+    if (!helpers.checkPermissions(message)) {
+
+	let cmd = message.content.toLowerCase().substring(1).split(" ")[0];
+	
+        if (allCommands.includes(cmd)) {
+            helpers.checkPermissionsManual(message, cmd);
+            return helpers.log("help & permissions DM sent");
+          }
+      return helpers.log("no permission to send messages.");
+    }
+    //remove later^^
+    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettings = helpers.readFile(guildSettingsPath);
+    const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
+    if (allCommands.includes(cmd) || helpers.mentioned(message, allCommands)) {
+        helpers.checkPermissionsManual(message, cmd);
+    }
+    if (cmd === "help" || helpers.mentioned(message, "help")) {
+        message.channel.send(HELP_MESSAGE);
+    }
+}
+
+module.exports = {run};
+>>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb

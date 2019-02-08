@@ -1,7 +1,11 @@
 const path = require("path");
 const helpers = require("./helpers.js");
 const fs = require("fs");
+<<<<<<< HEAD
 const usersPath = path.join(__dirname, "..", "stores", "users.json");
+=======
+const usersPath = path.join(__dirname, "..","stores", "users.json");
+>>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb
 const users = require("../stores/users.json");
 const HELP_MESSAGE = "```\
         Niles Usage\n\
@@ -22,6 +26,7 @@ const HELP_MESSAGE = "```\
 Visit http://niles.seanecoffey.com for more info.";
 
 function permissionDMChanger(message) {
+<<<<<<< HEAD
   let pieces = message.content.split(" ");
   if (!pieces[1]) {
     return message.author.send("You didn't enter an argument. Use `!permissions 0`");
@@ -65,3 +70,46 @@ function run(message) {
 module.exports = {
   run
 };
+=======
+    let pieces = message.content.split(" ");
+    if (!pieces[1]) {
+        return message.author.send("You didn't enter an argument. Use `!permissions 0`");
+    }
+    if (pieces[1] && !Number.isInteger(parseInt(pieces[1],10))) {
+        return message.author.send("You can only use a number i.e. `!permissions 0`");
+    }
+    if (["0", "1"].includes(pieces[1])) {
+        let settings = {
+            "permissionChecker": pieces[1]
+        };
+        users[message.author.id] = settings;
+        fs.writeFile(usersPath, JSON.stringify(users, "","\t"), (err) => {
+          if(err) {
+              return helpers.log("error writing the users database" + err);
+          }
+        });
+        return message.author.send("okay I've changed that setting.");
+    }
+    return message.author.send("I didn't change anything, use `!permissions 0` or `!permissions 1`");
+}
+
+function run (message) {
+    const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
+    //Command to function mappings
+    let help = () => message.author.send(HELP_MESSAGE);
+    let permissions = () => permissionDMChanger(message);
+    let cmdFns = {
+        permissions,
+        help
+      };
+      let cmdFn = cmdFns[cmd];
+      if (cmdFn) {
+        cmdFn();
+      }
+      if (message.content === "help") {
+          message.author.send(HELP_MESSAGE);
+      }
+}
+
+module.exports = {run};
+>>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb
