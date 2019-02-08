@@ -1,77 +1,107 @@
-//Use cluster
-var cluster = require ('cluster');
-var dotenv = require('dotenv');
-const util = require('util');
-dotenv.load();
-//Discord Settings
-discord = require('discord.js');
-client = new discord.Client();
-const token = process.env.BOT_TOKEN;
-var nilesSupport = process.env.CHANNEL_TOKEN; //NEED TO AUTO GENERATE THIS or CREATE SPECIFIC CHANNEL
+let discord = require("discord.js");
+let client = new discord.Client();
+exports.discord = discord;
+exports.client = client;
+const path = require("path");
+const users = require("./stores/users.json");
+let settings = require("./settings.js");
+let commands = require("./handlers/commands.js");
+let guilds = require("./handlers/guilds.js");
+let init = require("./handlers/init.js");
+let helpers = require("./handlers/helpers.js");
+let restricted = require("./handlers/nopermissions.js");
+let dm = require("./handlers/dm.js");
 
-//handlers & dbs
-const commands = require('./handlers/commands.js');
-const guilds = require('./handlers/guilds');
-guilddb = require('./stores/guilddb.json');
-const init = require('./handlers/init.js');
+client.login(settings.secrets.bot_token);
 
-//use cluster to run workers - deprecate in production
-if (cluster.isMaster) {
-    cluster.fork();
-  //Log worker deaths and start new workers
-  cluster.on('exit', function(worker) {
-    console.log(Date() + ' : Worker ' + worker.id + ' died...');
-    cluster.fork();
-  });
-} else {
-  //On-connect settings
-  client.on('ready', () => {
-    console.log(Date() + ' : Bot is logged in using worker '+ cluster.worker.id);
-    console.log('-------------------------------------------------');
-    client.user.setStatus('online');
-    //client.user.setGame(); //can set game with !help or similar
-    var d = new Date();
-    //client.channels.get(nilesSupport).send('Niles is online');
-  });
+client.on("ready", () => {
+  helpers.log("Bot is logged in");
+  client.user.setStatus("online");
+});
 
-  client.on('guildCreate', (guild) => {
-    guilds.create(guild);
-  });
+client.on("guildCreate", (guild) => {
+  guilds.create(guild);
+});
 
-  client.on('guildDelete', (guild) => {
-    guilds.delete(guild);
-  });
+client.on("guildDelete", (guild) => {
+  guilds.delete(guild);
+});
 
-  //message handler
-  client.on('message', (message) => {
-    if (message.author.bot) return;
-    if(!message.content.toLowerCase().startsWith(guilddb[message.guild.id]["prefix"]) && !message.isMentioned(client.user.id))
+client.on("message", (message) => {
+  /*if (message.author.bot) {
       return;
-    if(guilddb[message.guild.id]["calendarID"] === "") {
-      try {
-        init.run(message);
-      } catch (e) {
-        console.log(e);
-        return message.channel.send('Something went wrong');
-      }
-    } else {
-      try {
-        commands.run(message);
-      } catch (e) {
-        console.log(e);
-        return message.channel.send('Something went wrong');
-      }
+  }*/
+  if (message.channel.type === "dm") {
+    try {
+      dm.run(message);
+    } catch (err) {
+      helpers.log("error in dm channel" + err);
     }
-  });
+    return;
+  }
+  //only load guild settings after checking that message is not direct message.
+  let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
+  try {
+    var guildSettings = helpers.readFile(guildSettingsPath);
+  } catch (err) {
+    return helpers.log(err);
+  }
 
-  // Log In
-  client.login(token);
-  //restart bot on uncaught exceptions
-  process.on('uncaughtException', function(err){
-    var d = new Date();
-    client.channels.get(nilesSupport).send('I\'ve hit an unexpected error, restarting!').then(err => {
-      console.log('uncaughExceptionError: ' + err);
-      process.exit(1);
-    })
-  })
-}
+  try {
+    (guildSettings.prefix)
+  } catch (err) {
+    guilds.create(message.guild);
+    message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
+    return helpers.log("settings file not created properly ");
+  }
+
+  if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
+    return;
+  }
+  helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
+  if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
+    try {
+      restricted.run(message);
+    } catch (err) {
+      helpers.log("error in restricted permissions " + err);
+    }
+    return;
+  } else if (!helpers.checkPermissions(message)) {
+    return;
+  }
+  if (!guildSettings.calendarID || !guildSettings.timezone) {
+    try {
+      init.run(message);
+    } catch (err) {
+      helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
+      return message.channel.send("something went wrong");
+    }
+  } else {
+    try {
+      commands.run(message);
+    } catch (err) {
+      helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
+      return message.channel.send("something went wrong");
+    }
+  }
+});
+
+// ProcessListeners
+
+process.on("uncaughtException", (err) => {
+  helpers.log("uncaughtException error" + err);
+});
+
+process.on("SIGINT", () => {
+  client.destroy();
+  process.exit();
+});
+
+process.on("exit", () => {
+  client.destroy();
+  process.exit();
+});
+
+process.on('unhandledRejection', err => {
+  helpers.log("unhandled promise rejection " + err);
+});

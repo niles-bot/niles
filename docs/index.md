@@ -11,8 +11,6 @@ layout: default
 * You want to create a single channel to manage events in your Discord server.
 * You want to sync events from ([Google Calendar](https://calendar.google.com)).
 
-This page itself is built with Solo. It's generated from [this markdown file](https://github.com/chibicode/solo/blob/gh-pages/_includes/index.md).
-
 ## Setup
 
 First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
@@ -20,6 +18,8 @@ Next either create a new Google calendar or use an existing one, and under **Set
 
 Next head to 'Calendar details' and copy the **Calendar ID** - We'll use this when we setup Niles in your Discord Server.
 Run `!setup` in your `#general` to get started.
+
+Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed setup information.
 
 ## Usage
 

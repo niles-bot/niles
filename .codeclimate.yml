@@ -1,0 +1,28 @@
+engines:
+  rubocop:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - "javascript"
+  fixme:
+    enabled: true
+  eslint:
+    enabled: true
+    checks:
+      max-statements:
+        enabled: false
+      complexity:
+        enabled: true
+
+ratings:
+  paths:
+    - handlers/**
+    - "**.js"
+exclude_paths:
+  - config/**
+  - docs/**
+  - "**.md"
+  - "**.json"
+  - LICENSE

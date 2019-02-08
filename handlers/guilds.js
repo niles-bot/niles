@@ -1,40 +1,55 @@
-const fs = require('fs');
-const commands = require('../handlers/commands.js');
+const fs = require("fs");
+const path = require("path");
+const settings = require("../settings.js");
+const guilddatabase = require("../stores/guilddatabase.json");
+const helpers = require("./helpers.js");
+const commands = require("./commands.js");
+const bot = require("../bot.js");
 
 exports.create = (guild) => {
-  guilddb[guild.id] = {'prefix': '!',
-                        'calendarID': '',
-                        'calendarChannel': '',
-                        'timezone': ''
-                      };
-  commands.writeGuilddb(guilddb);
-console.log('guild.create guildb updated.');
-var emptyString = {
-	"day0": "[]",
-	"day1": "[]",
-	"day2": "[]",
-  "day3": "[]",
-  "day4": "[]",
-  "day5": "[]",
-  "day6": "[]"
-}
-fileString = './stores/' + guild.id + 'db.json';
-fs.writeFile(fileString, JSON.stringify(emptyString, '', '\t'), (err) => {
-  if (err)
-    return console.log(Date() + 'createdb error: ' + err);
-  });
-  console.log('guild.create invidual db updated.');
-guild.defaultChannel.send(`Hi, I'm ${client.user.username} and I'm ready to serve you. To see a list of my commands, send !help. DM Sean#8856 for more info`);
-console.log('welcome message sent');
-}
+  let guildPath = path.join(__dirname, "..", "stores", guild.id);
+  let d = new Date();
+  if (!fs.existsSync(guildPath)) {
+    fs.mkdirSync(guildPath);
+  }
+  let emptyCal = {
+    "day0": [],
+    "day1": [],
+    "day2": [],
+    "day3": [],
+    "day4": [],
+    "day5": [],
+    "day6": [],
+    "lastUpdate": "",
+    "calendarMessageId": ""
+  };
+  let defaultSettings = {
+    "prefix": "!",
+    "calendarID": "",
+    "calendarChannel": "",
+    "timezone": "",
+    "helpmenu": "1"
+  };
+  guilddatabase[guild.id] = {
+    "guildid": guild.id,
+    "name": guild.name,
+    "region": guild.region,
+    "ownerName": guild.owner.displayName,
+    "ownerId": guild.ownerID,
+    "timeAdded": d
+  };
+  helpers.writeGuildSpecific(guild.id, emptyCal, "calendar");
+  helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
+  helpers.writeGuilddb(guilddatabase);
+  helpers.log(`Guild ${guild.id} has been created`);
+  //guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.  **NOTE**: Make sure I have the right permissions in the channel you try and use me in!");
+};
 
 exports.delete = (guild) => {
-  delete guilddb[guild.id];
-  commands.writeGuilddb(guilddb);
-  guilddbString = './stores/' + String(guild.id) + 'db.json';
-  empty = {};
-  fs.writeFile(guilddbString, JSON.stringify(empty, '','\t'), (err) => {
-    if (err)
-      return console.log(Date() + ' deleteGuilde error: ' + err);
-    });
-  }
+  let guildPath = path.join(__dirname, "..", "stores", guild.id);
+  helpers.deleteFolderRecursive(guildPath);
+  delete guilddatabase[guild.id];
+  helpers.writeGuilddb(guilddatabase);
+  commands.deleteUpdater(guild.id);
+  helpers.log(`Guild ${guild.id} has been deleted`);
+};
