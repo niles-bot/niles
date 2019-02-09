@@ -59,7 +59,7 @@ client.on("message", (message) => {
   }
   //Check that there is a prefix - need more robust check of database files.
   try {
-    (guildSettings.prefix)
+    (guildSettings.prefix);
   } catch (err) {
     guilds.create(message.guild);
     message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
@@ -138,6 +138,6 @@ process.on("exit", () => {
   process.exit();
 });
 
-process.on('unhandledRejection', err => {
+process.on('unhandledRejection', (err) => {
   helpers.log("unhandled promise rejection " + err);
 });

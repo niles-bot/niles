@@ -13,10 +13,6 @@ function getLogChannel() {
   return bot.client.channels.get(getSettings().secrets.log_discord_channel);
 }
 
-function logError() {
-  log("[ERROR]", Array.from(arguments).slice(1).join(" "));
-}
-
 function formatLogMessage(message) {
   return `[${new Date().toUTCString()}] ${message}`;
 }
@@ -34,6 +30,10 @@ function log(...logItems) {
   console.log(logString);
 }
 
+function logError() {
+  log("[ERROR]", Array.from(arguments).slice(1).join(" "));
+}
+
 function readFile(path) {
   try {
     return JSON.parse(fs.readFileSync(path, "utf8"));
@@ -47,7 +47,7 @@ function readFileSettingsDefault(filePath, defaultValue) {
     const fileData = fs.readFileSync(filePath, "utf8");
     return JSON.parse(fileData);
   } catch (err) {
-    if (err.code !== 'ENOENT') throw err;
+    if (err.code !== "ENOENT") throw err;
 
     fs.writeFileSync(filePath, defaultValue, {
       encoding: "utf8",
@@ -116,12 +116,14 @@ const users = readFileSettingsDefault(userStorePath, "{}");
 const userDefaults = {};
 
 //uses cached version of user database
-function amendUserSettings(userId, partialSettigns) {
+function amendUserSettings(userId, partialSettings) {
   users[userId] = Object.assign({}, users[userId], partialSettings);
 
   const formattedJson = JSON.stringify(users, "", "\t");
   fs.writeFile(userStorePath, formattedJson, (err) => {
-    if (!err) return;
+    if (!err) {
+      return
+    };
     return logError("writing the users database", err);
   });
 }

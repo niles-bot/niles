@@ -93,7 +93,7 @@ function setRoles(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
   let adminRole = message.content.split(" ")[1];
-  let userRoles = message.member.roles.map(role => role.name);
+  let userRoles = message.member.roles.map((role) => role.name);
   if (!adminRole && guildSettings.allowedRoles.length === 0) {
     return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
   }
@@ -105,7 +105,7 @@ function setRoles(message) {
       message.channel.send("Do you want to allow everyone in this channel/server to use Niles? **(y/n)**");
       helpers.yesThenCollector(message).then(() => {
         return writeSetting(message, [], "allowedRoles");
-      })
+      });
     } else if (!userRoles.includes(adminRole)) {
       return message.channel.send("You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive");
     } else {

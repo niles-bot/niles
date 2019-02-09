@@ -30,8 +30,8 @@ function clean(channel, numberMessages, recurse) {
         helpers.writeGuildSpecific(channel.guild.id, calendar, "calendar");
         clearInterval(autoUpdater[channel.guild.id]);
         try {
-          delete timerCount[message.guild.id];
-          message.channel.send("update timer has been killed.")
+          delete timerCount[channel.guild.id];
+          channel.send("update timer has been killed.");
         } catch (err) {
           helpers.log(err);
         }
@@ -121,7 +121,7 @@ function getEvents(message, calendarID, dayMap) {
     "day4": [],
     "day5": [],
     "day6": []
-  }
+  };
   let tempKey;
   let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
   let calendar = helpers.readFile(calendarPath);
@@ -203,7 +203,7 @@ function getEvents(message, calendarID, dayMap) {
       clearInterval(autoUpdater[message.guild.id]);
       try {
         delete timerCount[message.guild.id];
-        message.channel.send("update timer has been killed.")
+        message.channel.send("update timer has been killed.");
       } catch (err) {
         helpers.log(err);
       }
@@ -286,6 +286,40 @@ function generateCalendar(message, dayMap) {
   return p.promise;
 }
 
+function startUpdateTimer(message) {
+  if (!timerCount[message.guild.id]) {
+    timerCount[message.guild.id] = 0;
+  }
+  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+  let guildSettings = helpers.readFile(guildSettingsPath);
+  let calendarID = guildSettings.calendarID;
+  let dayMap = createDayMap(message);
+  //Pull updates on set interval
+  if (!autoUpdater[message.guild.id]) {
+    timerCount[message.guild.id] += 1;
+    helpers.log("Starting update timer in guild: " + message.guild.id);
+    return autoUpdater[message.guild.id] = setInterval(function func() {
+      calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]);
+    }, settings.secrets.calendar_update_interval);
+
+  }
+  if (autoUpdater[message.guild.id]._idleTimeout !== settings.secrets.calendar_update_interval) {
+    try {
+      timerCount[message.guild.id] += 1;
+      helpers.log("Starting update timer in guild: " + message.guild.id);
+      return autoUpdater[message.guild.id] = setInterval(function func() {
+        calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]);
+      }, settings.secrets.calendar_update_interval);
+    } catch (err) {
+      helpers.log("error starting the autoupdater" + err);
+      clearInterval(autoUpdater[message.guild.id]);
+      delete timerCount[message.guild.id];
+    }
+  } else {
+    return helpers.log("timer not started in guild: " + message.guild.id);
+  }
+}
+
 function postCalendar(message, dayMap) {
   let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
   let calendar = helpers.readFile(calendarPath);
@@ -334,7 +368,7 @@ function updateCalendar(message, dayMap, human) {
     clearInterval(autoUpdater[message.guild.id]);
     try {
       delete timerCount[message.guild.id];
-      message.channel.send("update timer has been killed.")
+      message.channel.send("update timer has been killed.");
     } catch (err) {
       helpers.log(err);
     }
@@ -344,7 +378,7 @@ function updateCalendar(message, dayMap, human) {
     clearInterval(autoUpdater[message.guild.id]);
     try {
       delete timerCount[message.guild.id];
-      message.channel.send("update timer has been killed.")
+      message.channel.send("update timer has been killed.");
     } catch (err) {
       helpers.log(err);
     }
@@ -360,7 +394,7 @@ function updateCalendar(message, dayMap, human) {
       if ((timerCount[message.guild.id] === 0 || !timerCount[message.guild.id]) && human) {
         startUpdateTimer(message);
       }
-    })
+    });
   }).catch((err) => {
     helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
     //If theres an updater running try and kill it.
@@ -368,7 +402,7 @@ function updateCalendar(message, dayMap, human) {
       clearInterval(autoUpdater[message.guild.id]);
       try {
         delete timerCount[message.guild.id];
-        message.channel.send("update timer has been killed.")
+        message.channel.send("update timer has been killed.");
       } catch (err) {
         helpers.log(err);
       }
@@ -380,40 +414,6 @@ function updateCalendar(message, dayMap, human) {
     helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     return;
   });
-}
-
-function startUpdateTimer(message) {
-  if (!timerCount[message.guild.id]) {
-    timerCount[message.guild.id] = 0;
-  }
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
-  let calendarID = guildSettings.calendarID;
-  let dayMap = createDayMap(message);
-  //Pull updates on set interval
-  if (!autoUpdater[message.guild.id]) {
-    timerCount[message.guild.id] += 1;
-    helpers.log("Starting update timer in guild: " + message.guild.id);
-    return autoUpdater[message.guild.id] = setInterval(function func() {
-      calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]);
-    }, settings.secrets.calendar_update_interval);
-
-  }
-  if (autoUpdater[message.guild.id]._idleTimeout !== settings.secrets.calendar_update_interval) {
-    try {
-      timerCount[message.guild.id] += 1;
-      helpers.log("Starting update timer in guild: " + message.guild.id);
-      return autoUpdater[message.guild.id] = setInterval(function func() {
-        calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]);
-      }, settings.secrets.calendar_update_interval);
-    } catch (err) {
-      helpers.log("error starting the autoupdater" + err);
-      clearInterval(autoUpdater[message.guild.id]);
-      delete timerCount[message.guild.id];
-    }
-  } else {
-    return helpers.log("timer not started in guild: " + message.guild.id);
-  }
 }
 
 function quickAddEvent(message, calendarId) {
@@ -583,7 +583,7 @@ function calendarUpdater(message, calendarId, dayMap, timerCount) {
     clearInterval(autoUpdater[message.guild.id]);
     try {
       delete timerCount[message.guild.id];
-      message.channel.send("update timer has been killed.")
+      message.channel.send("update timer has been killed.");
     } catch (err) {
       helpers.log(err);
     }
@@ -615,7 +615,6 @@ exports.deleteUpdater = function(guildid) {
   clearInterval(autoUpdater[guildid]);
   try {
     delete timerCount[guildid];
-    message.channel.send("update timer has been killed.")
   } catch (err) {
     helpers.log(err);
   }
@@ -683,7 +682,7 @@ function run(message) {
       clearInterval(autoUpdater[message.guild.id]);
       try {
         delete timerCount[message.guild.id];
-        message.channel.send("update timer has been killed.")
+        message.channel.send("update timer has been killed.");
       } catch (err) {
         helpers.log(err);
       }
