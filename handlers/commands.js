@@ -345,7 +345,7 @@ function postCalendar(message, dayMap) {
     }).then((sent) => {
       calendar.calendarMessageId = sent.id;
       sent.pin();
-    })
+    });
   }).then((confirm) => {
     setTimeout(function func() {
       helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");

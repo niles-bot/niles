@@ -20,7 +20,6 @@ function permissionDMChanger(message) {
     users[message.author.id] = settings;
     fs.writeFile(usersPath, JSON.stringify(users, "", "\t"), (err) => {
       if (err) {
-        permi
         return helpers.log("error writing the users database" + err);
       }
     });

@@ -47,7 +47,9 @@ function readFileSettingsDefault(filePath, defaultValue) {
     const fileData = fs.readFileSync(filePath, "utf8");
     return JSON.parse(fileData);
   } catch (err) {
-    if (err.code !== "ENOENT") throw err;
+    if (err.code !== "ENOENT") {
+      throw err;
+    }
 
     fs.writeFileSync(filePath, defaultValue, {
       encoding: "utf8",
@@ -72,7 +74,9 @@ function getGuildDatabase() {
 function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
-    if (!err) return;
+    if (!err) {
+      return;
+    }
     return logError("writing the guild database", err);
   });
 }
@@ -122,8 +126,8 @@ function amendUserSettings(userId, partialSettings) {
   const formattedJson = JSON.stringify(users, "", "\t");
   fs.writeFile(userStorePath, formattedJson, (err) => {
     if (!err) {
-      return
-    };
+      return;
+    }
     return logError("writing the users database", err);
   });
 }
@@ -253,7 +257,7 @@ function sendMessageHandler(message, err) {
 function checkRole(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = readFile(guildSettingsPath);
-  let userRoles = message.member.roles.map(role => role.name);
+  let userRoles = message.member.roles.map((role) => role.name);
   if (guildSettings.allowedRoles.length === 0) {
     return true;
   }

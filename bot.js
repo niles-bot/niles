@@ -24,7 +24,7 @@ client.on("ready", () => {
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
   const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
 
-  unknownGuilds.forEach(guildId => {
+  unknownGuilds.forEach((guildId) => {
     helpers.log("unknown guild found; creating");
     guilds.create(client.guilds.get(guildId));
   });
@@ -124,7 +124,6 @@ client.on("message", (message) => {
 
 // ProcessListeners
 process.on("uncaughtException", (err) => {
-  console.log(err);
   helpers.log("uncaughtException error" + err);
 });
 
@@ -138,6 +137,6 @@ process.on("exit", () => {
   process.exit();
 });
 
-process.on('unhandledRejection', (err) => {
+process.on("unhandledRejection", (err) => {
   helpers.log("unhandled promise rejection " + err);
 });

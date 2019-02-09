@@ -15,7 +15,7 @@ function allowedRoles(message) {
   if (!guildSettings.allowedRoles) {
     writeSetting(message, [], "allowedRoles");
     helpers.log("update database settings file for guild: " + message.guild.id);
-    return true
+    return true;
   }
   return false;
 }
