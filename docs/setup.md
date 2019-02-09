@@ -11,11 +11,7 @@ First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122
 
 Create or select a Google calendar, and then head to **Settings > Calendars > 'The calendar you want to use in Discord'**
 
-<<<<<<< HEAD
-Now,  select 'Share This Calendar' and under 'Share with a specific person' add 
-=======
 Now,  select 'Share This Calendar' and under 'Share with a specific person' add
->>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb
 
 
 `niles-291@niles-169605.iam.gserviceaccount.com`
@@ -35,11 +31,7 @@ Next head to 'Calendar details' and copy the **Calendar ID** - We'll use this wh
 
 Now, in a channel where Niles has permissions (i.e. #general or another channel you have setup) we can use `!id`.
 
-<<<<<<< HEAD
-`!id calendarID` i.e. 
-=======
 `!id calendarID` i.e.
->>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb
 
 `!id qb9t3fb6mn9p52a4re0hc067d8@group.calendar.google.com`
 
@@ -48,40 +40,41 @@ Now, in a channel where Niles has permissions (i.e. #general or another channel 
 
 We could pull this from your Google calendar or Discord server, but since your members might be in different timezones, you must add your own.
 
-<<<<<<< HEAD
-This can be done using `!tz` i.e. 
-=======
 This can be done using `!tz` i.e.
->>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb
 
 `!tz GMT+10:00`
+`!tz GMT-03:00`
+`!tz GMT+00:00`
 
-and must be formatted like this, with +/- GMT time, including `:00`.
+and must be formatted like this with all 4 digits, +/- GMT time, including `:00`. UTC is the same as GMT.
 
 
 ### 4. Run your calendar for the first time!
 
 Great now we can tell Niles to pull events from our GCal, setting up the database and display our calendar.
 
-<<<<<<< HEAD
-You can choose from:
-`!init` - **WARNING** deletes all messages in current channel and THEN displays the calendar.
-
 `!display` - Displays the calendar WITHOUT deleting any messages.
 
 Both methods pin the current calendar to the channel it was called in.
 
 The calendar will automatically check for updates once an hour, but you can manually use `!update` to pull any updates.
-=======
-`!display` - Displays the calendar WITHOUT deleting any messages.
-
-This will pin the calendar to the channel it was called in.
-
-The calendar will automatically check for updates once every 5 minutes, but you can manually use `!update` to pull any updates.
->>>>>>> 3e38ffd698ed0bd741c498197e3cc560f9321cdb
 
 
-### 5. Customise display options (optional)
+### 5. Restrict Usage of Niles to admin/schduler Roles
+
+You can create a role, or use an existing one and restrict the usage of Niles to that role.
+
+i.e. create the role "Scheduler", assign it to yourself and others you want to have access, then enter:
+
+ `admin Scheduler`
+
+ Note that you MUST have the role you're trying to assign, the above is case sensitive.
+
+You can give everyone permissions again by using the command:
+
+ `admin everyone`
+
+### 6. Customise display options (optional)
 
 By default Niles will append a quick help menu to your calendar.
 

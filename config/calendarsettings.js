@@ -9,3 +9,4 @@ let key = JSON.parse(json).private_key;
 
 module.exports.key = key;
 module.exports.serviceAcctId = SERVICE_ACCT_ID;
+module.exports.timezone = 'UTC+00:00';

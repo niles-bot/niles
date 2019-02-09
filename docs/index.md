@@ -2,7 +2,7 @@
 layout: default
 ---
 
-[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for creating in-channel schedule calendars and interfacing with Google Calendar.
+[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for displaying a simple calendar that interfaces with Google Calendar.
 
 ![example](https://puu.sh/wcgpt/e209eef3ba.png)
 
@@ -13,11 +13,13 @@ layout: default
 
 ## Setup
 
-First [invite Niles](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=320434122344366082) to your Discord server.
-Next either create a new Google calendar or use an existing one, and under **Settings > Calendars > 'Calendar Name'**, select 'Share This Calendar' and under 'Share with a specific person' add `niles-291@niles-169605.iam.gserviceaccount.com` and make sure you give permission **Make changes to events**.
+1. First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
 
-Next head to 'Calendar details' and copy the **Calendar ID** - We'll use this when we setup Niles in your Discord Server.
-Run `!setup` in your `#general` to get started.
+2. Now, either create a new Google calendar or use an existing one, and under **Settings > Calendars > 'Calendar Name'**, select 'Share This Calendar'. Under 'Share with a specific person' add `niles-291@niles-169605.iam.gserviceaccount.com` and make sure you give permission **Make changes to events**.
+
+3. Next scroll down to 'Integrate calendar' and copy the **Calendar ID** - You'll need this to setup Niles in your Discord Server.
+
+4. Run `!setup` in your `#general` to get started.
 
 Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed setup information.
 
@@ -25,33 +27,21 @@ Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed set
 
 ### Commands
 
-* `!display`           - Displays your calendar.
-
-* `!displayoptions`    - Using `!displayoptions help 0/1` will hide or show the additional help instructions under your calendar.
-
-* `!update / !sync`    - Forces the calendar to check Google calendar for updates.
-
-* `!create / !scrim`   - Create events using GCal's quick add interpretation. Works best with something like `!scrim xeno on jun 23 8pm-9pm`.
-
-* `!clean / !purge`    - Deletes messages in channel, you can specify number like `!clean 4`. This cannot delete messages that are older than 14 days.
-
-* `!stats / !info`     - Displays Niles info, i.e. no. of servers, RAM usage.
-
-* `!invite`            - Get the invite link for Niles to join a server!
-
-* `!setup`             - Get details on how to setup Niles
-
-* `!id`                - Set the Google calendar ID for the guild
-
-* `!tz`                - Set the timezone for your calendar, must be in the form of `GMT-00:00`, i.e. `!tz gmt+04:30`.
-
-* `!prefix`            - View or change the prefix for Niles in your server.
-
-* `!help`              - Display usage options for Niles.
-
-* `!init`              - *WARNING* deletes all your settings and re-initialises Niles in your server, you will need to run `!setup` again.
-
-* `!ping`              - Pong!
+* `!help`     - Get a DM of the list of commands and usage.
+* `!setup`    - Get instructions for setting Niles up for use in your Discord.
+* `!id`       - Set the Google Calendar ID for the calendar you want Niles to sync to.
+* `!tz`       - Set the preferred timezone of your Discord server, use format relative to GMT:`!tz GMT+10:00`
+* `!init`     - Cleans messages from the current channel (all) and displays a calendar message.
+* `!display`  - Prints a message with the calendar.
+* `!update`   - Checks for any new events and updates the last printed calendar, also works as `!sync`.
+* `!prefix`   - Change the prefix that Niles uses in the server.
+* `!admin `   - Restrict usage to a specific role, i.e. "Scheduler" or "Captain".
+* `!create`   - Create a new event: `!create 4legs friday 8pm-10pm`, also works with `!scrim`.
+* `!delete`   - Delete an event: `!delete <day> <start time>`, i.e. `!delete friday 8pm`.
+* `!clean`    - Deletes all messages in the current channel, also works as `!purge`.
+* `!invite`   - Get the invite link for the Niles.
+* `!stats`    - Display the stats for the bot.
+* `!ping`     - Pong!
 
 ## Support
 
