@@ -164,7 +164,7 @@ function getEvents(message, calendarID, dayMap) {
           let allDayEvent = new Date(events[j].start.date);
           if (checkDateMatch(dayMap[day], allDayEvent)) {
             matches.push(events[j]);
-            for (let x = 1; x <= lengthEvent; x++) { //Add New Entry For Each Day of A Multi Day Event
+            for (let x = 1; x < lengthEvent; x++) { //Add New Entry For Each Day of A Multi Day Event
               let newDateTime = (tempStartDate.getTime()) + (x * 24 * 60 * 60 * 1000);
               let newDateA = new Date(newDateTime);
               let newDateString = (helpers.convertDate(newDateA, message.guild.id)).toJSON().slice(0, 10);
