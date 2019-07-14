@@ -29,7 +29,7 @@ For more information on setting up a Google Service Account, [see here](https://
 
 Create your own `secrets.json` file in `/config`, using the appropriate values, making sure you also place a copy of your Google Service Account JSON security file somewhere and referencing in `secrets`.
 
-Next you will need to copy the stores.json.example file 3 times.
+Next you will need to copy the `stores.json.example` in the `/stores` file 3 times.
 Rename those files to these names.
 ```
 store.json
