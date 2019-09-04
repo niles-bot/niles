@@ -21,6 +21,9 @@ The following variables are present in the secrets.json and will require an entr
 8. `log_discord_channel`
 9. `minimumPermissions`
 
+```
+```
+
 1. The `bot_token` is the token required for bot to connect to your discord application service.  This can be found by creating an application at the Discord developer portal, and copying the "CLIENT SECRET" on the app page.
 
 2. The `service_acct_id` is the account ID of your Google service account allowing an application to carry out actions on google products (i.e. Calendar). You can find this at console.cloud.google.com.  Your `service_acct_id` should have the form of yourproject-123@yourproject-456.iam.gserviceaccount.com or similar.
