@@ -66,13 +66,13 @@ You can create a role, or use an existing one and restrict the usage of Niles to
 
 i.e. create the role "Scheduler", assign it to yourself and others you want to have access, then enter:
 
- `admin Scheduler`
+ `!admin Scheduler`
 
  Note that you MUST have the role you're trying to assign, the above is case sensitive.
 
 You can give everyone permissions again by using the command:
 
- `admin everyone`
+ `!admin everyone`
 
 ### 6. Customise display options (optional)
 

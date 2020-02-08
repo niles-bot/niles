@@ -36,15 +36,25 @@ Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed set
 * `!prefix`   - Change the prefix that Niles uses in the server.
 * `!admin `   - Restrict usage to a specific role, i.e. "Scheduler" or "Captain".
 * `!create`   - Create a new event: `!create 4legs friday 8pm-10pm`, also works with `!scrim`.
-* `!delete`   - Delete an event: `!delete <day> <start time>`, i.e. `!delete friday 8pm`.
-* `!clean`    - Deletes all messages in the current channel, also works as `!purge`.
+* `!delete`   - Delete an event: `!delete <event_name>`, i.e. `!delete 4legs`.
+* `!clean`    - Deletes a certain number of messages: `!clean 5` (deletes previous 5 messages), also works with `!purge`
 * `!invite`   - Get the invite link for the Niles.
 * `!stats`    - Display the stats for the bot.
 * `!ping`     - Pong!
+* `!count`    - Check if a calendar updater thread is running in your server.
+
+### Display Options
+
+* `!displayoptions help` - Turn off the help text under the calendar, takes 1 or 0 as input (on or off) i.e. `!displayoptions help 0` to turn off help text.
+* `!displayoptions pin`  - Turn off pinning of the calendar, takes 1 or 0 as input (on or off) i.e. `!displayoptions pin 0` to turn off pinning.
 
 ## Support
 
 Join the [Niles Discord server](https://discord.gg/jNyntBn) if you have issues or suggestions.
+
+## Self-hosting
+
+Visit the [self-host page](http://niles.seanecoffey.com/selfhost) for more detailed setup information.
 
 ## Author
 

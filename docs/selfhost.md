@@ -4,7 +4,19 @@ layout: default
 
 ## Self-host Guide
 
-This page is under construction and incomplete. 
+This page is under construction and incomplete.  Discord provides fairly self explanatory details on creating an app with a bot account (https://discordapp.com/developers/applications/).  You need to create an app with a bot account.  In particular the `bot_token` found on the "Bot" page.
+
+Please visit the [Discord support server](https://discord.gg/jNyntBn) for further help.
+
+## General Steps
+
+1. Clone or download the repository, `git clone https://github.com/seanecoffey/Niles`
+
+2. Install using `npm install`.  **NOTE:** The npm version of Node-Google-Calendar has a bug that needs to be fixed manually. After running `npm install` navigate to `<app_directory>/node_modules/node-google-calendar\src`, edit the file `HttpRequest.js` as shown here: https://github.com/yuhong90/node-google-calendar/commit/6fc01e91098142c6004e5f642ddb50c8c38b5a34
+
+3. Create your `secrets.json` file (discussed below) inside `/config`.  Create 2 files, `guilddatabase.json` and `users.json` inside `/stores`, filling both with `{}` so that they are valid JSON files.
+
+4. Run `node bot.js` and you should be running!
 
 
 ### secrets.json
@@ -30,11 +42,11 @@ The following variables are present in the secrets.json and will require an entr
 
 3. When you create your google service account, you should be able to create a key to enable programs etc. to access your google service account.  This generates a .json key that you need to store in your Niles project.  In my case, I store it in the "config" directory, and then set my `service_acct_keypath` to "./config/Niles-XXXXXX.json"
 
-4. `support_discord_channel` should really be just "support discord".  This is the guild ID of the channel that the !stats command will link to for people needing support. You may not need to add this, but it may be required to prevent errors when using commands like !stats. 
+4. `support_discord_channel` should really be just "support discord".  This is the guild ID of the channel that the !stats command will link to for people needing support. You may not need to add this, but it may be required to prevent errors when using commands like !stats.
 
-5. `log_discord_channel` is the CHANNEL ID where the bot logs commands, errors etc. to.  This is required or the bot will not function.  You should create a channel that Niles has write access to, copy the ID and use this. 
+5. `log_discord_channel` is the CHANNEL ID where the bot logs commands, errors etc. to.  This is required or the bot will not function.  You should create a channel that Niles has write access to, copy the ID and use this.
 
-6. `current_version` is just an arbitrary number that is reported in !stats to keep track of which version of the bot is running.  Suggest just adding "v1". 
+6. `current_version` is just an arbitrary number that is reported in !stats to keep track of which version of the bot is running.  Suggest just adding "v1".
 
 7. `super_admin` is your discord ID.  The super admin is only used for one command at the moment, !timers, that allows only the super admin to monitor how many update timers are currently running across all discord servers.
 
