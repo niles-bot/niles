@@ -81,3 +81,5 @@ By default Niles will append a quick help menu to your calendar.
 You can toggle this by using `!displayoptions help 0/1`
 
 i.e. `!displayoptions help 0` will hide the help message on the next update / calendar pull.
+
+Last update: 8 Feb 2020

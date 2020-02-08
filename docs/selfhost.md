@@ -56,3 +56,5 @@ The following variables are present in the secrets.json and will require an entr
 
 
 NOTE: Discord user, server and channel ID's can be found by enabling discord developer mode by going to settings>appearance>developer mode.  You can then right click on servers, users and channels and "Copy ID".
+
+Last update: 8 Feb 2020

@@ -65,3 +65,5 @@ Sean Coffey ([GitHub](http://github.com/seanecoffey)).
 ### License
 
 [MIT License](http://seanecoffey.mit-license.org/)
+
+Last update: 8 Feb 2020
