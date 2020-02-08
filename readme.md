@@ -4,6 +4,8 @@
 A [Discord](https://discordapp.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
 Targeted towards eSports event scheduling (scrims, PCWs).
 
+![example](https://i.imgur.com/3yYK4QB.png)
+
 ## Getting Started
 
 [Invite the hosted bot to your Discord here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=320434122344366082).
