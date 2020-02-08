@@ -34,7 +34,7 @@ exports.create = (guild) => {
     "guildid": guild.id,
     "name": guild.name,
     "region": guild.region,
-    "ownerName": guild.owner.displayName,
+    "ownerName": "",
     "ownerId": guild.ownerID,
     "timeAdded": d
   };

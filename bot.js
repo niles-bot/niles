@@ -16,7 +16,7 @@ let checks = require("./handlers/createMissingAttributes.js");
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-  helpers.log("Bot is logged in");
+  helpers.log("Bot is logged in.");
   client.user.setStatus("online");
 
   //Create databases for any missing guilds
@@ -63,7 +63,18 @@ client.on("message", (message) => {
   } catch (err) {
     guilds.create(message.guild);
     message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
-    return helpers.log("settings file not created properly ");
+    return helpers.log("settings file not created properly in guild: " + message.guild.id + ". Attempted re-creation");
+  }
+  //Check calendar file becoming corrupted.
+  try {
+    let calendarID = guildSettings.calendarID;
+    let calendarPath = path.join(__dirname, "stores", message.guild.id, "calendar.json");
+    let calendar = helpers.readFile(calendarPath);
+    (calendar.day0);
+  } catch (err) {
+    guilds.create(message.guild);
+    message.channel.send("Sorry, the database for this server had to be re-created, you'll have to run the setup process again :(");
+    return helpers.log("calendar file not created properly in guild: " + message.guild.id + ". Attempted re-creation");
   }
   //Check if the database structure is up to date.
   try {
@@ -78,7 +89,12 @@ client.on("message", (message) => {
     return;
   }
   //Ignore if the command isn't one of the commands.
-  const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
+  let cmd;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
+  } else if (message.isMentioned(client.user.id)) {
+    cmd = message.content.toLowerCase().split(" ")[1];
+  }
   if (!restricted.allCommands.includes(cmd)) {
     return;
   } else {
@@ -107,7 +123,7 @@ client.on("message", (message) => {
       init.run(message);
     } catch (err) {
       helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
-      return message.channel.send("something went wrong");
+      return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");
     }
   } else {
     try {
@@ -116,8 +132,7 @@ client.on("message", (message) => {
       }
       commands.run(message);
     } catch (err) {
-      helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
-      return message.channel.send("something went wrong");
+      return helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
     }
   }
 });
@@ -138,5 +153,5 @@ process.on("exit", () => {
 });
 
 process.on("unhandledRejection", (err) => {
-  helpers.log("unhandled promise rejection " + err);
+  helpers.log("Promise Rejection: " + err);
 });

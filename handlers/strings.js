@@ -4,8 +4,8 @@ const HELP_MESSAGE = "```\
 !display             -  Display your calendar\n\
 !update / !sync      -  Update the Calendar\n\
 !create / !scrim     -  Create events using GCal's default interpreter - works best like !scrim xeno June 5 8pm - 9pm\n\
-!delete              -  Delete an event using the form !delete Friday 8pm, ONLY works like this !delete <day> <starttime>\n\
-!clean / !purge      -  Deletes messages in current channel, either !clean or !clean <number>\n\
+!delete              -  Delete an event using the form !delete <event_title>, ONLY works when the title matches the one in Google Calendar\n\
+!clean / !purge      -  Deletes messages in current channel, !clean <number>\n\
 !stats / !info       -  Display list of statistics and information about the Niles bot\n\
 !invite              -  Get the invite link for Niles to join your server!\n\
 !setup               -  Get details on how to setup Niles\n\

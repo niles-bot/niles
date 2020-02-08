@@ -24,6 +24,9 @@ function log(...logItems) {
   const logChannel = getLogChannel();
   if (logChannel) {
     logChannel.send(tripleGrave + logString + tripleGrave);
+    if (logString.includes("Bot is logged in.") || logString.includes("error running main message handler")) {
+      logChannel.send("<@" + settings.secrets.super_admin + ">");
+    }
   } else {
     console.log("no log channel found");
   }

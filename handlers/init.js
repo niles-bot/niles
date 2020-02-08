@@ -5,6 +5,7 @@ const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
 const strings = require("./strings.js");
 const defer = require("promise-defer");
+let bot = require("../bot.js");
 
 //functions
 function writeSetting(message, value, setting) {
@@ -18,7 +19,12 @@ function writeSetting(message, value, setting) {
 function logId(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  let calendarId = message.content.split(" ")[1];
+  let calendarId;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    calendarId = message.content.split(" ")[1];
+  } else if (message.isMentioned(bot.client.user.id)) {
+    calendarId = message.content.split(" ")[2];
+  }
   if (!calendarId && !guildSettings.calendarID) {
     message.channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
     return;
@@ -46,7 +52,12 @@ function logId(message) {
 function logTz(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  let tz = message.content.split(" ")[1];
+  let tz;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    tz = message.content.split(" ")[1];
+  } else if (message.isMentioned(bot.client.user.id)) {
+    tz = message.content.split(" ")[2];
+  }
   if (!tz && !guildSettings["timezone"]) {
     message.channel.send("Enter a timezone using `!tz`, i.e. `!tz GMT+10:00` (Must be formatted like this; no spaces and FOUR DIGITS, i.e. if using GMT+03:00, or GMT+00:00)");
     return;
@@ -57,7 +68,7 @@ function logTz(message) {
   }
   tz = tz.toUpperCase();
   if (tz.indexOf("GMT") === -1 || ((tz.indexOf("+") === -1) && (tz.indexOf("-") === -1)) || tz.length !== 9) {
-    message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00`` (must be formatted like this)");
+    message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00`` (must be formatted like this) - Note that you need a 0 in front of single digit timezones!");
     return;
   }
   if (guildSettings["timezone"] !== "") {
@@ -75,7 +86,12 @@ function logTz(message) {
 function setPrefix(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  let newPrefix = message.content.split(" ")[1];
+  let newPrefix;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    newPrefix = message.content.split(" ")[1];
+  } else if (message.isMentioned(bot.client.user.id)) {
+    newPrefix = message.content.split(" ")[2];
+  }
   if (!newPrefix) {
     return message.channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
   }
@@ -92,7 +108,12 @@ function setPrefix(message) {
 function setRoles(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  let adminRole = message.content.split(" ")[1];
+  let adminRole;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    adminRole = message.content.split(" ")[1];
+  } else if (message.isMentioned(bot.client.user.id)) {
+    adminRole = message.content.split(" ")[2];
+  }
   let userRoles = message.member.roles.map((role) => role.name);
   if (!adminRole && guildSettings.allowedRoles.length === 0) {
     return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
@@ -123,8 +144,12 @@ exports.run = function(message) {
   }
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
-
+  let cmd;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
+  } else if (message.isMentioned(bot.client.user.id)) {
+    cmd = message.content.toLowerCase().split(" ")[1];
+  }
   // Function Mapping
   let setup = () => message.channel.send(strings.SETUP_MESSAGE);
   let id = () => logId(message);
