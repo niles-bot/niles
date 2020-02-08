@@ -544,8 +544,7 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
   let params = {
     timeMin: startDate,
     timeMax: endDate,
-    singleEvents: true,
-    orderBy: "startTime"
+    singleEvents: true
   };
 	return cal.Events.list(calendarId, params)
 		.then(json => {
@@ -583,45 +582,46 @@ function deleteEvent(message, calendarId, dayMap) {
   }
   listSingleEventsWithinDateRange(message, calendarId, dayMap).then((resp) => {
     for (let i = 0; i < resp.length; i++) {
-      helpers.log(text + " : " + resp[i].summary);
-      if (text.toUpperCase().trim() == resp[i].summary.toUpperCase().trim()) {
-        let promptDate;
-        if (resp[i].start.dateTime) {promptDate=resp[i].start.dateTime;} else {promptDate=resp[i].start.date}
-        message.channel.send(`Are you sure you want to delete the event **${resp[i].summary}** on ${promptDate}? **(y/n)**`)
-          .then((res) => {
-            res.delete(10000);
+      if (resp[i].summary) {
+        if (text.toUpperCase().trim() == resp[i].summary.toUpperCase().trim()) {
+          let promptDate;
+          if (resp[i].start.dateTime) {promptDate=resp[i].start.dateTime;} else {promptDate=resp[i].start.date}
+          message.channel.send(`Are you sure you want to delete the event **${resp[i].summary}** on ${promptDate}? **(y/n)**`)
+            .then((res) => {
+              res.delete(10000);
+            });
+          const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
+            time: 10000
           });
-        const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
-          time: 10000
-        });
-        collector.on("collect", (m) => {
-          deleteMessages.push(m.id);
-          if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-            deleteEventById(resp[i].id, calendarId, dayMap, message).then((del) => {
-              message.channel.send(`Event **${resp[i].summary}** deleted`).then((res) => {
-                res.delete(10000);
+          collector.on("collect", (m) => {
+            deleteMessages.push(m.id);
+            if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
+              deleteEventById(resp[i].id, calendarId, dayMap, message).then((del) => {
+                message.channel.send(`Event **${resp[i].summary}** deleted`).then((res) => {
+                  res.delete(10000);
+                });
               });
-            });
-          } else {
-            message.channel.send("Okay, I won't do that").then((res) => {
-              res.delete(5000);
-            });
-          }
-          for (let k = 0; k < deleteMessages.length; k++) {
-            message.channel.fetchMessage(deleteMessages[k]).then((m) => {
-              m.delete(5000);
-            });
-          }
-          return collector.stop();
-        });
-        collector.on("end", (collected, reason) => {
-          if (reason === "time") {
-            message.channel.send("command response timeout").then((res) => {
-              res.delete(5000);
-            });
-          }
-        });
-        return;
+            } else {
+              message.channel.send("Okay, I won't do that").then((res) => {
+                res.delete(5000);
+              });
+            }
+            for (let k = 0; k < deleteMessages.length; k++) {
+              message.channel.fetchMessage(deleteMessages[k]).then((m) => {
+                m.delete(5000);
+              });
+            }
+            return collector.stop();
+          });
+          collector.on("end", (collected, reason) => {
+            if (reason === "time") {
+              message.channel.send("command response timeout").then((res) => {
+                res.delete(5000);
+              });
+            }
+          });
+          return;
+        }
       }
     }
     return message.channel.send("Couldn't find event with that name - make sure you use exactly what the event is named!").then((res) => {
