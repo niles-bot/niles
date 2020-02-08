@@ -4,7 +4,7 @@ layout: default
 
 [Niles](http://seanecoffey.github.io/Niles) is a Discord bot for displaying a simple calendar that interfaces with Google Calendar.
 
-![example](https://puu.sh/wcgpt/e209eef3ba.png)
+![example](https://i.imgur.com/3yYK4QB.png)
 
 ## Niles can help you if...
 
