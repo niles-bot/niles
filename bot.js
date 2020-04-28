@@ -154,4 +154,9 @@ process.on("exit", () => {
 
 process.on("unhandledRejection", (err) => {
   helpers.log("Promise Rejection: " + err);
+  // watch for ECONNRESET
+  if (err.code === "ECONNRESET") {
+    helpers.log("Connection Lost, Signalling restart");
+    process.exit();
+  }
 });
