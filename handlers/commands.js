@@ -512,6 +512,18 @@ function displayOptions(message) {
     } else {
       message.channel.send("Please only use 0 or 1 for the calendar help menu options, (off or on)");
     }
+  } else if (pieces[1] === "format") {
+    if (pieces[2] === "12") {
+      guildSettings.format = 12;
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Set to 12-Hour clock format");
+    } else if (pieces[2] === "24") {
+      guildSettings.format = 24;
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Set to 24-Hour clock format");
+    } else {
+      message.channel.send("Please only use 12 or 24 for the clock display options");
+    }
   } else if (pieces[1] == null) {
     message.channel.send("`!displayoptions help` and `!displayoptions pin` are the only valid Display Options.");
   }
