@@ -525,7 +525,7 @@ function displayOptions(message) {
       message.channel.send("Please only use 12 or 24 for the clock display options");
     }
   } else if (pieces[1] == null) {
-    message.channel.send("`!displayoptions help` and `!displayoptions pin` are the only valid Display Options.");
+    message.channel.send("`!displayoptions help`, `!displayoptions pin` and `!displayoptions format` are the only valid Display Options.");
   }
   else {
     message.channel.send("I don't think thats a valid display option, sorry!");
