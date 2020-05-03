@@ -234,8 +234,8 @@ function getStringTime(date, format) {
   let minutes = prependZero(date.getMinutes());
   // 24 hour format
   if (format === 24) {
-    // just return hour format
-    return `${hour}:${minutes}`;
+    // just return hour format with prepended zero
+    return `${prependZero(hour)}:${minutes}`;
   }
   // 12 hour format
   else {
