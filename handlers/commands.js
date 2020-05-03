@@ -139,7 +139,6 @@ function getEvents(message, calendarID, dayMap) {
     let tz = guildSettings.timezone;
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
     let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
-    let format = guildSettings.format;
     let params = {
       timeMin: startDate,
       timeMax: endDate,
