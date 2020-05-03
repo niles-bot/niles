@@ -228,22 +228,31 @@ function stringDate(date, guildid, hour) {
   return dateString;
 }
 
-function getStringTime(date) {
+function getStringTime(date, format) {
+  // check for 24 hour switch
   let hour = date.getHours();
   let minutes = prependZero(date.getMinutes());
-  if (minutes === "00") {
-    if (hour <= 11) {
-      return hourString(parseInt(date.getHours(), 10)) + "AM";
-    }
-    if (hour > 11) {
-      return hourString(parseInt(date.getHours(), 10)) + "PM";
-    }
-  } else {
-    if (hour <= 11) {
-      return `${hourString(parseInt(date.getHours(),10))}:${minutes}AM`;
-    }
-    if (hour > 11) {
-      return `${hourString(parseInt(date.getHours(),10))}:${minutes}PM`;
+  // 24 hour format
+  if (format === 24) {
+    // just return hour format
+    return `${hour}:${minutes}`;
+  }
+  // 12 hour format
+  else {
+    if (minutes === "00") {
+      if (hour <= 11) {
+        return hourString(parseInt(date.getHours(), 10)) + "AM";
+      }
+      if (hour > 11) {
+        return hourString(parseInt(date.getHours(), 10)) + "PM";
+      }
+    } else {
+      if (hour <= 11) {
+        return `${hourString(parseInt(date.getHours(),10))}:${minutes}AM`;
+      }
+      if (hour > 11) {
+        return `${hourString(parseInt(date.getHours(),10))}:${minutes}PM`;
+      }
     }
   }
 }

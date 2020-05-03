@@ -139,6 +139,7 @@ function getEvents(message, calendarID, dayMap) {
     let tz = guildSettings.timezone;
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
     let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
+    let format = guildSettings.format;
     let params = {
       timeMin: startDate,
       timeMax: endDate,
@@ -236,6 +237,7 @@ function generateCalendar(message, dayMap) {
   let calendar = helpers.readFile(calendarPath);
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
+  let format = guildSettings.format;
   let p = defer();
   let finalString = "";
   for (let i = 0; i < 7; i++) {
@@ -276,7 +278,7 @@ function generateCalendar(message, dayMap) {
           tempStartDate = helpers.convertDate(tempStartDate, message.guild.id);
           let tempFinDate = new Date(calendar[key][m].end.dateTime);
           tempFinDate = helpers.convertDate(tempFinDate, message.guild.id);
-          tempString[helpers.getStringTime(tempStartDate) + " - " + helpers.getStringTime(tempFinDate)] = calendar[key][m].summary;
+          tempString[helpers.getStringTime(tempStartDate,format) + " - " + helpers.getStringTime(tempFinDate,format)] = calendar[key][m].summary;
           sendString += columnify(tempString, options) + "\n";
         }
       }
