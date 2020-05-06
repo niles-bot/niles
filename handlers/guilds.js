@@ -28,6 +28,7 @@ exports.create = (guild) => {
     "calendarChannel": "",
     "timezone": "",
     "helpmenu": "1",
+    "format": 12,
     "allowedRoles": []
   };
   const guildData = {
