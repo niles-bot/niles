@@ -660,7 +660,7 @@ function calendarUpdater(message, calendarId, dayMap, timerCount) {
     clearInterval(autoUpdater[message.guild.id]);
     try {
       delete timerCount[message.guild.id];
-      message.channel.send("update timer has been killed.");
+      //message.channel.send("update timer has been killed.");
     } catch (err) {
       helpers.log(err);
     }
@@ -759,7 +759,7 @@ function run(message) {
       clearInterval(autoUpdater[message.guild.id]);
       try {
         delete timerCount[message.guild.id];
-        message.channel.send("update timer has been killed.");
+        //message.channel.send("update timer has been killed.");
       } catch (err) {
         helpers.log(err);
       }
