@@ -536,7 +536,7 @@ function displayOptions(message) {
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
       message.channel.send("Turned timezone display off");
     } else {
-      message.channel.send("Please only use 0 or 1 for the calendar timzone display options, (off or on)")
+      message.channel.send("Please only use 0 or 1 for the calendar timzone display options, (off or on)");
     }
   } else if (pieces[1] == null) {
     message.channel.send("`!displayoptions help`, `!displayoptions pin`, `!displayoptions format`, `!displayoptions tzdisplay` are the only valid Display Options.");
