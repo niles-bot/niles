@@ -300,6 +300,9 @@ function generateCalendar(message, dayMap) {
   if (guildSettings.helpmenu === "1") {
     embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
   }
+  if (guildSettings.tzDisplay === "1") { // display timezone
+    embed.addField("Timezone", guildSettings.timezone, false);
+  }
   embed.setTimestamp(new Date());
   p.resolve(embed);
   return p.promise;
@@ -523,8 +526,20 @@ function displayOptions(message) {
     } else {
       message.channel.send("Please only use 12 or 24 for the clock display options");
     }
+  } else if (pieces[1] === "tzdisplay") {
+    if (pieces[2] === "1") {
+      guildSettings.tzDisplay = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Turned timezone display on");
+    } else if (pieces[2] === "0") {
+      guildSettings.tzDisplay = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Turned timezone display off");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the calendar timzone display options, (off or on)")
+    }
   } else if (pieces[1] == null) {
-    message.channel.send("`!displayoptions help`, `!displayoptions pin` and `!displayoptions format` are the only valid Display Options.");
+    message.channel.send("`!displayoptions help`, `!displayoptions pin`, `!displayoptions format`, `!displayoptions tzdisplay` are the only valid Display Options.");
   }
   else {
     message.channel.send("I don't think thats a valid display option, sorry!");
