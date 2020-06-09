@@ -10,7 +10,7 @@ function getSettings() {
 }
 
 function getLogChannel() {
-  return bot.client.channels.get(getSettings().secrets.log_discord_channel);
+  return bot.client.channels.cache.get(getSettings().secrets.log_discord_channel);
 }
 
 function formatLogMessage(message) {
@@ -145,7 +145,7 @@ function mentioned(msg, x) {
   if (!Array.isArray(x)) {
     x = [x];
   }
-  return msg.isMentioned(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
+  return msg.mentions.has(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
 }
 
 function hourString(hour) {
@@ -269,7 +269,7 @@ function sendMessageHandler(message, err) {
 function checkRole(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = readFile(guildSettingsPath);
-  let userRoles = message.member.roles.map((role) => role.name);
+  let userRoles = message.member.roles.cache.map((role) => role.name);
   if (guildSettings.allowedRoles.length === 0) {
     return true;
   }

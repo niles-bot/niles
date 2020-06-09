@@ -20,7 +20,7 @@ client.on("ready", () => {
   client.user.setStatus("online");
 
   //Create databases for any missing guilds
-  const availableGuilds = Array.from(client.guilds.keys());
+  const availableGuilds = Array.from(client.guilds.cache.keys());
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
   const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
 
@@ -85,14 +85,14 @@ client.on("message", (message) => {
     return helpers.log(err);
   }
   //Ignore messages that dont use guild prefix or mentions.
-  if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
+  if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
     return;
   }
   //Ignore if the command isn't one of the commands.
   let cmd;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
-  } else if (message.isMentioned(client.user.id)) {
+  } else if (message.mentions.has(client.user.id)) {
     cmd = message.content.toLowerCase().split(" ")[1];
   }
   if (!restricted.allCommands.includes(cmd)) {

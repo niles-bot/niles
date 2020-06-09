@@ -21,7 +21,7 @@ let timerCount = [];
 function clean(channel, numberMessages, recurse) {
   let calendarPath = path.join(__dirname, "..", "stores", channel.guild.id, "calendar.json");
   let calendar = helpers.readFile(calendarPath);
-  channel.fetchMessages({
+  channel.messages.fetch({
     limit: numberMessages
   }).then((messages) => { //If the current calendar is deleted
     messages.forEach(function(message) {
@@ -291,7 +291,7 @@ function generateCalendar(message, dayMap) {
       return p.promise;
     }
   }
-  let embed = new bot.discord.RichEmbed();
+  let embed = new bot.discord.MessageEmbed();
   embed.setTitle("CALENDAR");
   embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
   embed.setColor("BLUE");
@@ -347,7 +347,7 @@ function postCalendar(message, dayMap) {
     let guildSettings = helpers.readFile(guildSettingsPath);
 
     if (calendar.calendarMessageId) {
-      message.channel.fetchMessage(calendar.calendarMessageId).then((message) => {
+      message.channel.messages.fetch(calendar.calendarMessageId).then((message) => {
         message.delete();
       }).catch((err) => {
         if (err.code === 10008) {
@@ -419,7 +419,7 @@ function updateCalendar(message, dayMap, human) {
     return;
   }
   let messageId = calendar.calendarMessageId;
-  message.channel.fetchMessage(messageId).then((m) => {
+  message.channel.messages.fetch(messageId).then((m) => {
     generateCalendar(message, dayMap).then((embed) => {
       if (embed === 2048) {
         return
@@ -458,7 +458,7 @@ function quickAddEvent(message, calendarId) {
   if (!pieces[1]) {
     return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
       .then((m) => {
-        m.delete(5000);
+        m.delete({ timeout: 5000 });
       });
   }
   let text = "";
@@ -473,7 +473,7 @@ function quickAddEvent(message, calendarId) {
     let promptDate;
     if (resp.start.dateTime) {promptDate=resp.start.dateTime;} else {promptDate=resp.start.date}
     message.channel.send("Event `" + resp.summary + "` on `" + promptDate + "` has been created").then((m) => {
-      m.delete(5000);
+      m.delete({ timeout: 5000 });
     });
     p.resolve(resp);
   }).catch((err) => {
@@ -586,7 +586,7 @@ function deleteEvent(message, calendarId, dayMap) {
   if (!pieces[1]) {
     return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
       .then((m) => {
-        m.delete(5000);
+        m.delete({ timeout: 5000 });
       });
   }
   let text = "";
@@ -601,7 +601,7 @@ function deleteEvent(message, calendarId, dayMap) {
           if (resp[i].start.dateTime) {promptDate=resp[i].start.dateTime;} else {promptDate=resp[i].start.date}
           message.channel.send(`Are you sure you want to delete the event **${resp[i].summary}** on ${promptDate}? **(y/n)**`)
             .then((res) => {
-              res.delete(10000);
+              res.delete({ timeout: 10000 });
             });
           const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
             time: 10000
@@ -611,17 +611,17 @@ function deleteEvent(message, calendarId, dayMap) {
             if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
               deleteEventById(resp[i].id, calendarId, dayMap, message).then((del) => {
                 message.channel.send(`Event **${resp[i].summary}** deleted`).then((res) => {
-                  res.delete(10000);
+                  res.delete({ timeout: 10000 });
                 });
               });
             } else {
               message.channel.send("Okay, I won't do that").then((res) => {
-                res.delete(5000);
+                res.delete({ timeout: 5000 });
               });
             }
             for (let k = 0; k < deleteMessages.length; k++) {
-              message.channel.fetchMessage(deleteMessages[k]).then((m) => {
-                m.delete(5000);
+              message.channel.messages.fetch(deleteMessages[k]).then((m) => {
+                m.delete({ timeout: 5000 });
               });
             }
             return collector.stop();
@@ -629,7 +629,7 @@ function deleteEvent(message, calendarId, dayMap) {
           collector.on("end", (collected, reason) => {
             if (reason === "time") {
               message.channel.send("command response timeout").then((res) => {
-                res.delete(5000);
+                res.delete({ timeout: 5000 });
               });
             }
           });
@@ -638,11 +638,11 @@ function deleteEvent(message, calendarId, dayMap) {
       }
     }
     return message.channel.send("Couldn't find event with that name - make sure you use exactly what the event is named!").then((res) => {
-      res.delete(5000)});
+      res.delete({ timeout: 5000 })});
   }).catch((err) => {
     helpers.log(err); //FIX THIS
     return message.channel.send("There was an error finding this event").then((res) => {
-      res.delete(5000)});
+      res.delete({ timeout: 5000 })});
   });
 }
 
@@ -668,13 +668,13 @@ function calendarUpdater(message, calendarId, dayMap, timerCount) {
 }
 
 function displayStats(message) {
-  let embed = new bot.discord.RichEmbed()
+  let embed = new bot.discord.MessageEmbed()
     .setColor("RED")
     .setTitle(`Niles Bot ${settings.secrets.current_version}`)
     .setURL("https://github.com/seanecoffey/Niles")
     .addField("Servers", bot.client.guilds.size, true)
     .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
-    .addField("Ping", `${(bot.client.ping).toFixed(0)} ms`, true)
+    .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
     .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")}
       (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
     .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
@@ -718,17 +718,17 @@ function run(message) {
   }
   if (cmd === "help" || helpers.mentioned(message, "help")) {
     message.channel.send(strings.HELP_MESSAGE);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "invite" || helpers.mentioned(message, "invite")) {
     message.channel.send({
-      embed: new bot.discord.RichEmbed()
+      embed: new bot.discord.MessageEmbed()
         .setColor("#FFFFF")
         .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
     }).catch((err) => {
       helpers.sendMessageHandler(message, err);
     });
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd) || helpers.mentioned(message, ["setup", "start", "id", "tz", "prefix", "admin"])) {
     try {
@@ -736,11 +736,11 @@ function run(message) {
     } catch (err) {
       helpers.log("error trying to run init message catcher in guild: " + message.guild.id + ": " + err);
     }
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "init" || helpers.mentioned(message, "init")) {
     guilds.create(message.guild);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (["clean", "purge"].includes(cmd) || helpers.mentioned(message, ["clean", "purge"])) {
     deleteMessages(message);
@@ -750,7 +750,7 @@ function run(message) {
     setTimeout(function func() {
       postCalendar(message, dayMap);
     }, 2000);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "update" || helpers.mentioned(message, "update")) {
     if (typeof calendar === "undefined") {
@@ -767,7 +767,7 @@ function run(message) {
     }
     if (calendar.calendarMessageId === "") {
       message.channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
-      message.delete(5000);
+      message.delete({ timeout: 5000 });
       return;
     }
     delayGetEvents(message, calendarID, dayMap);
@@ -778,7 +778,7 @@ function run(message) {
         helpers.log("error in update command: " + err);
       }
     }, 2000);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (["create", "scrim"].includes(cmd) || helpers.mentioned(message, ["create", "scrim"])) {
     quickAddEvent(message, calendarID).then((resp) => {
@@ -790,19 +790,19 @@ function run(message) {
     }).catch((err) => {
       helpers.log("error creating event in guild: " + message.guild.id + ": " + err);
     });
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "displayoptions" || helpers.mentioned(message, "displayoptions")) {
     displayOptions(message);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (["stats", "info"].includes(cmd) || helpers.mentioned(message, ["stats", "info"])) {
     displayStats(message);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "get" || helpers.mentioned(message, "get")) {
     getEvents(message, calendarID, dayMap);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "stop" || helpers.mentioned(message, "stop")) {
     clearInterval(autoUpdater[message.guild.id]);
@@ -810,7 +810,7 @@ function run(message) {
   }
   if (cmd === "delete" || helpers.mentioned(message, "delete")) {
     deleteEvent(message, calendarID, dayMap);
-    message.delete(5000);
+    message.delete({ timeout: 5000 });
   }
   if (cmd === "count" || helpers.mentioned(message, "count")) {
     let theCount;
