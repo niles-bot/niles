@@ -52,7 +52,7 @@ The following variables are present in the secrets.json and will require an entr
 
 8. `calendar_update_interval` - the time in milliseconds between automatic updates.  Default is 300000 (5 minutes).
 
-9. `minimumPermissions` is an array of permissions that the bot considers as minimum permissions to function in a channel.  Can be useful for preventing errors due to incorrect permissions.  By default I use `"minimumPermissions": ["SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"]`
+9. `minimumPermissions` is an array of permissions that the bot considers as minimum permissions to function in a channel.  Can be useful for preventing errors due to incorrect permissions.  By default I use `"minimumPermissions": ["VIEW_CHANNEL', "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"]`
 
 
 NOTE: Discord user, server and channel ID's can be found by enabling discord developer mode by going to settings>appearance>developer mode.  You can then right click on servers, users and channels and "Copy ID".
