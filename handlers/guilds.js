@@ -29,6 +29,7 @@ exports.create = (guild) => {
     "timezone": "",
     "helpmenu": "1",
     "format": 12,
+    "tzDisplay": "0",
     "allowedRoles": []
   };
   const guildData = {

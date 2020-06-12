@@ -45,9 +45,10 @@ Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed set
 
 ### Display Options
 
-* `!displayoptions help`    - Turn off the help text under the calendar, takes 1 or 0 as input (on or off) i.e. `!displayoptions help 0` to turn off help text.
-* `!displayoptions pin`     - Turn off pinning of the calendar, takes 1 or 0 as input (on or off) i.e. `!displayoptions pin 0` to turn off pinning.
-* `!displayoptions format`  - Change clock format between 12 and 24-hour clock format, takes 12 or 24 as input i.e. `displayopions format 24` to disply events in 24-hour clock format.
+* `!displayoptions help`      - Turn off the help text under the calendar, takes 1 or 0 as input (on or off) i.e. `!displayoptions help 0` to turn off help text.
+* `!displayoptions pin`       - Turn off pinning of the calendar, takes 1 or 0 as input (on or off) i.e. `!displayoptions pin 0` to turn off pinning.
+* `!displayoptions format`    - Change clock format between 12 and 24-hour clock format, takes 12 or 24 as input i.e. `displayoptions format 24` to disply events in 24-hour clock format.
+* `!displayoptions tzdisplay` - Turn off timezone display, take 1 or 0 as input (on or off) i.e. `!displayoptions tzdisplay 0` to turn off timezone display.
 
 ## Support
 
