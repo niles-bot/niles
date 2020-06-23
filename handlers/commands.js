@@ -687,7 +687,7 @@ function displayStats(message) {
     .setColor("RED")
     .setTitle(`Niles Bot ${settings.secrets.current_version}`)
     .setURL("https://github.com/seanecoffey/Niles")
-    .addField("Servers", bot.client.guilds.size, true)
+    .addField("Servers", bot.client.guilds.cache.size, true)
     .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
     .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
     .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")}
