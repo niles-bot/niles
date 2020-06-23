@@ -22,7 +22,7 @@ function logId(message) {
   let calendarId;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     calendarId = message.content.split(" ")[1];
-  } else if (message.isMentioned(bot.client.user.id)) {
+  } else if (message.mentions.has(bot.client.user.id)) {
     calendarId = message.content.split(" ")[2];
   }
   if (!calendarId && !guildSettings.calendarID) {
@@ -55,7 +55,7 @@ function logTz(message) {
   let tz;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     tz = message.content.split(" ")[1];
-  } else if (message.isMentioned(bot.client.user.id)) {
+  } else if (message.mentions.has(bot.client.user.id)) {
     tz = message.content.split(" ")[2];
   }
   if (!tz && !guildSettings["timezone"]) {
@@ -89,7 +89,7 @@ function setPrefix(message) {
   let newPrefix;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     newPrefix = message.content.split(" ")[1];
-  } else if (message.isMentioned(bot.client.user.id)) {
+  } else if (message.mentions.has(bot.client.user.id)) {
     newPrefix = message.content.split(" ")[2];
   }
   if (!newPrefix) {
@@ -111,10 +111,10 @@ function setRoles(message) {
   let adminRole;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     adminRole = message.content.split(" ")[1];
-  } else if (message.isMentioned(bot.client.user.id)) {
+  } else if (message.mentions.has(bot.client.user.id)) {
     adminRole = message.content.split(" ")[2];
   }
-  let userRoles = message.member.roles.map((role) => role.name);
+  let userRoles = message.member.roles.cache.map((role) => role.name);
   if (!adminRole && guildSettings.allowedRoles.length === 0) {
     return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
   }
@@ -147,7 +147,7 @@ exports.run = function(message) {
   let cmd;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
-  } else if (message.isMentioned(bot.client.user.id)) {
+  } else if (message.mentions.has(bot.client.user.id)) {
     cmd = message.content.toLowerCase().split(" ")[1];
   }
   // Function Mapping
