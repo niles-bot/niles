@@ -12,7 +12,8 @@ const HELP_MESSAGE = "```\
 !id                  -  Set the Google calendar ID for the guild\n\
 !tz                  -  Set the timezone for the guild\n\
 !prefix              -  View or change the prefix for Niles\n\
-!admin              -  Restrict the usage of Niles to a specific role\n\
+!displayoptions      -  Change formatting of the calendar display\n\
+!admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\
 Visit http://niles.seanecoffey.com for more info.";
