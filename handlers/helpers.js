@@ -41,7 +41,9 @@ function readFile(path) {
   try {
     return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
-    return log("error reading file " + err);
+    log("error reading file " + err);
+    // return valid JSON to trigger update
+    return {};
   }
 }
 
