@@ -18,7 +18,7 @@ If you wanted to host your own version or similar, these instructions will get y
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/en/) - v8 or higher
+* [Node.js](https://nodejs.org/en/) - v12 or higher
 
 ### Installing
 

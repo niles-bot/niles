@@ -140,6 +140,7 @@ client.on("message", (message) => {
 // ProcessListeners
 process.on("uncaughtException", (err) => {
   helpers.log("uncaughtException error" + err);
+  process.exit();
 });
 
 process.on("SIGINT", () => {
