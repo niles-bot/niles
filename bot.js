@@ -26,7 +26,7 @@ client.on("ready", () => {
 
   unknownGuilds.forEach((guildId) => {
     helpers.log("unknown guild found; creating");
-    guilds.create(client.guilds.get(guildId));
+    guilds.create(client.guilds.cache.get(guildId));
   });
 });
 

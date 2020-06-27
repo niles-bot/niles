@@ -727,7 +727,7 @@ function run(message) {
   let dayMap = createDayMap(message);
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
   if (cmd === "ping" || helpers.mentioned(message, "ping")) {
-    message.channel.send(`:ping_pong: !Pong! ${bot.client.ws.ping[0]}ms`).catch((err) => {
+    message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
       helpers.sendMessageHandler(message, err);
     });
   }
