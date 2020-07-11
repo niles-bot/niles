@@ -110,9 +110,9 @@ function setRoles(message) {
   let guildSettings = helpers.readFile(guildSettingsPath);
   let adminRole;
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
-    adminRole = message.content.split(" ")[1];
+    adminRole = message.content.split(" ").slice(1).join(" ");
   } else if (message.mentions.has(bot.client.user.id)) {
-    adminRole = message.content.split(" ")[2];
+    adminRole = message.content.split(" ").slice(2).join(" ");
   }
   let userRoles = message.member.roles.cache.map((role) => role.name);
   if (!adminRole && guildSettings.allowedRoles.length === 0) {
@@ -125,14 +125,18 @@ function setRoles(message) {
     if (["everyone", "Everyone", "EVERYONE"].includes(adminRole)) {
       message.channel.send("Do you want to allow everyone in this channel/server to use Niles? **(y/n)**");
       helpers.yesThenCollector(message).then(() => {
-        return writeSetting(message, [], "allowedRoles");
+        writeSetting(message, [], "allowedRoles");
+      }).catch((err) => {
+        helpers.log(err);
       });
     } else if (!userRoles.includes(adminRole)) {
       return message.channel.send("You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive");
     } else {
       message.channel.send(`Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`);
       helpers.yesThenCollector(message).then(() => {
-        return writeSetting(message, [adminRole], "allowedRoles");
+        writeSetting(message, [adminRole], "allowedRoles");
+      }).catch((err) => {
+        helpers.log(err);
       });
     }
   }
