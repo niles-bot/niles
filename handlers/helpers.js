@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
+const moment = require('moment-timezone');
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -179,6 +180,19 @@ function prependZero(item) {
   }
 }
 
+// timezone validation
+const tzValidation = (timezone) => { return moment.tz.zone(timezone) };
+
+// parse timezone and adjust time
+function parseTz(time, timezone) {
+  if (tzValidation(timezone)) { // passes moment timezone test
+    return moment(time).tz(timezone);
+  } else { // does not pass moment timezone test (old timezone)
+    return moment(time).utcOffset(timezone);
+  }
+}
+
+// new convertDate
 function convertDate(dateToConvert, guildid) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
   let guildSettings = readFile(guildSettingsPath);
@@ -197,6 +211,15 @@ function convertDate(dateToConvert, guildid) {
   let utcdate = new Date(utc);
   let nd = new Date(utc + (3600000 * offset));
   return nd;
+}
+
+// now with moment
+// returns date object adjusted for tz
+function newConvertDate(dateToConvert, guildid) {
+  let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
+  let guildSettings = readFile(guildSettingsPath);
+  let tz = guildSettings.timezone;
+  return parseTz(dateToConvert, tz).toDate();
 }
 
 function stringDate(date, guildid, hour) {
@@ -230,6 +253,14 @@ function stringDate(date, guildid, hour) {
   return dateString;
 }
 
+// now with momentjs
+function newStringDate(date, guildid, hour) {
+  let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
+  let guildSettings = readFile(guildSettingsPath);
+  let tz = guildSettings.timezone;
+  return parseTz(date, tz).toISOString(true);
+}
+
 function getStringTime(date, format) {
   // check for 24 hour switch
   let hour = date.getHours();
@@ -259,6 +290,15 @@ function getStringTime(date, format) {
   }
 }
 
+function newGetStringTime(date, format) {
+  // date.format(hA:mm) - 9:05AM
+  // date.format(HH:mm) - 09:05
+  if (date.minutes() === 0) { // if on the hour
+    return ((format === 24) ? date.format('HH') : date.format('hA'));
+  } else { // if not on the hour
+    return ((format === 24) ? date.format('HH:mm') : date.format('h:mmA'));
+  }
+}
 
 function sendMessageHandler(message, err) {
   if (err.message === "Missing Permissions") {

@@ -4,7 +4,7 @@ const defer = require("promise-defer");
 const CalendarAPI = require("node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
-const moment = require("moment");
+const moment = require("moment-timezone");
 require("moment-duration-format");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
@@ -117,6 +117,11 @@ function createDayMap(message) {
 
 function checkDateMatch(date1, date2) {
   return (date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate())
+}
+
+// new checkDateMatch with MomentJS
+function newCheckDateMatch(date1, date2) {
+  return moment(date1).isSame(date2, 'day');
 }
 
 function getEvents(message, calendarID, dayMap) {
