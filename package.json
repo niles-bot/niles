@@ -13,6 +13,7 @@
     "discord.js": "^12.2.0",
     "moment": "^2.26.0",
     "moment-duration-format": "^2.3.2",
+    "moment-timezone": "^0.5.31",
     "node-google-calendar": "^1.1.1",
     "promise-defer": "^1.0.0"
   },

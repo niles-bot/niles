@@ -52,34 +52,36 @@ function logId(message) {
 function logTz(message) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
+  const currentTz = guildSettings["timezone"];
   let tz;
+  // parse timezone
   if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
     tz = message.content.split(" ")[1];
   } else if (message.mentions.has(bot.client.user.id)) {
     tz = message.content.split(" ")[2];
   }
-  if (!tz && !guildSettings["timezone"]) {
-    message.channel.send("Enter a timezone using `!tz`, i.e. `!tz GMT+10:00` (Must be formatted like this; no spaces and FOUR DIGITS, i.e. if using GMT+03:00, or GMT+00:00)");
-    return;
+  if (!tz) { // no input
+    if (!currentTz) { // no timezone set
+      return message.channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` No spaces in formatting.");
+    } else { // timezone set
+      return message.channel.send("You didn't enter a timezone, you are currently using `" + currentTz + "`");
+    }
   }
-  if (!tz) {
-    message.channel.send("You didn't enter a timezone, you are currently using `" + guildSettings["timezone"] + "`");
-    return;
-  }
-  tz = tz.toUpperCase();
-  if (tz.indexOf("GMT") === -1 || ((tz.indexOf("+") === -1) && (tz.indexOf("-") === -1)) || tz.length !== 9) {
-    message.channel.send("Please enter timezone in valid format, i.e. ``GMT+06:00`` (must be formatted like this) - Note that you need a 0 in front of single digit timezones!");
-    return;
-  }
-  if (guildSettings["timezone"] !== "") {
-    message.channel.send("I've already been setup to use `" + guildSettings["timezone"] + "`, do you want to overwrite this and use `" + tz + "`? **(y/n)** ");
-    helpers.yesThenCollector(message).then(() => {
+  // valid input
+  if (helpers.validateTz(tz)) { // passes validation
+    if (currentTz) { // timezone set
+      message.channel.send("I've already been setup to use `" + currentTz + "`, do you want to overwrite this and use `" + tz + "`? **(y/n)** ");
+      // collect yes
+      helpers.yesThenCollector(message).then(() => {
+        writeSetting(message, tz, "timezone");
+      }).catch((err) => {
+        helpers.log(err);
+      });
+    } else { // timezone is not set
       writeSetting(message, tz, "timezone");
-    }).catch((err) => {
-      helpers.log(err);
-    });
-  } else {
-    writeSetting(message, tz, "timezone");
+    }
+  } else { // fails validation
+    return message.channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` No spaces in formatting.");
   }
 }
 

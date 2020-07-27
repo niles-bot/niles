@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
+const moment = require("moment-timezone");
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -150,115 +151,45 @@ function mentioned(msg, x) {
   return msg.mentions.has(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
 }
 
-function hourString(hour) {
-  let hours = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
-  return hours[hour];
-}
-
-function dayString(number) {
-  let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return days[number];
-}
-
-function monthString(number) {
-  let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  return months[number];
-}
-
 function firstUpper(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function prependZero(item) {
-  let converted = "";
-  if (String(item).length < 2) {
-    converted = "0" + String(item);
-    return converted;
-  } else {
-    return String(item);
+// timezone validation
+const validateTz = (timezone) => { return moment.tz.zone(timezone); };
+
+// parse timezone and adjust time
+function addTz(time, timezone) {
+  if (validateTz(timezone)) { // passes moment timezone test
+    return moment(time).tz(timezone);
+  } else { // does not pass moment timezone test (old timezone)
+    return moment(time).utcOffset(timezone);
   }
 }
 
+// returns date object adjusted for tz
 function convertDate(dateToConvert, guildid) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
   let guildSettings = readFile(guildSettingsPath);
-  let tz = guildSettings.timezone;
-  let pieces = tz.split("GMT")[1];
-  let hour = pieces.split(":")[0];
-  let minutes = pieces.split(":")[1];
-  if (minutes === "00") {
-    minutes = ".";
-  }
-  if (minutes === "30") {
-    minutes = ".5";
-  }
-  let offset = parseFloat(hour + minutes);
-  let utc = dateToConvert.getTime() + (dateToConvert.getTimezoneOffset() * 60000);
-  let utcdate = new Date(utc);
-  let nd = new Date(utc + (3600000 * offset));
-  return nd;
+  return addTz(dateToConvert, guildSettings.timezone).toDate();
 }
 
 function stringDate(date, guildid, hour) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
   let guildSettings = readFile(guildSettingsPath);
-  let offset;
-  if (guildSettings.timezone.indexOf("-") === -1) {
-    offset = guildSettings.timezone.split("+")[1];
-  } else {
-    offset = guildSettings.timezone.split("-")[1];
-  }
-  let year = date.getFullYear();
-  let month = prependZero(date.getMonth() + 1);
-  let day = prependZero(date.getDate());
-  let dateString = "";
-  if (guildSettings.timezone.indexOf("-") === -1) {
-    if (hour === "start") {
-      dateString += `${year}-${month}-${day}T00:00:00+${offset}`;
-    }
-    if (hour === "end") {
-      dateString += `${year}-${month}-${day}T23:59:00+${offset}`;
-    }
-  } else {
-    if (hour === "start") {
-      dateString += `${year}-${month}-${day}T00:00:00-${offset}`;
-    }
-    if (hour === "end") {
-      dateString += `${year}-${month}-${day}T23:59:00-${offset}`;
-    }
-  }
-  return dateString;
+  return addTz(date, guildSettings.timezone).toISOString(true);
 }
 
 function getStringTime(date, format) {
-  // check for 24 hour switch
-  let hour = date.getHours();
-  let minutes = prependZero(date.getMinutes());
-  // 24 hour format
-  if (format === 24) {
-    // just return hour format with prepended zero
-    return `${prependZero(hour)}:${minutes}`;
-  }
-  // 12 hour format
-  else {
-    if (minutes === "00") {
-      if (hour <= 11) {
-        return hourString(parseInt(date.getHours(), 10)) + "AM";
-      }
-      if (hour > 11) {
-        return hourString(parseInt(date.getHours(), 10)) + "PM";
-      }
-    } else {
-      if (hour <= 11) {
-        return `${hourString(parseInt(date.getHours(),10))}:${minutes}AM`;
-      }
-      if (hour > 11) {
-        return `${hourString(parseInt(date.getHours(),10))}:${minutes}PM`;
-      }
-    }
+  // m.format(hA:mm) - 9:05AM
+  // m.format(HH:mm) - 09:05
+  const m = moment(date);
+  if (m.minutes() === 0) { // if on the hour
+    return ((format === 24) ? m.format("HH") : m.format("hA"));
+  } else { // if not on the hour
+    return ((format === 24) ? m.format("HH:mm") : m.format("h:mmA"));
   }
 }
-
 
 function sendMessageHandler(message, err) {
   if (err.message === "Missing Permissions") {
@@ -345,17 +276,14 @@ module.exports = {
   amendUserSettings,
   getUserSetting,
   mentioned,
-  dayString,
-  monthString,
   firstUpper,
+  validateTz,
   log,
   logError,
   readFile,
   getStringTime,
   stringDate,
-  hourString,
   convertDate,
-  prependZero,
   sendMessageHandler,
   checkPermissions,
   checkPermissionsManual,

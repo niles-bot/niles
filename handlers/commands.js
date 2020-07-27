@@ -4,7 +4,7 @@ const defer = require("promise-defer");
 const CalendarAPI = require("node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
-const moment = require("moment");
+const moment = require("moment-timezone");
 require("moment-duration-format");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
@@ -116,7 +116,7 @@ function createDayMap(message) {
 }
 
 function checkDateMatch(date1, date2) {
-  return (date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate())
+  return moment(date1).isSame(date2, "day");
 }
 
 function getEvents(message, calendarID, dayMap) {
@@ -242,7 +242,7 @@ function generateCalendar(message, dayMap) {
   for (let i = 0; i < 7; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
+    sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n");
     if (calendar[key].length === 0) {
       sendString += "``` ```";
     } else {
@@ -694,7 +694,7 @@ function displayStats(message) {
       (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
     .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
     .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
-    .addField("Links", "[Bot invite](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)", true)
+    .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)", true)
     .setFooter("Created by Sean#0420");
   message.channel.send({
     embed
@@ -739,7 +739,7 @@ function run(message) {
     message.channel.send({
       embed: new bot.discord.MessageEmbed()
         .setColor("#FFFFF")
-        .setDescription("Click [here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
+        .setDescription("Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
     }).catch((err) => {
       helpers.sendMessageHandler(message, err);
     });
