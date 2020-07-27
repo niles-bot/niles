@@ -4,7 +4,7 @@ layout: default
 
 ## Self-host Guide
 
-This page is under construction and incomplete.  Discord provides fairly self explanatory details on creating an app with a bot account (https://discordapp.com/developers/applications/).  You need to create an app with a bot account.  In particular the `bot_token` found on the "Bot" page.
+This page is under construction and incomplete.  Discord provides fairly self explanatory details on creating an app with a bot account (https://discord.com/developers/applications/).  You need to create an app with a bot account.  In particular the `bot_token` found on the "Bot" page.
 
 Please visit the [Discord support server](https://discord.gg/jNyntBn) for further help.
 

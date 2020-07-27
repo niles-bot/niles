@@ -1,14 +1,14 @@
 # Niles Discord Bot
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a1440f5f9d23451a867348e5f9c1724e)](https://www.codacy.com/app/seanecoffey/Niles?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=seanecoffey/Niles&amp;utm_campaign=Badge_Grade)
 
-A [Discord](https://discordapp.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
+A [Discord](https://discord.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
 Targeted towards eSports event scheduling (scrims, PCWs).
 
 ![example](https://i.imgur.com/3yYK4QB.png)
 
 ## Getting Started
 
-[Invite the hosted bot to your Discord here](https://discordapp.com/oauth2/authorize?permissions=97344&scope=bot&client_id=320434122344366082).
+[Invite the hosted bot to your Discord here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=320434122344366082).
 
 Join the [Niles Discord server](https://discord.gg/jNyntBn) for support, bug reporting and feature requests.
 
@@ -22,9 +22,9 @@ If you wanted to host your own version or similar, these instructions will get y
 
 ### Installing
 
-Setup your Discord app on the [Discord developers website](https://discordapp.com/developers/applications/me).
+Setup your Discord app on the [Discord developers website](https://discord.com/developers/applications/me).
 
-Note: To add a development bot to your Discord server, visit https://discordapp.com/api/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot&permissions=97344 replacing your app id in the URL.
+Note: To add a development bot to your Discord server, visit https://discord.com/api/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot&permissions=97344 replacing your app id in the URL.
 
 Set up a [Google Service Account](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
 For more information on setting up a Google Service Account, [see here](https://github.com/yuhong90/node-google-calendar/wiki#setup-service-accounts).

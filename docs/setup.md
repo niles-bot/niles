@@ -4,7 +4,7 @@ layout: default
 
 ## Setup Guide
 
-First [invite Niles](https://discordapp.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
+First [invite Niles](https://discord.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344) to your Discord server.
 
 
 ### 1. Configure Google Calendar
@@ -42,12 +42,11 @@ We could pull this from your Google calendar or Discord server, but since your m
 
 This can be done using `!tz` i.e.
 
-`!tz GMT+10:00`
-`!tz GMT-03:00`
-`!tz GMT+00:00`
+`!tz America/New_York`
+`!tz +5`
+`!tz EST`
 
-and must be formatted like this with all 4 digits, +/- GMT time, including `:00`. UTC is the same as GMT.
-
+Full list of TZ database names: https://cutt.ly/tz
 
 ### 4. Run your calendar for the first time!
 
