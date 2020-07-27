@@ -161,9 +161,9 @@ const validateTz = (timezone) => { return moment.tz.zone(timezone); };
 // parse timezone and adjust time
 function addTz(time, timezone) {
   if (validateTz(timezone)) { // passes moment timezone test
-    return moment(time).tz(timezone);
+    return moment.parseZone(time).tz(timezone);
   } else { // does not pass moment timezone test (old timezone)
-    return moment(time).utcOffset(timezone);
+    return moment.parseZone(time).utcOffset(timezone);
   }
 }
 
@@ -183,7 +183,7 @@ function stringDate(date, guildid, hour) {
 function getStringTime(date, format) {
   // m.format(hA:mm) - 9:05AM
   // m.format(HH:mm) - 09:05
-  const m = moment(date);
+  const m = moment.parseZone(date);
   if (m.minutes() === 0) { // if on the hour
     return ((format === 24) ? m.format("HH") : m.format("hA"));
   } else { // if not on the hour
