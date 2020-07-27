@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-const moment = require('moment-timezone');
+const moment = require("moment-timezone");
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -156,7 +156,7 @@ function firstUpper(string) {
 }
 
 // timezone validation
-const validateTz = (timezone) => { return moment.tz.zone(timezone) };
+const validateTz = (timezone) => { return moment.tz.zone(timezone); };
 
 // parse timezone and adjust time
 function addTz(time, timezone) {
@@ -183,11 +183,11 @@ function stringDate(date, guildid, hour) {
 function getStringTime(date, format) {
   // m.format(hA:mm) - 9:05AM
   // m.format(HH:mm) - 09:05
-  m = moment(date)
+  const m = moment(date);
   if (m.minutes() === 0) { // if on the hour
-    return ((format === 24) ? m.format('HH') : m.format('hA'));
+    return ((format === 24) ? m.format("HH") : m.format("hA"));
   } else { // if not on the hour
-    return ((format === 24) ? m.format('HH:mm') : m.format('h:mmA'));
+    return ((format === 24) ? m.format("HH:mm") : m.format("h:mmA"));
   }
 }
 

@@ -116,7 +116,7 @@ function createDayMap(message) {
 }
 
 function checkDateMatch(date1, date2) {
-  return moment(date1).isSame(date2, 'day');
+  return moment(date1).isSame(date2, "day");
 }
 
 function getEvents(message, calendarID, dayMap) {
@@ -242,7 +242,7 @@ function generateCalendar(message, dayMap) {
   for (let i = 0; i < 7; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n")
+    sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n");
     if (calendar[key].length === 0) {
       sendString += "``` ```";
     } else {
