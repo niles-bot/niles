@@ -265,17 +265,17 @@ function generateCalendar(message, dayMap) {
         };
         if (Object.keys(calendar[key][m].start).includes("date")) {
           let tempString = {};
-          let tempStartDate = new Date(calendar[key][m].start.date);
+          let tempStartDate = moment(calendar[key][m].start.date);
           tempStartDate = helpers.convertDate(tempStartDate, message.guild.id);
-          let tempFinDate = new Date(calendar[key][m].end.date);
+          let tempFinDate = moment(calendar[key][m].end.date);
           tempFinDate = helpers.convertDate(tempFinDate, message.guild.id);
           tempString["All Day"] = calendar[key][m].summary;
           sendString += columnify(tempString, options) + "\n";
         } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
           let tempString = {};
-          let tempStartDate = new Date(calendar[key][m].start.dateTime);
+          let tempStartDate = moment(calendar[key][m].start.dateTime);
           tempStartDate = helpers.convertDate(tempStartDate, message.guild.id);
-          let tempFinDate = new Date(calendar[key][m].end.dateTime);
+          let tempFinDate = moment(calendar[key][m].end.dateTime);
           tempFinDate = helpers.convertDate(tempFinDate, message.guild.id);
           tempString[helpers.getStringTime(tempStartDate,format) + " - " + helpers.getStringTime(tempFinDate,format)] = calendar[key][m].summary;
           sendString += columnify(tempString, options) + "\n";
