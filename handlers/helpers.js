@@ -171,7 +171,7 @@ function addTz(time, timezone) {
 function convertDate(dateToConvert, guildid) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
   let guildSettings = readFile(guildSettingsPath);
-  return addTz(dateToConvert, guildSettings.timezone).toDate();
+  return addTz(dateToConvert, guildSettings.timezone).utc(true).toDate();
 }
 
 function stringDate(date, guildid, hour) {
