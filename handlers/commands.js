@@ -19,8 +19,7 @@ let timerCount = [];
 //functions
 
 function clean(channel, numberMessages, recurse) {
-  let calendarPath = path.join(__dirname, "..", "stores", channel.guild.id, "calendar.json");
-  let calendar = helpers.readFile(calendarPath);
+  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
   channel.messages.fetch({
     limit: numberMessages
   }).then((messages) => { //If the current calendar is deleted
@@ -131,10 +130,8 @@ function getEvents(message, calendarID, dayMap) {
       "day6": []
     };
     let tempKey;
-    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-    let calendar = helpers.readFile(calendarPath);
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-    let guildSettings = helpers.readFile(guildSettingsPath);
+    let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
     let events = [];
     let tz = guildSettings.timezone;
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
@@ -232,10 +229,8 @@ function getEvents(message, calendarID, dayMap) {
 }
 
 function generateCalendar(message, dayMap) {
-  let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-  let calendar = helpers.readFile(calendarPath);
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
+  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   let format = guildSettings.format;
   let p = defer();
   let finalString = "";
@@ -312,8 +307,7 @@ function startUpdateTimer(message) {
   if (!timerCount[message.guild.id]) {
     timerCount[message.guild.id] = 0;
   }
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   let calendarID = guildSettings.calendarID;
   let dayMap = createDayMap(message);
   //Pull updates on set interval
@@ -344,10 +338,8 @@ function startUpdateTimer(message) {
 
 function postCalendar(message, dayMap) {
   try {
-    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-    let calendar = helpers.readFile(calendarPath);
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-    let guildSettings = helpers.readFile(guildSettingsPath);
+    let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
 
     if (calendar.calendarMessageId) {
       message.channel.messages.fetch(calendar.calendarMessageId).then((message) => {
@@ -395,10 +387,8 @@ function postCalendar(message, dayMap) {
 }
 
 function updateCalendar(message, dayMap, human) {
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
-  let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-  let calendar = helpers.readFile(calendarPath);
+  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   if (typeof calendar === "undefined") {
     helpers.log("calendar undefined in " + message.guild.id + ". Killing update timer.");
     clearInterval(autoUpdater[message.guild.id]);
@@ -488,8 +478,7 @@ function quickAddEvent(message, calendarId) {
 
 function displayOptions(message) {
   let pieces = message.content.split(" ");
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   if (pieces[1] === "help") {
     if (pieces[2] === "1") {
       guildSettings.helpmenu = "1";
@@ -561,10 +550,8 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
 }
 
 function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
-  let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-  let calendar = helpers.readFile(calendarPath);
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
+  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
 	let eventsArray = [];
   let tz = guildSettings.timezone;
   let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
@@ -719,11 +706,9 @@ function delayGetEvents(message, calendarId, dayMap) {
 }
 
 function run(message) {
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = helpers.readFile(guildSettingsPath);
+  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   let calendarID = guildSettings.calendarID;
-  let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-  let calendar = helpers.readFile(calendarPath);
   let dayMap = createDayMap(message);
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
   if (cmd === "ping" || helpers.mentioned(message, "ping")) {
