@@ -711,6 +711,10 @@ function run(message) {
   let calendarID = guildSettings.calendarID;
   let dayMap = createDayMap(message);
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
+  // print current shard number
+  if (cmd === "shard" || helpers.mentioned(message, "shard")) {
+    return message.channel.send(`Shard: ${bot.client.shard.ids}`);
+  }
   if (cmd === "ping" || helpers.mentioned(message, "ping")) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
       helpers.sendMessageHandler(message, err);
