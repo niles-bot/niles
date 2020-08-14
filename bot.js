@@ -16,18 +16,35 @@ let checks = require("./handlers/createMissingAttributes.js");
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-  helpers.log("Bot is logged in.");
+  helpers.log(`Bot is logged in. Shard: ${client.shard.ids}`);
   client.user.setStatus("online");
+  // fetch all guild cache objects
+  client.shard.fetchClientValues('guilds.cache')
+      .then(results => {
+        const shardGuilds = []
+        results.forEach(function (item) { // iterate over shards
+          item.forEach(function (item) { // iterate over servers
+            shardGuilds.push(item.id) // add server id to shardGuilds
+          })
+        })
+        addMissingGuilds(shardGuilds) // start adding missing guilds
+        helpers.log("all shards spawned") // all shards spawned
+      })
+      .catch((err) => {
+        if (err.name === "Error [SHARDING_IN_PROCESS]") {
+          console.log('spawning shards ...') // send error to console - still sharding
+        }
+      });
 
-  //Create databases for any missing guilds
-  const availableGuilds = Array.from(client.guilds.cache.keys());
-  const knownGuilds = Object.keys(helpers.getGuildDatabase());
-  const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
-
-  unknownGuilds.forEach((guildId) => {
-    helpers.log("unknown guild found; creating");
-    guilds.create(client.guilds.cache.get(guildId));
-  });
+  function addMissingGuilds(availableGuilds) {
+    //Create databases for any missing guilds
+    const knownGuilds = Object.keys(helpers.getGuildDatabase());
+    const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
+    unknownGuilds.forEach((guildId) => {
+      helpers.log("unknown guild found; creating");
+      guilds.create(client.guilds.cache.get(guildId));
+    });
+  }
 });
 
 client.on("guildCreate", (guild) => {
@@ -98,7 +115,7 @@ client.on("message", (message) => {
   if (!restricted.allCommands.includes(cmd)) {
     return;
   } else {
-    helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
+    helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
   }
   if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
     if (restricted.allCommands.includes(cmd)) {

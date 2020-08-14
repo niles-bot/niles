@@ -6,6 +6,17 @@ let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
 
+function getGuildSettings(id, file) {
+  // select file
+  if (file === "calendar") {
+    filePath = path.join(__dirname, "..", "stores", id, "calendar.json");
+  } else if (file === "settings") {
+    filePath = path.join(__dirname, "..", "stores", id, "settings.json");
+  }
+  // read file
+  return readFile(filePath);
+}
+
 function getSettings() {
   return require("../settings.js");
 }
@@ -169,14 +180,12 @@ function addTz(time, timezone) {
 
 // returns date object adjusted for tz
 function convertDate(dateToConvert, guildid) {
-  let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
-  let guildSettings = readFile(guildSettingsPath);
+  let guildSettings = getGuildSettings(guildid, "settings");
   return addTz(dateToConvert, guildSettings.timezone).utc(true).toDate();
 }
 
 function stringDate(date, guildid, hour) {
-  let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
-  let guildSettings = readFile(guildSettingsPath);
+  let guildSettings = getGuildSettings(guildid, "settings");
   return addTz(date, guildSettings.timezone).toISOString(true);
 }
 
@@ -200,8 +209,7 @@ function sendMessageHandler(message, err) {
 }
 
 function checkRole(message) {
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-  let guildSettings = readFile(guildSettingsPath);
+  let guildSettings = getGuildSettings(message.guild.id, "settings");
   let userRoles = message.member.roles.cache.map((role) => role.name);
   if (guildSettings.allowedRoles.length === 0) {
     return true;
@@ -269,6 +277,7 @@ module.exports = {
   fullname,
   deleteFolderRecursive,
   getGuildDatabase,
+  getGuildSettings,
   removeGuildFromDatabase,
   writeGuildDatabase,
   amendGuildDatabase,

@@ -2,7 +2,7 @@
   "name": "niles",
   "version": "2.1.0",
   "description": "niles discord bot",
-  "main": "bot.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
