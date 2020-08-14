@@ -21,8 +21,16 @@ function getSettings() {
   return require("../settings.js");
 }
 
-function getLogChannel() {
-  return bot.client.channels.cache.get(getSettings().secrets.log_discord_channel);
+function postLog(string) {
+  const grave = "`";
+  const tripleGrave = "```";
+  let logChannel = grave + getSettings().secrets.log_discord_channel.toString() + grave;
+  let logString = grave + string + grave;
+  bot.client.shard.broadcastEval(
+    `this.channels.fetch(${logChannel}).then((channel) => {
+      channel.send(${logString});
+    })`
+  );
 }
 
 function formatLogMessage(message) {
@@ -32,17 +40,8 @@ function formatLogMessage(message) {
 function log(...logItems) {
   const logMessage = logItems.join(" ");
   const logString = formatLogMessage(logMessage);
-  const tripleGrave = "```";
-  const logChannel = getLogChannel();
-  if (logChannel) {
-    logChannel.send(tripleGrave + logString + tripleGrave);
-    if (logString.includes("Bot is logged in.") || logString.includes("error running main message handler")) {
-      logChannel.send("<@" + settings.secrets.super_admin + ">");
-    }
-  } else {
-    console.log("no log channel found");
-  }
   console.log(logString);
+  postLog(logString);
 }
 
 function logError() {
