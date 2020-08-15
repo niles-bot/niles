@@ -35,7 +35,7 @@ function log(...logItems) {
   bot.client.shard.broadcastEval(`
     // no log channel defined
     if (!'${logChannelId}') {
-      console.log("no log channel defined")
+      console.log("no log channel defined");
     }
     // fetch log channel
     const channel = this.channels.cache.get('${logChannelId}');
@@ -44,9 +44,10 @@ function log(...logItems) {
       if ('${logString}'.includes("Bot is logged in.") || '${logString}'.includes("error running main message handler")) {
         channel.send("<@${superAdmin}>");
       }
+      console.log('${logString}'); // send to console only once to avoid multiple lines
     }
   `)
-  .catch((err) => console.error(err)) // catch errors to console
+  .catch(console.error);
 }
 
 function logError() {
