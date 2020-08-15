@@ -19,7 +19,7 @@ let timerCount = [];
 //functions
 
 function clean(channel, numberMessages, recurse) {
-  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+  let calendar = helpers.getGuildSettings(channel.guild.id, "calendar");
   channel.messages.fetch({
     limit: numberMessages
   }).then((messages) => { //If the current calendar is deleted
@@ -826,8 +826,27 @@ function run(message) {
     message.channel.send("There are " + theCount + " timer threads running in this guild");
   }
   if (cmd === "timers" || helpers.mentioned(message, "timers")) {
-    if (message.author.id === settings.secrets.super_admin) {
+    const authorId = message.author.id;
+    if (authorId === settings.secrets.super_admin || settings.secrets.other_admin.includes(authorId)) {
       return message.channel.send("There are " + Object.keys(timerCount).length + " timers running across all guilds right now.");
+    } else {
+      return;
+    }
+  }
+  if (cmd === "reset" || helpers.mentioned(message, "reset")) {
+    const authorId = message.author.id;
+    if (authorId === settings.secrets.super_admin || settings.secrets.other_admin.includes(authorId)) {
+      let pieces = message.content.split(" ");
+      let response = "";
+      if (pieces[1] == null) response = "No shard number specified";
+      const shardNo = parseInt(pieces[1]); // check for valid shard
+      if (isNaN(shardNo)) response = "Invalid shard number"; // check for valid number
+      else {
+        response = `Restarting shard ${shardNo}`;
+        helpers.log(response);
+        bot.client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
+      }
+      message.client.send(response)
     } else {
       return;
     }

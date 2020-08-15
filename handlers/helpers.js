@@ -33,7 +33,6 @@ function log(...logItems) {
   const superAdmin = getSettings().secrets.super_admin;
   // send to all shards
   bot.client.shard.broadcastEval(`
-    // no log channel defined
     if (!'${logChannelId}') {
       console.log("no log channel defined");
     }
@@ -47,7 +46,9 @@ function log(...logItems) {
       console.log('${logString}'); // send to console only once to avoid multiple lines
     }
   `)
-  .catch(console.error);
+  .catch(err => {
+    console.log(err);
+  });
 }
 
 function logError() {
