@@ -21,28 +21,32 @@ function getSettings() {
   return require("../settings.js");
 }
 
-function getLogChannel() {
-  return bot.client.channels.cache.get(getSettings().secrets.log_discord_channel);
-}
-
 function formatLogMessage(message) {
   return `[${new Date().toUTCString()}] ${message}`;
 }
 
 function log(...logItems) {
   const logMessage = logItems.join(" ");
-  const logString = formatLogMessage(logMessage);
   const tripleGrave = "```";
-  const logChannel = getLogChannel();
-  if (logChannel) {
-    logChannel.send(tripleGrave + logString + tripleGrave);
-    if (logString.includes("Bot is logged in.") || logString.includes("error running main message handler")) {
-      logChannel.send("<@" + settings.secrets.super_admin + ">");
+  const logString = formatLogMessage(logMessage);
+  const logChannelId = getSettings().secrets.log_discord_channel;
+  const superAdmin = getSettings().secrets.super_admin;
+  // send to all shards
+  bot.client.shard.broadcastEval(`
+    // no log channel defined
+    if (!'${logChannelId}') {
+      console.log("no log channel defined")
     }
-  } else {
-    console.log("no log channel found");
-  }
-  console.log(logString);
+    // fetch log channel
+    const channel = this.channels.cache.get('${logChannelId}');
+    if (channel) { // check for channel on shard
+      channel.send('${tripleGrave} ${logString} ${tripleGrave}');
+      if ('${logString}'.includes("Bot is logged in.") || '${logString}'.includes("error running main message handler")) {
+        channel.send("<@${superAdmin}>");
+      }
+    }
+  `)
+  .catch((err) => console.error(err)) // catch errors to console
 }
 
 function logError() {
