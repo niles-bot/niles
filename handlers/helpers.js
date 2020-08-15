@@ -21,27 +21,33 @@ function getSettings() {
   return require("../settings.js");
 }
 
-function postLog(string) {
-  const grave = "`";
-  const tripleGrave = "```";
-  let logChannel = grave + getSettings().secrets.log_discord_channel.toString() + grave;
-  let logString = grave + string + grave;
-  bot.client.shard.broadcastEval(
-    `this.channels.fetch(${logChannel}).then((channel) => {
-      channel.send(${logString});
-    })`
-  );
-}
-
 function formatLogMessage(message) {
   return `[${new Date().toUTCString()}] ${message}`;
 }
 
 function log(...logItems) {
   const logMessage = logItems.join(" ");
+  const tripleGrave = "```";
   const logString = formatLogMessage(logMessage);
-  console.log(logString);
-  postLog(logString);
+  const logChannelId = getSettings().secrets.log_discord_channel;
+  const superAdmin = getSettings().secrets.super_admin;
+  // send to all shards
+  bot.client.shard.broadcastEval(`
+    // no log channel defined
+    if (!'${logChannelId}') {
+      console.log("no log channel defined");
+    }
+    // fetch log channel
+    const channel = this.channels.cache.get('${logChannelId}');
+    if (channel) { // check for channel on shard
+      channel.send('${tripleGrave} ${logString} ${tripleGrave}');
+      if ('${logString}'.includes("Bot is logged in.") || '${logString}'.includes("error running main message handler")) {
+        channel.send("<@${superAdmin}>");
+      }
+      console.log('${logString}'); // send to console only once to avoid multiple lines
+    }
+  `)
+  .catch(console.error);
 }
 
 function logError() {
