@@ -46,7 +46,7 @@ function log(...logItems) {
       console.log('${logString}'); // send to console only once to avoid multiple lines
     }
   `)
-  .catch(err => {
+  .catch((err) => {
     console.log(err);
   });
 }

@@ -838,15 +838,15 @@ function run(message) {
     if (authorId === settings.secrets.super_admin || settings.secrets.other_admin.includes(authorId)) {
       let pieces = message.content.split(" ");
       let response = "";
-      if (pieces[1] == null) response = "No shard number specified";
       const shardNo = parseInt(pieces[1]); // check for valid shard
-      if (isNaN(shardNo)) response = "Invalid shard number"; // check for valid number
-      else {
+      if (isNaN(shardNo)) { 
+        response = "Invalid shard number"; // check for valid number
+      } else {
         response = `Restarting shard ${shardNo}`;
         helpers.log(response);
         bot.client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
       }
-      message.client.send(response)
+      message.client.send(response);
     } else {
       return;
     }
