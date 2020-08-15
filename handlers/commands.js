@@ -670,21 +670,25 @@ function calendarUpdater(message, calendarId, dayMap, timerCount) {
 }
 
 function displayStats(message) {
-  let embed = new bot.discord.MessageEmbed()
-    .setColor("RED")
-    .setTitle(`Niles Bot ${settings.secrets.current_version}`)
-    .setURL("https://github.com/seanecoffey/Niles")
-    .addField("Servers", bot.client.guilds.cache.size, true)
-    .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
-    .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
-    .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")}
-      (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
-    .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
-    .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
-    .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)", true)
-    .setFooter("Created by Sean#0420");
-  message.channel.send({
-    embed
+  bot.client.shard.fetchClientValues('guilds.cache.size').then(results => {
+    let embed = new bot.discord.MessageEmbed()
+      .setColor("RED")
+      .setTitle(`Niles Bot ${settings.secrets.current_version}`)
+      .setURL("https://github.com/seanecoffey/Niles")
+      .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
+      .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
+      .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
+      .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")}
+        (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
+      .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
+      .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
+      .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)", true)
+      .setFooter("Created by Sean#0420");
+    message.channel.send({
+      embed
+    }).catch((err) => {
+      helpers.log(err);
+    });
   }).catch((err) => {
     helpers.log(err);
   });
