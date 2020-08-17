@@ -1,6 +1,6 @@
 {
   "name": "niles",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -10,11 +10,11 @@
   "license": "MIT",
   "dependencies": {
     "columnify": "^1.5.4",
-    "discord.js": "^12.2.0",
-    "moment": "^2.26.0",
+    "discord.js": "^12.3.1",
+    "moment": "^2.27.0",
     "moment-duration-format": "^2.3.2",
     "moment-timezone": "^0.5.31",
-    "node-google-calendar": "^1.1.1",
+    "@mchangrh/node-google-calendar": "^2.0.3",
     "promise-defer": "^1.0.0"
   },
   "devDependencies": {},

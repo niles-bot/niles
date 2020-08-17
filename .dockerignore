@@ -1,0 +1,13 @@
+# ignore current node_modules
+node_modules
+# ignore source control
+.git
+# ignore examples
+config/secrets.json.examples
+# ignore . files
+.gitignore
+.gitattributes
+.codeclimate.yml
+# ignore docs
+docs
+readme.md
