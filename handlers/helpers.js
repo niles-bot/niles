@@ -175,11 +175,6 @@ function firstUpper(string) {
 // timezone validation
 const validateTz = (timezone) => { return moment.tz.zone(timezone); };
 
-function momentDate(time, guildid) {
-  let guildSettings = getGuildSettings(guildid, "settings")
-  return addTz(time, guildSettings.timezone)
-}
-
 // parse timezone and adjust time
 function addTz(time, timezone) {
   if (validateTz(timezone)) { // passes moment timezone test
@@ -187,6 +182,11 @@ function addTz(time, timezone) {
   } else { // does not pass moment timezone test (old timezone)
     return moment.parseZone(time).utcOffset(timezone);
   }
+}
+
+function momentDate(time, guildid) {
+  let guildSettings = getGuildSettings(guildid, "settings");
+  return addTz(time, guildSettings.timezone);
 }
 
 // returns date object adjusted for tz
