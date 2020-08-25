@@ -184,6 +184,11 @@ function addTz(time, timezone) {
   }
 }
 
+function momentDate(time, guildid) {
+  let guildSettings = getGuildSettings(guildid, "settings");
+  return addTz(time, guildSettings.timezone);
+}
+
 // returns date object adjusted for tz
 function convertDate(dateToConvert, guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
@@ -198,7 +203,7 @@ function stringDate(date, guildid, hour) {
 function getStringTime(date, format) {
   // m.format(hA:mm) - 9:05AM
   // m.format(HH:mm) - 09:05
-  const m = moment.parseZone(date);
+  const m = moment(date); // no parsezone since we are passing in a moment object
   if (m.minutes() === 0) { // if on the hour
     return ((format === 24) ? m.format("HH") : m.format("hA"));
   } else { // if not on the hour
@@ -298,6 +303,7 @@ module.exports = {
   readFile,
   getStringTime,
   stringDate,
+  momentDate,
   convertDate,
   sendMessageHandler,
   checkPermissions,
