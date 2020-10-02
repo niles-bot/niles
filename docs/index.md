@@ -50,6 +50,20 @@ Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed set
 * `!displayoptions format`    - Change clock format between 12 and 24-hour clock format, takes 12 or 24 as input i.e. `displayoptions format 24` to disply events in 24-hour clock format.
 * `!displayoptions tzdisplay` - Turn off timezone display, take 1 or 0 as input (on or off) i.e. `!displayoptions tzdisplay 0` to turn off timezone display.
 
+### !create formatting
+`!create` is entirely handled by Google Calendar.
+Numerical date formats supported:
+* MM DD YY
+* M D YY
+* YYYY MM DD
+
+Textual date formats are supported in English only e.g. `September 4 2020`
+
+Multi-day events can be created with keywords " - " or " to " etc...
+e.g. `01/30/2020 - 05/30/2020`
+
+There is no way to change it and no plans to add middleware to convert it (Natural Language Processing is out of the scope of Niles)
+
 ## Support
 
 Join the [Niles Discord server](https://discord.gg/jNyntBn) if you have issues or suggestions.
