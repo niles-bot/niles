@@ -12,11 +12,11 @@ Please visit the [Discord support server](https://discord.gg/jNyntBn) for furthe
 
 1. Clone or download the repository, `git clone https://github.com/seanecoffey/Niles`
 
-2. Install using `npm install`.  **NOTE:** The npm version of Node-Google-Calendar has a bug that needs to be fixed manually. After running `npm install` navigate to `<app_directory>/node_modules/node-google-calendar\src`, edit the file `HttpRequest.js` as shown here: https://github.com/yuhong90/node-google-calendar/commit/6fc01e91098142c6004e5f642ddb50c8c38b5a34
+2. Install using `npm install`.
 
 3. Create your `secrets.json` file (discussed below) inside `/config`.  Create 2 files, `guilddatabase.json` and `users.json` inside `/stores`, filling both with `{}` so that they are valid JSON files.
 
-4. Run `node bot.js` and you should be running!
+4. Run `node index.js` and you should be running!
 
 
 ### secrets.json

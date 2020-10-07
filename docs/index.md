@@ -2,7 +2,7 @@
 layout: default
 ---
 
-[Niles](http://seanecoffey.github.io/Niles) is a Discord bot for displaying a simple calendar that interfaces with Google Calendar.
+[Niles](https://niles.seanecoffey.com/) is a Discord bot for displaying a simple calendar that interfaces with Google Calendar.
 
 ![example](https://i.imgur.com/3yYK4QB.png)
 
@@ -21,7 +21,7 @@ layout: default
 
 4. Run `!setup` in your `#general` to get started.
 
-Visit the [setup page](http://niles.seanecoffey.com/setup) for more detailed setup information.
+Visit the [setup page](https://niles.seanecoffey.com/setup) for more detailed setup information.
 
 ## Usage
 
@@ -70,16 +70,16 @@ Join the [Niles Discord server](https://discord.gg/jNyntBn) if you have issues o
 
 ## Self-hosting
 
-Visit the [self-host page](http://niles.seanecoffey.com/selfhost) for more detailed setup information.
+Visit the [self-host page](https://niles.seanecoffey.com/selfhost) for more detailed setup information.
 
 ## Author
 
-Sean Coffey ([GitHub](http://github.com/seanecoffey)).
+Sean Coffey ([GitHub](https://github.com/seanecoffey)).
 
 ![Sean Coffey](https://puu.sh/wcgvn/5dd67ad9c9.png)
 
 ### License
 
-[MIT License](http://seanecoffey.mit-license.org/)
+[MIT License](https://seanecoffey.mit-license.org/)
 
 Last update: 8 Feb 2020
