@@ -50,7 +50,7 @@ npm install
 ```
 
 ```
-node bot.js
+node index.js
 ```
 
 ## Built With
