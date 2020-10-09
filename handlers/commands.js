@@ -121,40 +121,6 @@ function createDayMap(message) {
   return dayMap;
 }
 
-/**
- * This function returns a classification of type 'eventType' to state the relation between a date and an event.
- * You can only check for the DAY relation, of checkDate, not the full dateTime relation!
- * @param {Date} checkDate - the Date to classify for an event
- * @param {Date} eventStartDate - the start Date() of an event
- * @param {Date} eventEndDate - the end Date() of an event
- * @return {string} eventType - A string of ENUM(eventType) representing the relation
- */
-function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
-  // remove the time to prevent call-time dependant issues
-  let lCheckDate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
-  let lEventStartDate = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
-  let lEventEndDate = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
-  let eventMatchType = eventType.NOMATCH;
-  // simple single day event
-  if(moment(lCheckDate).isSame(lEventStartDate) && moment(lEventStartDate).isSame(lEventEndDate)){
-    eventMatchType = eventType.SINGLE;
-}
-  // multi-day event
-  else if(!moment(lEventStartDate).isSame(lEventEndDate))
-  {
-    if(moment(lCheckDate).isSame(lEventStartDate)){
-      eventMatchType = eventType.MULTISTART;
-    }
-    else if(moment(lCheckDate).isSame(lEventEndDate)){
-      eventMatchType = eventType.MULTYEND;
-    } 
-    else if(moment(lCheckDate).isAfter(lEventStartDate) && moment(lCheckDate).isBefore(lEventEndDate)){
-      eventMatchType = eventType.MULTIMID;
-    } 
-  }
-  return eventMatchType;
-}
-
 function getEvents(message, calendarID, dayMap) {
   try {
     let tempDayArray = {
@@ -200,7 +166,7 @@ function getEvents(message, calendarID, dayMap) {
             eEndDate = new Date(new Date(json[i].end.date).getTime()-(1*24*60*60*1000));
           }
 
-          let eType = classifyEventMatch(dayMap[day], eStartDate, eEndDate);
+          let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
           if (eType != eventType.NOMATCH) {
             matches.push({
               id: json[i].id,
