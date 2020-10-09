@@ -5,6 +5,13 @@ const CalendarAPI = require("@mchangrh/node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
 const moment = require("moment-timezone");
+const eventType = {
+  NOMATCH: "nm",
+  SINGLE: "se",
+  MULTISTART: "ms",
+  MULTIMID: "mm",
+  MULTYEND: "me"
+};
 require("moment-duration-format");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
@@ -114,8 +121,38 @@ function createDayMap(message) {
   return dayMap;
 }
 
-function checkDateMatch(date1, date2) {
-  return moment(date1).isSame(date2, "day");
+/**
+ * This function returns a classification of type 'eventType' to state the relation between a date and an event.
+ * You can only check for the DAY relation, of checkDate, not the full dateTime relation!
+ * @param {Date} checkDate - the Date to classify for an event
+ * @param {Date} eventStartDate - the start Date() of an event
+ * @param {Date} eventEndDate - the end Date() of an event
+ * @return {string} eventType - A string of ENUM(eventType) representing the relation
+ */
+function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
+  // remove the time to prevent call-time dependant issues
+  let lCheckDate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+  let lEventStartDate = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+  let lEventEndDate = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
+  let eventMatchType = eventType.NOMATCH;
+  // simple single day event
+  if(moment(lCheckDate).isSame(lEventStartDate) && moment(lEventStartDate).isSame(lEventEndDate)){
+    eventMatchType = eventType.SINGLE;
+}
+  // multi-day event
+  else if(!moment(lEventStartDate).isSame(lEventEndDate))
+  {
+    if(moment(lCheckDate).isSame(lEventStartDate)){
+      eventMatchType = eventType.MULTISTART;
+    }
+    else if(moment(lCheckDate).isSame(lEventEndDate)){
+      eventMatchType = eventType.MULTYEND;
+    } 
+    else if(moment(lCheckDate).isAfter(lEventStartDate) && moment(lCheckDate).isBefore(lEventEndDate)){
+      eventMatchType = eventType.MULTIMID;
+    } 
+  }
+  return eventMatchType;
 }
 
 function getEvents(message, calendarID, dayMap) {
@@ -132,7 +169,6 @@ function getEvents(message, calendarID, dayMap) {
     let tempKey;
     let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
     let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-    let events = [];
     let tz = guildSettings.timezone;
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
     let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
@@ -142,62 +178,42 @@ function getEvents(message, calendarID, dayMap) {
       singleEvents: true,
       orderBy: "startTime"
     };
+    let matches = [];
+
     cal.Events.list(calendarID, params).then((json) => {
-      for (let i = 0; i < json.length; i++) {
-        let event = {
-          id: json[i].id,
-          summary: json[i].summary,
-          start: json[i].start,
-          end: json[i].end
-        };
-        events.push(event);
-      }
       for (let day = 0; day < 7; day++) {
         let key = "day" + String(day);
-        let matches = [];
-        for (let j = 0; j < json.length; j++) {
-          let tempDate = new Date(events[j].start.dateTime);
-          tempDate = helpers.convertDate(tempDate, message.guild.id);
-          if (checkDateMatch(dayMap[day], tempDate)) {
-            matches.push(events[j]);
+        matches = [];
+
+        for (let i = 0; i < json.length; i++) {
+          let eStartDate;
+          let eEndDate;
+          //Handle dateTime-based Events
+          if (json[i].start.dateTime) {
+            eStartDate = helpers.convertDate(new Date(json[i].start.dateTime), message.guild.id);
+            eEndDate = helpers.convertDate(new Date(json[i].end.dateTime), message.guild.id);
           }
           //Handle All Day Events
-          if (events[j].start.date) {
-            let tempStartDate = new Date(events[j].start.date);
-            let tempEndDate = new Date(events[j].end.date);
-            let lengthEvent = ((tempEndDate.getTime() - tempStartDate.getTime()) / (1000 * 60 * 60 * 24));
-            let allDayEvent = new Date(events[j].start.date);
-            if (checkDateMatch(dayMap[day], allDayEvent)) {
-              matches.push(events[j]);
-              for (let x = 1; x < lengthEvent; x++) { //Add New Entry For Each Day of A Multi Day Event
-                let newDateTime = (tempStartDate.getTime()) + (x * 24 * 60 * 60 * 1000);
-                let newDateA = new Date(newDateTime);
-                let newDateString = (helpers.convertDate(newDateA, message.guild.id)).toJSON().slice(0, 10);
-                let newEvent = {
-                  id: events[j].id,
-                  summary: events[j].summary,
-                  start: {
-                    "date": newDateString
-                  },
-                  end: events[j].end
-                };
-                tempKey = "day" + String(day + x);
-                tempDayArray[tempKey] = newEvent;
-              }
-            }
+          else if (json[i].start.date) {
+            eStartDate = new Date(json[i].start.date);
+            // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though 
+            eEndDate = new Date(new Date(json[i].end.date).getTime()-(1*24*60*60*1000));
           }
+
+          let eType = classifyEventMatch(dayMap[day], eStartDate, eEndDate);
+          if (eType != eventType.NOMATCH) {
+            matches.push({
+              id: json[i].id,
+              summary: json[i].summary,
+              start: json[i].start,
+              end: json[i].end,
+              type: eType
+            });
         }
         calendar[key] = matches;
-        if (tempDayArray[key].id) {
-          calendar[key].push({
-            "id": tempDayArray[key].id,
-            "summary": tempDayArray[key].summary,
-            "start": tempDayArray[key].start,
-            "end": tempDayArray[key].end
-          });
+        }
         }
 
-      }
       let d = new Date();
       calendar.lastUpdate = d;
       helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
@@ -265,9 +281,23 @@ function generateCalendar(message, dayMap) {
           sendString += columnify(tempString, options) + "\n";
         } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
           let tempString = {};
-          let tempStartDate = helpers.momentDate(calendar[key][m].start.dateTime, message.guild.id);
-          let tempFinDate = helpers.momentDate(calendar[key][m].end.dateTime, message.guild.id);
-          tempString[helpers.getStringTime(tempStartDate,format) + " - " + helpers.getStringTime(tempFinDate,format)] = calendar[key][m].summary;
+          let tempStartDate = "...";
+          let tempFinDate = "...";
+          let tempStringKey = "";
+          if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
+            tempStartDate = helpers.getStringTime(helpers.momentDate(calendar[key][m].start.dateTime, message.guild.id));
+          } 
+          if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
+            tempFinDate = helpers.getStringTime(helpers.momentDate(calendar[key][m].end.dateTime, message.guild.id));
+          }
+          if(calendar[key][m].type === eventType.MULTIMID){
+            tempStringKey = "All Day";
+          }
+          else
+          {
+            tempStringKey = tempStartDate + " - " + tempFinDate;
+          }
+          tempString[tempStringKey] = calendar[key][m].summary;
           sendString += columnify(tempString, options) + "\n";
         }
       }
