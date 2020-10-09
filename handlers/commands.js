@@ -5,13 +5,6 @@ const CalendarAPI = require("@mchangrh/node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
 const moment = require("moment-timezone");
-const eventType = {
-  NOMATCH: "nm",
-  SINGLE: "se",
-  MULTISTART: "ms",
-  MULTIMID: "mm",
-  MULTYEND: "me"
-};
 require("moment-duration-format");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
@@ -22,7 +15,7 @@ let guilds = require("./guilds.js");
 let cal = new CalendarAPI(settings.calendarConfig);
 let autoUpdater = [];
 let timerCount = [];
-
+let eventType = helpers.eventType;
 //functions
 
 function clean(channel, numberMessages, recurse) {
@@ -167,7 +160,7 @@ function getEvents(message, calendarID, dayMap) {
           }
 
           let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
-          if (eType != eventType.NOMATCH) {
+          if (eType !== eventType.NOMATCH) {
             matches.push({
               id: json[i].id,
               summary: json[i].summary,

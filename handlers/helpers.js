@@ -2,6 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
 const moment = require("moment-timezone");
+const eventType = {
+  NOMATCH: "nm",
+  SINGLE: "se",
+  MULTISTART: "ms",
+  MULTIMID: "mm",
+  MULTYEND: "me"
+};
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -344,5 +351,6 @@ module.exports = {
   checkPermissionsManual,
   checkRole,
   yesThenCollector,
-  classifyEventMatch
+  classifyEventMatch,
+  eventType
 };
