@@ -325,6 +325,23 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
   return eventMatchType;
 }
 
+
+/**
+ * This helper function limits the amount of chars in a string to max trimLength and adds "..." if shortened.
+ * @param {string} eventName - The name/summary of an event
+ * @param {int} trimLength - the number of chars to trim the title to
+ * @return {string} eventName - A string wit max 23 chars length
+ */
+function trimEventName(eventName, trimLength){
+  if(trimLength === null || trimLength === 0) return eventName;
+
+  if(eventName.length > trimLength){
+    eventName = eventName.trim().substring(0, trimLength-3) + "...";
+  }
+  return eventName;
+}
+
+
 module.exports = {
   fullname,
   deleteFolderRecursive,
@@ -352,5 +369,6 @@ module.exports = {
   checkRole,
   yesThenCollector,
   classifyEventMatch,
-  eventType
+  eventType,
+  trimEventName
 };

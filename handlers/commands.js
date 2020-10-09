@@ -168,10 +168,10 @@ function getEvents(message, calendarID, dayMap) {
               end: json[i].end,
               type: eType
             });
+          }
+          calendar[key] = matches;
         }
-        calendar[key] = matches;
-        }
-        }
+      }
 
       let d = new Date();
       calendar.lastUpdate = d;
@@ -213,6 +213,7 @@ function generateCalendar(message, dayMap) {
     let key = "day" + String(i);
     let sendString = "";
     sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n");
+    if(guildSettings.emptydays === "0" && calendar[key].length === 0) continue;
     if (calendar[key].length === 0) {
       sendString += "``` ```";
     } else {
@@ -233,10 +234,11 @@ function generateCalendar(message, dayMap) {
             }
           }
         };
+        let eventTitle = helpers.trimEventName(calendar[key][m].summary, guildSettings.trim);
         if (Object.keys(calendar[key][m].start).includes("date")) {
           let tempString = {};
           // no need for temp start/fin dates
-          tempString["All Day"] = calendar[key][m].summary;
+          tempString["All Day"] = eventTitle;
           sendString += columnify(tempString, options) + "\n";
         } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
           let tempString = {};
@@ -256,7 +258,7 @@ function generateCalendar(message, dayMap) {
           {
             tempStringKey = tempStartDate + " - " + tempFinDate;
           }
-          tempString[tempStringKey] = calendar[key][m].summary;
+          tempString[tempStringKey] = eventTitle;
           sendString += columnify(tempString, options) + "\n";
         }
       }
@@ -511,11 +513,44 @@ function displayOptions(message) {
     } else {
       message.channel.send("Please only use 0 or 1 for the calendar timzone display options, (off or on)");
     }
-  } else if (pieces[1] == null) {
-    message.channel.send("`!displayoptions help`, `!displayoptions pin`, `!displayoptions format`, `!displayoptions tzdisplay` are the only valid Display Options.");
-  }
-  else {
-    message.channel.send("I don't think thats a valid display option, sorry!");
+  } else if (pieces[1] === "emptydays") {
+    if (pieces[2] === "1") {
+      guildSettings.emptydays = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of empty days to 1 (on)");
+    } else if (pieces[2] === "0") {
+      guildSettings.emptydays = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of empty days to 0 (off)");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the calendar empty days display options, (off or on)");
+    }
+  } else if (pieces[1] === "trim") {
+    if (pieces[2] !== null) {
+      let size = parseInt(pieces[2]);
+      if(size.isNaN){
+        size = 0;
+      }
+      guildSettings.trim = size;
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed trimming of event titles to "+size+" (0 = off)");
+    } else  {
+      message.channel.send("Please provide a number to trim event titels. (0 = don't trim!)");
+    }
+  } else {
+    let usageMessage = `**displayoptions USAGE**\`\`\`
+    COMMAND                       PARAMS      EFFECT
+    ---------------------------------------------------------------------------
+    !displayoptions help          (0|1)       hide/show help
+    !displayoptions pin           (0|1)       pin calendar message
+    !displayoptions format        (12|24)     12h or 24h clock display 
+    !displayoptions tzdisplay     (0|1)       hide/show timezone
+    !displayoptions emptydays     (0|1)       hide/show empty days
+    !displayoptions trim          (n)         trim event names to n characters (0 = off)
+    \`\`\`
+    `;
+    let b = "`!displayoptions help`, `!displayoptions pin`, `!displayoptions format`, `!displayoptions tzdisplay` are the only valid Display Options.";
+    message.channel.send(usageMessage);
   }
 }
 
