@@ -333,7 +333,9 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
  * @return {string} eventName - A string wit max 23 chars length
  */
 function trimEventName(eventName, trimLength){
-  if(trimLength === null || trimLength === 0) return eventName;
+  if(trimLength === null || trimLength === 0){
+    return eventName;
+  }
 
   if(eventName.length > trimLength){
     eventName = eventName.trim().substring(0, trimLength-3) + "...";

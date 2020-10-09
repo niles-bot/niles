@@ -213,7 +213,9 @@ function generateCalendar(message, dayMap) {
     let key = "day" + String(i);
     let sendString = "";
     sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n");
-    if(guildSettings.emptydays === "0" && calendar[key].length === 0) continue;
+    if(guildSettings.emptydays === "0" && calendar[key].length === 0) {
+      continue;
+    }
     if (calendar[key].length === 0) {
       sendString += "``` ```";
     } else {
