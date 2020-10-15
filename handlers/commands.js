@@ -248,10 +248,10 @@ function generateCalendar(message, dayMap) {
           let tempFinDate = "...";
           let tempStringKey = "";
           if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(helpers.momentDate(calendar[key][m].start.dateTime, message.guild.id));
+            tempStartDate = helpers.getStringTime(calendar[key][m].start.dateTime, message.guild.id);
           } 
           if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(helpers.momentDate(calendar[key][m].end.dateTime, message.guild.id));
+            tempFinDate = helpers.getStringTime(calendar[key][m].end.dateTime, message.guild.id);
           }
           if(calendar[key][m].type === eventType.MULTIMID){
             tempStringKey = "All Day";
