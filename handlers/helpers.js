@@ -191,11 +191,6 @@ function addTz(time, timezone) {
   }
 }
 
-function momentDate(time, guildid) {
-  let guildSettings = getGuildSettings(guildid, "settings");
-  return addTz(time, guildSettings.timezone);
-}
-
 // returns date object adjusted for tz
 function convertDate(dateToConvert, guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
@@ -206,11 +201,19 @@ function stringDate(date, guildid, hour) {
   let guildSettings = getGuildSettings(guildid, "settings");
   return addTz(date, guildSettings.timezone).toISOString(true);
 }
-
-function getStringTime(date, format) {
+/**
+ * Make a nicely formatted string with timezone adjustment from date object
+ * @param {Date} date - date object to convert 
+ * @param {Snowflake} guildid - Guild ID to get settings from
+ * @return {string} - nicely formatted string for date event
+ */
+function getStringTime(date, guildid) {
+  let guildSettings = getGuildSettings(guildid, "settings");
+  let format = guildSettings.format
+  let timezone = guildSettings.timezone
   // m.format(hA:mm) - 9:05AM
   // m.format(HH:mm) - 09:05
-  const m = moment(date); // no parsezone since we are passing in a moment object
+  const m = addTz(date, timezone); // no parsezone since we are passing in a moment object
   if (m.minutes() === 0) { // if on the hour
     return ((format === 24) ? m.format("HH") : m.format("hA"));
   } else { // if not on the hour
@@ -363,7 +366,6 @@ module.exports = {
   readFile,
   getStringTime,
   stringDate,
-  momentDate,
   convertDate,
   sendMessageHandler,
   checkPermissions,
