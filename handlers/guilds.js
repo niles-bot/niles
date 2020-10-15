@@ -27,7 +27,9 @@ exports.create = (guild) => {
     "helpmenu": "1",
     "format": 12,
     "tzDisplay": "0",
-    "allowedRoles": []
+    "allowedRoles": [],
+    "emptydays": "1",
+    "trim": 0
   };
   const guildData = {
     "guildid": guild.id,

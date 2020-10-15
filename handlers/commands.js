@@ -540,19 +540,7 @@ function displayOptions(message) {
       message.channel.send("Please provide a number to trim event titels. (0 = don't trim!)");
     }
   } else {
-    let usageMessage = `**displayoptions USAGE**\`\`\`
-    COMMAND                       PARAMS      EFFECT
-    ---------------------------------------------------------------------------
-    !displayoptions help          (0|1)       hide/show help
-    !displayoptions pin           (0|1)       pin calendar message
-    !displayoptions format        (12|24)     12h or 24h clock display 
-    !displayoptions tzdisplay     (0|1)       hide/show timezone
-    !displayoptions emptydays     (0|1)       hide/show empty days
-    !displayoptions trim          (n)         trim event names to n characters (0 = off)
-    \`\`\`
-    `;
-    let b = "`!displayoptions help`, `!displayoptions pin`, `!displayoptions format`, `!displayoptions tzdisplay` are the only valid Display Options.";
-    message.channel.send(usageMessage);
+    message.channel.send(strings.DISPLAYOPTIONS_USAGE);
   }
 }
 
