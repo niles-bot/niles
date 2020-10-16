@@ -209,8 +209,8 @@ function stringDate(date, guildid, hour) {
  */
 function getStringTime(date, guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
-  let format = guildSettings.format
-  let timezone = guildSettings.timezone
+  let format = guildSettings.format;
+  let timezone = guildSettings.timezone;
   // m.format(hA:mm) - 9:05AM
   // m.format(HH:mm) - 09:05
   const m = addTz(date, timezone); // no parsezone since we are passing in a moment object
