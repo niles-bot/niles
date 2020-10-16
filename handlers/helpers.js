@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-const { DateTime, IANAZone } = require("luxon");
+const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 const eventType = {
   NOMATCH: "nm",
   SINGLE: "se",
@@ -181,18 +181,17 @@ function firstUpper(string) {
 
 // timezone validation
 function validateTz(tz) {
-  return IANAZone.isValidZone(tz);
+  return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 }
 
 /**
- * get a valid Timezone (fallback to Europe/London if config option is inval)
+ * get a valid Timezone (fallback to UTC if config option is inval)
  * @param {number} guildid - Guild ID to get settings from
  * @return {string} - valid IANAZone formatted timezone
  */
 function getValidTz(guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
-  let tz = IANAZone.isValidZone(guildSettings.timezone) ? guildSettings.timezone : "Europe/London";
-  return tz;
+  return validateTz(guildSettings.timezone) ? guildSettings.timezone : "UTC";
 }
 
 /**
