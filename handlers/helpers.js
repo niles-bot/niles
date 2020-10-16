@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-const moment = require("moment-timezone");
+const { DateTime, IANAZone } = require('luxon');
 const eventType = {
   NOMATCH: "nm",
   SINGLE: "se",
@@ -180,45 +180,32 @@ function firstUpper(string) {
 }
 
 // timezone validation
-const validateTz = (timezone) => { return moment.tz.zone(timezone); };
-
-// parse timezone and adjust time
-function addTz(time, timezone) {
-  if (validateTz(timezone)) { // passes moment timezone test
-    return moment.parseZone(time).tz(timezone);
-  } else { // does not pass moment timezone test (old timezone)
-    return moment.parseZone(time).utcOffset(timezone);
-  }
+function validateTz(tz) {
+  return IANAZone.isValidZone(tz);
 }
 
-// returns date object adjusted for tz
-function convertDate(dateToConvert, guildid) {
-  let guildSettings = getGuildSettings(guildid, "settings");
-  return addTz(dateToConvert, guildSettings.timezone).utc(true).toDate();
-}
-
-function stringDate(date, guildid, hour) {
-  let guildSettings = getGuildSettings(guildid, "settings");
-  return addTz(date, guildSettings.timezone).toISOString(true);
-}
 /**
- * Make a nicely formatted string with timezone adjustment from date object
- * @param {Date} date - date object to convert 
+ * get a valid Timezone (fallback to Europe/London if config option is inval)
+ * @param {number} guildid - Guild ID to get settings from
+ * @return {string} - valid IANAZone formatted timezone
+ */
+function getValidTz(guildid) {
+  let guildSettings = getGuildSettings(guildid, "settings");
+  let tz = IANAZone.isValidZone(guildSettings.timezone) ? guildSettings.timezone : "Europe/London";
+  return tz
+}
+
+/**
+ * Make a guild setting formatted time string from timezone adjusted date object
+ * @param {string} date - ISO datetimestring
  * @param {Snowflake} guildid - Guild ID to get settings from
  * @return {string} - nicely formatted string for date event
  */
 function getStringTime(date, guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
   let format = guildSettings.format;
-  let timezone = guildSettings.timezone;
-  // m.format(hA:mm) - 9:05AM
-  // m.format(HH:mm) - 09:05
-  const m = addTz(date, timezone); // no parsezone since we are passing in a moment object
-  if (m.minutes() === 0) { // if on the hour
-    return ((format === 24) ? m.format("HH") : m.format("hA"));
-  } else { // if not on the hour
-    return ((format === 24) ? m.format("HH:mm") : m.format("h:mmA"));
-  }
+  let zDate = DateTime.fromISO(date, {setZone: true});
+  return zDate.toLocaleString({ hour: '2-digit', minute: '2-digit', hour12: (format === 12) });
 }
 
 function sendMessageHandler(message, err) {
@@ -297,31 +284,27 @@ function yesThenCollector(message) {
 /**
  * This function returns a classification of type 'eventType' to state the relation between a date and an event.
  * You can only check for the DAY relation, of checkDate, not the full dateTime relation!
- * @param {Date} checkDate - the Date to classify for an event
- * @param {Date} eventStartDate - the start Date() of an event
- * @param {Date} eventEndDate - the end Date() of an event
+ * @param {DateTime} checkDate - the Date to classify for an event
+ * @param {DateTime} eventStartDate - the start Date() of an event
+ * @param {DateTime} eventEndDate - the end Date() of an event
  * @return {string} eventType - A string of ENUM(eventType) representing the relation
  */
 function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
-  // remove the time to prevent call-time dependant issues
-  let lCheckDate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
-  let lEventStartDate = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
-  let lEventEndDate = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
   let eventMatchType = eventType.NOMATCH;
   // simple single day event
-  if(moment(lCheckDate).isSame(lEventStartDate) && moment(lEventStartDate).isSame(lEventEndDate)){
+  if(checkDate.hasSame(eventStartDate, 'day') && eventStartDate.hasSame(eventEndDate, 'day')){
     eventMatchType = eventType.SINGLE;
   }
   // multi-day event
-  else if(!moment(lEventStartDate).isSame(lEventEndDate))
+  else if(!eventStartDate.hasSame(eventEndDate, 'day'))
   {
-    if(moment(lCheckDate).isSame(lEventStartDate)){
+    if(checkDate.hasSame(eventStartDate, 'day')){
       eventMatchType = eventType.MULTISTART;
     }
-    else if(moment(lCheckDate).isSame(lEventEndDate)){
+    else if(checkDate.hasSame(eventEndDate, 'day')){
       eventMatchType = eventType.MULTYEND;
     } 
-    else if(moment(lCheckDate).isAfter(lEventStartDate) && moment(lCheckDate).isBefore(lEventEndDate)){
+    else if(checkDate.startOf('day') > eventStartDate.startOf('day') && checkDate.startOf('day') < eventEndDate.startOf('day')){
       eventMatchType = eventType.MULTIMID;
     } 
   }
@@ -365,8 +348,7 @@ module.exports = {
   logError,
   readFile,
   getStringTime,
-  stringDate,
-  convertDate,
+  getValidTz,
   sendMessageHandler,
   checkPermissions,
   checkPermissionsManual,
