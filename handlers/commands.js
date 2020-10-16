@@ -4,7 +4,7 @@ const defer = require("promise-defer");
 const CalendarAPI = require("@mchangrh/node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
-const { DateTime, Duration }  = require('luxon');
+const { DateTime, Duration }  = require("luxon");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
 let settings = require("../settings.js");
@@ -107,7 +107,7 @@ function createDayMap(message) {
   let tz = helpers.getValidTz(message.guild.id);
   // this is automatically the start of the day in current TimeZone
   // allowing all days to be correctly TZ adjusted
-  let d = DateTime.fromJSDate(new Date()).setZone(tz).startOf('day');
+  let d = DateTime.fromJSDate(new Date()).setZone(tz).startOf("day");
   dayMap[0] =  d;
   for (let i = 1; i < 7; i++) {
     dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
@@ -121,7 +121,7 @@ function getEvents(message, calendarID, dayMap) {
     let tz = helpers.getValidTz(message.guild.id);
     let params = {
       timeMin: dayMap[0].toISO(),
-      timeMax: dayMap[6].endOf('day').toISO(), // get all events of last day!
+      timeMax: dayMap[6].endOf("day").toISO(), // get all events of last day!
       singleEvents: true,
       orderBy: "startTime",
       timeZone: tz
@@ -201,7 +201,7 @@ function generateCalendar(message, dayMap) {
   for (let i = 0; i < 7; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: 'long'}) + "** - "+ dayMap[i].toLocaleString({ month: 'long', day: '2-digit' });
+    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long"}) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
     if(guildSettings.emptydays === "0" && calendar[key].length === 0) {
       continue;
     }

@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-const { DateTime, IANAZone } = require('luxon');
+const { DateTime, IANAZone } = require("luxon");
 const eventType = {
   NOMATCH: "nm",
   SINGLE: "se",
@@ -192,7 +192,7 @@ function validateTz(tz) {
 function getValidTz(guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
   let tz = IANAZone.isValidZone(guildSettings.timezone) ? guildSettings.timezone : "Europe/London";
-  return tz
+  return tz;
 }
 
 /**
@@ -205,7 +205,7 @@ function getStringTime(date, guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
   let format = guildSettings.format;
   let zDate = DateTime.fromISO(date, {setZone: true});
-  return zDate.toLocaleString({ hour: '2-digit', minute: '2-digit', hour12: (format === 12) });
+  return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
 }
 
 function sendMessageHandler(message, err) {
@@ -292,19 +292,19 @@ function yesThenCollector(message) {
 function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
   let eventMatchType = eventType.NOMATCH;
   // simple single day event
-  if(checkDate.hasSame(eventStartDate, 'day') && eventStartDate.hasSame(eventEndDate, 'day')){
+  if(checkDate.hasSame(eventStartDate, "day") && eventStartDate.hasSame(eventEndDate, "day")){
     eventMatchType = eventType.SINGLE;
   }
   // multi-day event
-  else if(!eventStartDate.hasSame(eventEndDate, 'day'))
+  else if(!eventStartDate.hasSame(eventEndDate, "day"))
   {
-    if(checkDate.hasSame(eventStartDate, 'day')){
+    if(checkDate.hasSame(eventStartDate, "day")){
       eventMatchType = eventType.MULTISTART;
     }
-    else if(checkDate.hasSame(eventEndDate, 'day')){
+    else if(checkDate.hasSame(eventEndDate, "day")){
       eventMatchType = eventType.MULTYEND;
     } 
-    else if(checkDate.startOf('day') > eventStartDate.startOf('day') && checkDate.startOf('day') < eventEndDate.startOf('day')){
+    else if(checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day")){
       eventMatchType = eventType.MULTIMID;
     } 
   }
