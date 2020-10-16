@@ -10,7 +10,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/en/) - v8 or higher
+* [Node.js](https://nodejs.org) - v12 or higher
 
 ### Installing
 
@@ -28,7 +28,7 @@ npm install
 ```
 
 ```
-node bot.js
+node index.js
 ```
 
 ## Testing
@@ -42,7 +42,7 @@ Might eventually host this whom knows
 ## Built With
 
 * [Discord.js](https://github.com/discordjs/discord.js) - NodeJS library for interfacing with the Discord API
-* [node-google-calendar](https://github.com/yuhong90/node-google-calendar) - Simple Node module that supports Google Calendar API
+* [node-google-calendar](https://github.com/mchangrh/node-google-calendar) - Simple Node module that supports Google Calendar API
 
 ## License
 
