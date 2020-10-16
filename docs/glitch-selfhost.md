@@ -27,9 +27,6 @@ For help specifically with Glitch contact @blabdude on the support server for fu
   <summary>Click to expand</summary>
 
   1. created `stores/guilddatabase.json` & `stores/users.json`
-  2. replaced `node-google-calendar` with `@mchangrh/node-google-calendar`
-     * to patch `HttpRequest.js` (impossible on glitch)
-     * Source code on GitHub: https://github.com/mchangrh/node-google-calendar
   3. added start script as per: https://glitch.com/help/failstart/
 </details>
 

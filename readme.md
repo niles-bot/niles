@@ -50,13 +50,13 @@ npm install
 ```
 
 ```
-node bot.js
+node index.js
 ```
 
 ## Built With
 
-* [Discord.js](https://github.com/hydrabolt/discord.js/) - NodeJS library for interfacing with the Discord API
-* [node-google-calendar](https://github.com/yuhong90/node-google-calendar) - Simple Node module that supports Google Calendar API
+* [Discord.js](https://github.com/discordjs/discord.js) - NodeJS library for interfacing with the Discord API
+* [node-google-calendar](https://github.com/mchangrh/node-google-calendar) - Simple Node module that supports Google Calendar API
 
 ## License
 
