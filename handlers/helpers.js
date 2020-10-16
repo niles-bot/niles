@@ -2,6 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
 const moment = require("moment-timezone");
+const eventType = {
+  NOMATCH: "nm",
+  SINGLE: "se",
+  MULTISTART: "ms",
+  MULTIMID: "mm",
+  MULTYEND: "me"
+};
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -184,11 +191,6 @@ function addTz(time, timezone) {
   }
 }
 
-function momentDate(time, guildid) {
-  let guildSettings = getGuildSettings(guildid, "settings");
-  return addTz(time, guildSettings.timezone);
-}
-
 // returns date object adjusted for tz
 function convertDate(dateToConvert, guildid) {
   let guildSettings = getGuildSettings(guildid, "settings");
@@ -199,11 +201,19 @@ function stringDate(date, guildid, hour) {
   let guildSettings = getGuildSettings(guildid, "settings");
   return addTz(date, guildSettings.timezone).toISOString(true);
 }
-
-function getStringTime(date, format) {
+/**
+ * Make a nicely formatted string with timezone adjustment from date object
+ * @param {Date} date - date object to convert 
+ * @param {Snowflake} guildid - Guild ID to get settings from
+ * @return {string} - nicely formatted string for date event
+ */
+function getStringTime(date, guildid) {
+  let guildSettings = getGuildSettings(guildid, "settings");
+  let format = guildSettings.format;
+  let timezone = guildSettings.timezone;
   // m.format(hA:mm) - 9:05AM
   // m.format(HH:mm) - 09:05
-  const m = moment(date); // no parsezone since we are passing in a moment object
+  const m = addTz(date, timezone); // no parsezone since we are passing in a moment object
   if (m.minutes() === 0) { // if on the hour
     return ((format === 24) ? m.format("HH") : m.format("hA"));
   } else { // if not on the hour
@@ -284,6 +294,59 @@ function yesThenCollector(message) {
   return p.promise;
 }
 
+/**
+ * This function returns a classification of type 'eventType' to state the relation between a date and an event.
+ * You can only check for the DAY relation, of checkDate, not the full dateTime relation!
+ * @param {Date} checkDate - the Date to classify for an event
+ * @param {Date} eventStartDate - the start Date() of an event
+ * @param {Date} eventEndDate - the end Date() of an event
+ * @return {string} eventType - A string of ENUM(eventType) representing the relation
+ */
+function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
+  // remove the time to prevent call-time dependant issues
+  let lCheckDate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+  let lEventStartDate = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+  let lEventEndDate = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
+  let eventMatchType = eventType.NOMATCH;
+  // simple single day event
+  if(moment(lCheckDate).isSame(lEventStartDate) && moment(lEventStartDate).isSame(lEventEndDate)){
+    eventMatchType = eventType.SINGLE;
+  }
+  // multi-day event
+  else if(!moment(lEventStartDate).isSame(lEventEndDate))
+  {
+    if(moment(lCheckDate).isSame(lEventStartDate)){
+      eventMatchType = eventType.MULTISTART;
+    }
+    else if(moment(lCheckDate).isSame(lEventEndDate)){
+      eventMatchType = eventType.MULTYEND;
+    } 
+    else if(moment(lCheckDate).isAfter(lEventStartDate) && moment(lCheckDate).isBefore(lEventEndDate)){
+      eventMatchType = eventType.MULTIMID;
+    } 
+  }
+  return eventMatchType;
+}
+
+
+/**
+ * This helper function limits the amount of chars in a string to max trimLength and adds "..." if shortened.
+ * @param {string} eventName - The name/summary of an event
+ * @param {int} trimLength - the number of chars to trim the title to
+ * @return {string} eventName - A string wit max 23 chars length
+ */
+function trimEventName(eventName, trimLength){
+  if(trimLength === null || trimLength === 0){
+    return eventName;
+  }
+
+  if(eventName.length > trimLength){
+    eventName = eventName.trim().substring(0, trimLength-3) + "...";
+  }
+  return eventName;
+}
+
+
 module.exports = {
   fullname,
   deleteFolderRecursive,
@@ -303,11 +366,13 @@ module.exports = {
   readFile,
   getStringTime,
   stringDate,
-  momentDate,
   convertDate,
   sendMessageHandler,
   checkPermissions,
   checkPermissionsManual,
   checkRole,
-  yesThenCollector
+  yesThenCollector,
+  classifyEventMatch,
+  eventType,
+  trimEventName
 };

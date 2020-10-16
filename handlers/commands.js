@@ -15,7 +15,7 @@ let guilds = require("./guilds.js");
 let cal = new CalendarAPI(settings.calendarConfig);
 let autoUpdater = [];
 let timerCount = [];
-
+let eventType = helpers.eventType;
 //functions
 
 function clean(channel, numberMessages, recurse) {
@@ -114,10 +114,6 @@ function createDayMap(message) {
   return dayMap;
 }
 
-function checkDateMatch(date1, date2) {
-  return moment(date1).isSame(date2, "day");
-}
-
 function getEvents(message, calendarID, dayMap) {
   try {
     let tempDayArray = {
@@ -132,7 +128,6 @@ function getEvents(message, calendarID, dayMap) {
     let tempKey;
     let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
     let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-    let events = [];
     let tz = guildSettings.timezone;
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
     let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
@@ -142,62 +137,42 @@ function getEvents(message, calendarID, dayMap) {
       singleEvents: true,
       orderBy: "startTime"
     };
+    let matches = [];
+
     cal.Events.list(calendarID, params).then((json) => {
-      for (let i = 0; i < json.length; i++) {
-        let event = {
-          id: json[i].id,
-          summary: json[i].summary,
-          start: json[i].start,
-          end: json[i].end
-        };
-        events.push(event);
-      }
       for (let day = 0; day < 7; day++) {
         let key = "day" + String(day);
-        let matches = [];
-        for (let j = 0; j < json.length; j++) {
-          let tempDate = new Date(events[j].start.dateTime);
-          tempDate = helpers.convertDate(tempDate, message.guild.id);
-          if (checkDateMatch(dayMap[day], tempDate)) {
-            matches.push(events[j]);
+        matches = [];
+
+        for (let i = 0; i < json.length; i++) {
+          let eStartDate;
+          let eEndDate;
+          //Handle dateTime-based Events
+          if (json[i].start.dateTime) {
+            eStartDate = helpers.convertDate(new Date(json[i].start.dateTime), message.guild.id);
+            eEndDate = helpers.convertDate(new Date(json[i].end.dateTime), message.guild.id);
           }
           //Handle All Day Events
-          if (events[j].start.date) {
-            let tempStartDate = new Date(events[j].start.date);
-            let tempEndDate = new Date(events[j].end.date);
-            let lengthEvent = ((tempEndDate.getTime() - tempStartDate.getTime()) / (1000 * 60 * 60 * 24));
-            let allDayEvent = new Date(events[j].start.date);
-            if (checkDateMatch(dayMap[day], allDayEvent)) {
-              matches.push(events[j]);
-              for (let x = 1; x < lengthEvent; x++) { //Add New Entry For Each Day of A Multi Day Event
-                let newDateTime = (tempStartDate.getTime()) + (x * 24 * 60 * 60 * 1000);
-                let newDateA = new Date(newDateTime);
-                let newDateString = (helpers.convertDate(newDateA, message.guild.id)).toJSON().slice(0, 10);
-                let newEvent = {
-                  id: events[j].id,
-                  summary: events[j].summary,
-                  start: {
-                    "date": newDateString
-                  },
-                  end: events[j].end
-                };
-                tempKey = "day" + String(day + x);
-                tempDayArray[tempKey] = newEvent;
-              }
-            }
+          else if (json[i].start.date) {
+            eStartDate = new Date(json[i].start.date);
+            // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though 
+            eEndDate = new Date(new Date(json[i].end.date).getTime()-(1*24*60*60*1000));
           }
-        }
-        calendar[key] = matches;
-        if (tempDayArray[key].id) {
-          calendar[key].push({
-            "id": tempDayArray[key].id,
-            "summary": tempDayArray[key].summary,
-            "start": tempDayArray[key].start,
-            "end": tempDayArray[key].end
-          });
-        }
 
+          let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
+          if (eType !== eventType.NOMATCH) {
+            matches.push({
+              id: json[i].id,
+              summary: json[i].summary,
+              start: json[i].start,
+              end: json[i].end,
+              type: eType
+            });
+          }
+          calendar[key] = matches;
+        }
       }
+
       let d = new Date();
       calendar.lastUpdate = d;
       helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
@@ -238,6 +213,9 @@ function generateCalendar(message, dayMap) {
     let key = "day" + String(i);
     let sendString = "";
     sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n");
+    if(guildSettings.emptydays === "0" && calendar[key].length === 0) {
+      continue;
+    }
     if (calendar[key].length === 0) {
       sendString += "``` ```";
     } else {
@@ -258,16 +236,31 @@ function generateCalendar(message, dayMap) {
             }
           }
         };
+        let eventTitle = helpers.trimEventName(calendar[key][m].summary, guildSettings.trim);
         if (Object.keys(calendar[key][m].start).includes("date")) {
           let tempString = {};
           // no need for temp start/fin dates
-          tempString["All Day"] = calendar[key][m].summary;
+          tempString["All Day"] = eventTitle;
           sendString += columnify(tempString, options) + "\n";
         } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
           let tempString = {};
-          let tempStartDate = helpers.momentDate(calendar[key][m].start.dateTime, message.guild.id);
-          let tempFinDate = helpers.momentDate(calendar[key][m].end.dateTime, message.guild.id);
-          tempString[helpers.getStringTime(tempStartDate,format) + " - " + helpers.getStringTime(tempFinDate,format)] = calendar[key][m].summary;
+          let tempStartDate = "...";
+          let tempFinDate = "...";
+          let tempStringKey = "";
+          if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
+            tempStartDate = helpers.getStringTime(calendar[key][m].start.dateTime, message.guild.id);
+          } 
+          if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
+            tempFinDate = helpers.getStringTime(calendar[key][m].end.dateTime, message.guild.id);
+          }
+          if(calendar[key][m].type === eventType.MULTIMID){
+            tempStringKey = "All Day";
+          }
+          else
+          {
+            tempStringKey = tempStartDate + " - " + tempFinDate;
+          }
+          tempString[tempStringKey] = eventTitle;
           sendString += columnify(tempString, options) + "\n";
         }
       }
@@ -522,11 +515,32 @@ function displayOptions(message) {
     } else {
       message.channel.send("Please only use 0 or 1 for the calendar timzone display options, (off or on)");
     }
-  } else if (pieces[1] == null) {
-    message.channel.send("`!displayoptions help`, `!displayoptions pin`, `!displayoptions format`, `!displayoptions tzdisplay` are the only valid Display Options.");
-  }
-  else {
-    message.channel.send("I don't think thats a valid display option, sorry!");
+  } else if (pieces[1] === "emptydays") {
+    if (pieces[2] === "1") {
+      guildSettings.emptydays = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of empty days to 1 (on)");
+    } else if (pieces[2] === "0") {
+      guildSettings.emptydays = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of empty days to 0 (off)");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the calendar empty days display options, (off or on)");
+    }
+  } else if (pieces[1] === "trim") {
+    if (pieces[2] !== null) {
+      let size = parseInt(pieces[2]);
+      if(size.isNaN){
+        size = 0;
+      }
+      guildSettings.trim = size;
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed trimming of event titles to "+size+" (0 = off)");
+    } else  {
+      message.channel.send("Please provide a number to trim event titels. (0 = don't trim!)");
+    }
+  } else {
+    message.channel.send(strings.DISPLAYOPTIONS_USAGE);
   }
 }
 

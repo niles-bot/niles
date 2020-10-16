@@ -39,7 +39,7 @@ const SETUP_MESSAGE = "\
 Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/setup \n\
 \n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to \'Make changes to events\' under the Permission Settings on the Google Calendar you want to use with Niles\n\
 2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id 123abc@123abc.com`\n\
-3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. `!tz America/New_York` No spaces in formatting.`\n\
+3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. `!tz America/New_York` No spaces in formatting.\n\
 \n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
 
 const RESTRICT_ROLE_MESSAGE = "\
@@ -49,10 +49,24 @@ The person assigning the restriction must have the role being assigned. \n\
 i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)\n\
 **Warning - Experimental Feature - Please go to the Niles discord server and post if you have any issues with this feature**";
 
+const DISPLAYOPTIONS_USAGE =
+`**displayoptions USAGE**\`\`\`
+    COMMAND                       PARAMS      EFFECT
+    ---------------------------------------------------------------------------
+    !displayoptions help          (0|1)       hide/show help
+    !displayoptions pin           (0|1)       pin calendar message
+    !displayoptions format        (12|24)     12h or 24h clock display 
+    !displayoptions tzdisplay     (0|1)       hide/show timezone
+    !displayoptions emptydays     (0|1)       hide/show empty days
+    !displayoptions trim          (n)         trim event names to n characters (0 = off)
+    \`\`\`
+    `;
+
 module.exports = {
   HELP_MESSAGE,
   NO_CALENDAR_MESSAGE,
   SETUP_MESSAGE,
   SETUP_HELP,
-  RESTRICT_ROLE_MESSAGE
+  RESTRICT_ROLE_MESSAGE,
+  DISPLAYOPTIONS_USAGE
 };
