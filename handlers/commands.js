@@ -80,7 +80,7 @@ function deleteMessages(message) {
     //message.channel.send("**WARNING** - This will delete all messages in this channel! Are you sure? **(y/n)**");
     //numberMessages = 97;
     //recurse = true;
-    return message.channel.send("You can only use a number to delete messages. i.e. `!clean 10`")
+    return message.channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
   }
   const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
     time: 30000
@@ -144,7 +144,7 @@ function getEvents(message, calendarID, dayMap) {
           //Handle All Day Events
           else if (json[i].start.date) {
             eStartDate = DateTime.fromISO(json[i].start.date, {zone: tz});
-            // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though 
+            // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
             eEndDate = DateTime.fromISO(json[i].end.date, {zone: tz}).minus({days: 1});
           }
 
@@ -334,7 +334,7 @@ function postCalendar(message, dayMap) {
     }
     generateCalendar(message, dayMap).then((embed) => {
       if (embed === 2048) {
-        return
+        return;
       }
       message.channel.send({
         embed
@@ -442,7 +442,7 @@ function quickAddEvent(message, calendarId) {
   cal.Events.quickAdd(calendarId, params).then((resp) => {
     let json = resp;
     let promptDate;
-    if (resp.start.dateTime) {promptDate=resp.start.dateTime;} else {promptDate=resp.start.date}
+    if (resp.start.dateTime) {promptDate=resp.start.dateTime;} else {promptDate=resp.start.date;}
     message.channel.send("Event `" + resp.summary + "` on `" + promptDate + "` has been created").then((m) => {
       m.delete({ timeout: 5000 });
     });
@@ -575,8 +575,8 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
 				eventsArray.push(event);
 			}
 			return eventsArray;
-		}).catch(err => {
-			helpers.log('Error: listSingleEventsWithinDateRange', err.message);
+		}).catch((err) => {
+			helpers.log("Error: listSingleEventsWithinDateRange", err.message);
 		});
 }
 
@@ -600,7 +600,7 @@ function deleteEvent(message, calendarId, dayMap) {
       if (resp[i].summary) {
         if (text.toUpperCase().trim() == resp[i].summary.toUpperCase().trim()) {
           let promptDate;
-          if (resp[i].start.dateTime) {promptDate=resp[i].start.dateTime;} else {promptDate=resp[i].start.date}
+          if (resp[i].start.dateTime) {promptDate=resp[i].start.dateTime;} else {promptDate=resp[i].start.date;}
           message.channel.send(`Are you sure you want to delete the event **${resp[i].summary}** on ${promptDate}? **(y/n)**`)
             .then((res) => {
               res.delete({ timeout: 10000 });
@@ -670,7 +670,7 @@ function calendarUpdater(message, calendarId, dayMap, timerCount) {
 }
 
 function displayStats(message) {
-  bot.client.shard.fetchClientValues('guilds.cache.size').then(results => {
+  bot.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
     let embed = new bot.discord.MessageEmbed()
       .setColor("RED")
       .setTitle(`Niles Bot ${settings.secrets.current_version}`)
@@ -843,7 +843,7 @@ function run(message) {
       let pieces = message.content.split(" ");
       let response = "";
       const shardNo = parseInt(pieces[1]); // check for valid shard
-      if (isNaN(shardNo)) { 
+      if (isNaN(shardNo)) {
         response = "Invalid shard number"; // check for valid number
       } else {
         response = `Restarting shard ${shardNo}`;

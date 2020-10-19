@@ -13,39 +13,39 @@ let restricted = require("./handlers/nopermissions.js");
 let dm = require("./handlers/dm.js");
 let checks = require("./handlers/createMissingAttributes.js");
 
+function addMissingGuilds(availableGuilds) {
+  //Create databases for any missing guilds
+  const knownGuilds = Object.keys(helpers.getGuildDatabase());
+  const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
+  unknownGuilds.forEach((guildId) => {
+    helpers.log("unknown guild found; creating");
+    guilds.create(client.guilds.cache.get(guildId));
+  })
+}
+
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
   helpers.log(`Bot is logged in. Shard: ${client.shard.ids}`);
   client.user.setStatus("online");
   // fetch all guild cache objects
-  client.shard.fetchClientValues('guilds.cache')
+  client.shard.fetchClientValues("guilds.cache")
       .then(results => {
-        const shardGuilds = []
+        const shardGuilds = [];
         results.forEach(function (item) { // iterate over shards
           item.forEach(function (item) { // iterate over servers
-            shardGuilds.push(item.id) // add server id to shardGuilds
-          })
+            shardGuilds.push(item.id); // add server id to shardGuilds
+          });
         })
-        addMissingGuilds(shardGuilds) // start adding missing guilds
-        helpers.log("all shards spawned") // all shards spawned
+        addMissingGuilds(shardGuilds); // start adding missing guilds
+        helpers.log("all shards spawned"); // all shards spawned
       })
       .catch((err) => {
         if (err.name === "Error [SHARDING_IN_PROCESS]") {
-          console.log('spawning shards ...') // send error to console - still sharding
+          console.log("spawning shards ..."); // send error to console - still sharding
         }
       });
-
-  function addMissingGuilds(availableGuilds) {
-    //Create databases for any missing guilds
-    const knownGuilds = Object.keys(helpers.getGuildDatabase());
-    const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
-    unknownGuilds.forEach((guildId) => {
-      helpers.log("unknown guild found; creating");
-      guilds.create(client.guilds.cache.get(guildId));
     });
-  }
-});
 
 client.on("guildCreate", (guild) => {
   guilds.create(guild);
@@ -120,7 +120,7 @@ client.on("message", (message) => {
   if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
     if (restricted.allCommands.includes(cmd)) {
       if (!helpers.checkRole(message)) {
-        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server")
+        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server");
       }
       try {
         restricted.run(message);
