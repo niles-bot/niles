@@ -30,7 +30,7 @@ Visit the [setup page](https://niles.seanecoffey.com/setup) for more detailed se
 * `!help`     - Get a DM of the list of commands and usage.
 * `!setup`    - Get instructions for setting Niles up for use in your Discord.
 * `!id`       - Set the Google Calendar ID for the calendar you want Niles to sync to.
-* `!tz`       - Set the preferred timezone of your Discord server, use format relative to GMT:`!tz GMT+10:00`
+* `!tz`       - Set the preferred timezone of your Discord server, use either `!tz America/New_York` or `!tz UTC+4` or `!tz EST`
 * `!display`  - Prints a message with the calendar.
 * `!update`   - Checks for any new events and updates the last printed calendar, also works as `!sync`.
 * `!prefix`   - Change the prefix that Niles uses in the server.

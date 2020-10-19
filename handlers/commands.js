@@ -4,8 +4,7 @@ const defer = require("promise-defer");
 const CalendarAPI = require("@mchangrh/node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
-const moment = require("moment-timezone");
-require("moment-duration-format");
+const { DateTime, Duration }  = require("luxon");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
 let settings = require("../settings.js");
@@ -105,37 +104,27 @@ function deleteMessages(message) {
 
 function createDayMap(message) {
   let dayMap = [];
-  let d = new Date();
-  let nd = helpers.convertDate(d, message.guild.id);
-  dayMap[0] = new Date(String(nd));
+  let tz = helpers.getValidTz(message.guild.id);
+  // this is automatically the start of the day in current TimeZone
+  // allowing all days to be correctly TZ adjusted
+  let d = DateTime.fromJSDate(new Date()).setZone(tz).startOf("day");
+  dayMap[0] =  d;
   for (let i = 1; i < 7; i++) {
-    dayMap[i] = new Date(nd.setDate(nd.getDate() + 1));
+    dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
   }
   return dayMap;
 }
 
 function getEvents(message, calendarID, dayMap) {
   try {
-    let tempDayArray = {
-      "day0": [],
-      "day1": [],
-      "day2": [],
-      "day3": [],
-      "day4": [],
-      "day5": [],
-      "day6": []
-    };
-    let tempKey;
     let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
-    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-    let tz = guildSettings.timezone;
-    let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
-    let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
+    let tz = helpers.getValidTz(message.guild.id);
     let params = {
-      timeMin: startDate,
-      timeMax: endDate,
+      timeMin: dayMap[0].toISO(),
+      timeMax: dayMap[6].endOf("day").toISO(), // get all events of last day!
       singleEvents: true,
-      orderBy: "startTime"
+      orderBy: "startTime",
+      timeZone: tz
     };
     let matches = [];
 
@@ -149,14 +138,14 @@ function getEvents(message, calendarID, dayMap) {
           let eEndDate;
           //Handle dateTime-based Events
           if (json[i].start.dateTime) {
-            eStartDate = helpers.convertDate(new Date(json[i].start.dateTime), message.guild.id);
-            eEndDate = helpers.convertDate(new Date(json[i].end.dateTime), message.guild.id);
+            eStartDate = DateTime.fromISO(json[i].start.dateTime, {setZone: true});
+            eEndDate = DateTime.fromISO(json[i].end.dateTime, {setZone: true});
           }
           //Handle All Day Events
           else if (json[i].start.date) {
-            eStartDate = new Date(json[i].start.date);
+            eStartDate = DateTime.fromISO(json[i].start.date, {zone: tz});
             // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though 
-            eEndDate = new Date(new Date(json[i].end.date).getTime()-(1*24*60*60*1000));
+            eEndDate = DateTime.fromISO(json[i].end.date, {zone: tz}).minus({days: 1});
           }
 
           let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
@@ -212,7 +201,7 @@ function generateCalendar(message, dayMap) {
   for (let i = 0; i < 7; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += "\n" + moment(dayMap[i]).format("**dddd** - MMMM D\n");
+    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long"}) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
     if(guildSettings.emptydays === "0" && calendar[key].length === 0) {
       continue;
     }
@@ -228,7 +217,7 @@ function generateCalendar(message, dayMap) {
           columns: ["time", "events"],
           config: {
             time: {
-              minWidth: 17,
+              minWidth: (guildSettings.format === 24) ? 15 : 20,
               align: "center"
             },
             events: {
@@ -244,12 +233,13 @@ function generateCalendar(message, dayMap) {
           sendString += columnify(tempString, options) + "\n";
         } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
           let tempString = {};
-          let tempStartDate = "...";
-          let tempFinDate = "...";
+          // keep the - centered depending on format option
+          let tempStartDate = (guildSettings.format === 24) ? "....." : "........";
+          let tempFinDate = (guildSettings.format === 24) ? "....." : "........";
           let tempStringKey = "";
           if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
             tempStartDate = helpers.getStringTime(calendar[key][m].start.dateTime, message.guild.id);
-          } 
+          }
           if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
             tempFinDate = helpers.getStringTime(calendar[key][m].end.dateTime, message.guild.id);
           }
@@ -562,13 +552,14 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
   let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
 	let eventsArray = [];
-  let tz = guildSettings.timezone;
-  let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
-  let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
+  let tz = helpers.getValidTz(message.guild.id);
+  let startDate = dayMap[0].toISO();
+  let endDate = dayMap[6].toISO();
   let params = {
     timeMin: startDate,
     timeMax: endDate,
-    singleEvents: true
+    singleEvents: true,
+    timeZone: tz
   };
 	return cal.Events.list(calendarId, params)
 		.then(json => {
@@ -685,7 +676,7 @@ function displayStats(message) {
       .setTitle(`Niles Bot ${settings.secrets.current_version}`)
       .setURL("https://github.com/seanecoffey/Niles")
       .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
-      .addField("Uptime", moment.duration(process.uptime(), "seconds").format("dd:hh:mm:ss"), true)
+      .addField("Uptime", Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"))
       .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
       .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")}
         (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)

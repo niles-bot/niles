@@ -43,6 +43,8 @@ We could pull this from your Google calendar or Discord server, but since your m
 This can be done using `!tz` i.e.
 
 `!tz America/New_York`
+`!tz UTC+5`
+`!tz EST`
 
 Full list of TZ database names: https://cutt.ly/tz
 

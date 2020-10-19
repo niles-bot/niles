@@ -62,7 +62,7 @@ function logTz(message) {
   }
   if (!tz) { // no input
     if (!currentTz) { // no timezone set
-      return message.channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` No spaces in formatting.");
+      return message.channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.");
     } else { // timezone set
       return message.channel.send("You didn't enter a timezone, you are currently using `" + currentTz + "`");
     }
@@ -81,7 +81,7 @@ function logTz(message) {
       writeSetting(message, tz, "timezone");
     }
   } else { // fails validation
-    return message.channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` No spaces in formatting.");
+    return message.channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.");
   }
 }
 
