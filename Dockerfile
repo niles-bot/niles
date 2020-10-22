@@ -10,4 +10,4 @@ RUN cp stores/store.json.example stores/guilddatabase.json && \
 
 # npm setup
 RUN npm install
-CMD [ "node", "bot.js"]
+CMD [ "node", "index.js"]
