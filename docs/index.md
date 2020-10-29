@@ -50,6 +50,7 @@ Visit the [setup page](https://niles.seanecoffey.com/setup) for more detailed se
 * `!displayoptions format`    - Change clock format between 12 and 24-hour clock format, takes 12 or 24 as input i.e. `displayoptions format 24` to disply events in 24-hour clock format.
 * `!displayoptions tzdisplay` - Turn off timezone display, take 1 or 0 as input (on or off) i.e. `!displayoptions tzdisplay 0` to turn off timezone display.
 * `!displayoptions emptydays` - Hide or show empty days, takes 1 or 0 as input (show or hide) i.e. `!displayoptions emptydays 0` to hide empty days
+* `!displayoptions showpast`  - Hide or show past events of today, takes 1 or 0 as input (show or hide) i.e. `!displayoptions showpast 1` to show past events
 * `!displayoptions trim`      - Trim event names to n characters, with 0 being off. i.e. `!displayoptions trim 15` will limit event names to 5 characters and the rest being `...`
 
 ### !create formatting

@@ -51,14 +51,14 @@ i.e. Create a role called *Scheduler*, and then tell Niles to only allow people 
 
 const DISPLAYOPTIONS_USAGE =
 `**displayoptions USAGE**\`\`\`
-    COMMAND                       PARAMS      EFFECT
-    ---------------------------------------------------------------------------
-    !displayoptions help          (0|1)       hide/show help
-    !displayoptions pin           (0|1)       pin calendar message
-    !displayoptions format        (12|24)     12h or 24h clock display 
-    !displayoptions tzdisplay     (0|1)       hide/show timezone
-    !displayoptions emptydays     (0|1)       hide/show empty days
-    !displayoptions trim          (n)         trim event names to n characters (0 = off)
+    COMMAND                    PARAMS   EFFECT
+    !displayoptions help       (0|1)    hide/show help
+    !displayoptions pin        (0|1)    pin calendar message
+    !displayoptions format     (12|24)  12h or 24h clock display 
+    !displayoptions tzdisplay  (0|1)    hide/show timezone
+    !displayoptions emptydays  (0|1)    hide/show empty days
+    !displayoptions showpast   (0|1)    hide/show today's past events
+    !displayoptions trim       (n)      trim event names to n characters (0 = off)
     \`\`\`
     `;
 

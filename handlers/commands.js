@@ -105,9 +105,13 @@ function deleteMessages(message) {
 function createDayMap(message) {
   let dayMap = [];
   let tz = helpers.getValidTz(message.guild.id);
-  // this is automatically the start of the day in current TimeZone
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   // allowing all days to be correctly TZ adjusted
-  let d = DateTime.fromJSDate(new Date()).setZone(tz).startOf("day");
+  let d = DateTime.fromJSDate(new Date()).setZone(tz);
+  // if Option to show past events is set, start at startOf Day instead of NOW()
+  if(guildSettings.showpast === "1") {
+    d = d.startOf("day");
+  }
   dayMap[0] =  d;
   for (let i = 1; i < 7; i++) {
     dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
@@ -516,6 +520,18 @@ function displayOptions(message) {
       message.channel.send("Changed display of empty days to 0 (off)");
     } else {
       message.channel.send("Please only use 0 or 1 for the calendar empty days display options, (off or on)");
+    }
+  } else if (pieces[1] === "showpast") {
+    if (pieces[2] === "1") {
+      guildSettings.showpast = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of today's past events to 1 (on)");
+    } else if (pieces[2] === "0") {
+      guildSettings.showpast = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of today's past events 0 (off)");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the display of today's past events option. (off or on) ");
     }
   } else if (pieces[1] === "trim") {
     if (pieces[2] !== null) {

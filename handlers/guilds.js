@@ -29,6 +29,7 @@ exports.create = (guild) => {
     "tzDisplay": "0",
     "allowedRoles": [],
     "emptydays": "1",
+    "showpast": "0",
     "trim": 0
   };
   const guildData = {
