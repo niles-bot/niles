@@ -52,6 +52,7 @@ Visit the [setup page](https://niles.seanecoffey.com/setup) for more detailed se
 * `!displayoptions emptydays` - Hide or show empty days, takes 1 or 0 as input (show or hide) i.e. `!displayoptions emptydays 0` to hide empty days
 * `!displayoptions showpast`  - Hide or show past events of today, takes 1 or 0 as input (show or hide) i.e. `!displayoptions showpast 1` to show past events
 * `!displayoptions trim`      - Trim event names to n characters, with 0 being off. i.e. `!displayoptions trim 15` will limit event names to 5 characters and the rest being `...`
+* `!displayoptions days`      - Set the number of days to display i.e. `!displayoptions days 14` will try to show 2 weeks of events (discord limits may hit! use `!displayoptions emptydays 0`)
 
 ### !create formatting
 `!create` is entirely handled by Google Calendar.

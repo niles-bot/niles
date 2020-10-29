@@ -113,7 +113,7 @@ function createDayMap(message) {
     d = d.startOf("day");
   }
   dayMap[0] =  d;
-  for (let i = 1; i < 7; i++) {
+  for (let i = 1; i < guildSettings.days; i++) {
     dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
   }
   return dayMap;
@@ -125,7 +125,7 @@ function getEvents(message, calendarID, dayMap) {
     let tz = helpers.getValidTz(message.guild.id);
     let params = {
       timeMin: dayMap[0].toISO(),
-      timeMax: dayMap[6].endOf("day").toISO(), // get all events of last day!
+      timeMax: dayMap[dayMap.length-1].endOf("day").toISO(), // get all events of last day!
       singleEvents: true,
       orderBy: "startTime",
       timeZone: tz
@@ -133,7 +133,7 @@ function getEvents(message, calendarID, dayMap) {
     let matches = [];
 
     cal.Events.list(calendarID, params).then((json) => {
-      for (let day = 0; day < 7; day++) {
+      for (let day = 0; day < dayMap.length; day++) {
         let key = "day" + String(day);
         matches = [];
 
@@ -202,7 +202,7 @@ function generateCalendar(message, dayMap) {
   let format = guildSettings.format;
   let p = defer();
   let finalString = "";
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
     let sendString = "";
     sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long"}) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
@@ -544,6 +544,22 @@ function displayOptions(message) {
       message.channel.send("Changed trimming of event titles to "+size+" (0 = off)");
     } else  {
       message.channel.send("Please provide a number to trim event titels. (0 = don't trim!)");
+    }
+  } else if (pieces[1] === "days") {
+    if (pieces[2] !== null) {
+      let size = parseInt(pieces[2]);
+      if(size.isNaN){
+        size = 7;
+      }
+      // limit the max value to keep effort and storage sanity
+      if(size > 90){
+        size = 90;
+      }
+      guildSettings.days = size;
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed days to display to: "+size + " (you may have to use `!displayoptions emptydays 0`)");
+    } else  {
+      message.channel.send("Please provide a number of days to display. (7 = default, 90 = max)");
     }
   } else {
     message.channel.send(strings.DISPLAYOPTIONS_USAGE);

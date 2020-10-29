@@ -59,6 +59,7 @@ const DISPLAYOPTIONS_USAGE =
     !displayoptions emptydays  (0|1)    hide/show empty days
     !displayoptions showpast   (0|1)    hide/show today's past events
     !displayoptions trim       (n)      trim event names to n characters (0 = off)
+    !displayoptions days       (n)      number of days to display (max 90)
     \`\`\`
     `;
 

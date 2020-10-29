@@ -9,6 +9,21 @@ const eventType = {
   MULTIMID: "mm",
   MULTYEND: "me"
 };
+const defaultSettings = {
+  "prefix": "!",
+  "calendarID": "",
+  "calendarChannel": "",
+  "timezone": "",
+  "helpmenu": "1",
+  "format": 12,
+  "tzDisplay": "0",
+  "allowedRoles": [],
+  "emptydays": "1",
+  "showpast": "0",
+  "trim": 0,
+  "days": 7
+};
+
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -21,7 +36,10 @@ function getGuildSettings(id, file) {
     filePath = path.join(__dirname, "..", "stores", id, "settings.json");
   }
   // read file
-  return readFile(filePath);
+  let storedData = readFile(filePath);
+  //merge defaults and stored settings to guarantee valid data
+  let combinedData = {...defaultSettings, ...storedData };
+  return combinedData
 }
 
 function getSettings() {
@@ -367,5 +385,6 @@ module.exports = {
   yesThenCollector,
   classifyEventMatch,
   eventType,
+  defaultSettings,
   trimEventName
 };
