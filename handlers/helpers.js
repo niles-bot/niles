@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
+const stripHtml = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 const eventType = {
   NOMATCH: "nm",
@@ -21,7 +22,10 @@ const defaultSettings = {
   "emptydays": "1",
   "showpast": "0",
   "trim": 0,
-  "days": 7
+  "days": 7,
+  "style": "code",
+  "inline": "0",
+  "description": "0"
 };
 
 let settings = require("../settings.js");
@@ -358,6 +362,16 @@ function trimEventName(eventName, trimLength){
   return eventName;
 }
 
+/**
+ * this helper function strips all html formatting from the description.
+ * @param {string} inputString - the unclean string
+ * @return {string} strippedString - string stripped of html
+ */
+function descriptionParser(inputString) {
+  const decoded = decodeURI(inputString); // decode URI
+  const replaced = decoded.replace(/(<br>)+/g, "\n"); // replace <br> with \n
+  return stripHtml(replaced); // strip html
+}
 
 module.exports = {
   fullname,
@@ -386,5 +400,6 @@ module.exports = {
   classifyEventMatch,
   eventType,
   defaultSettings,
-  trimEventName
+  trimEventName,
+  descriptionParser
 };

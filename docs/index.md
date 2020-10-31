@@ -53,6 +53,10 @@ Visit the [setup page](https://niles.seanecoffey.com/setup) for more detailed se
 * `!displayoptions showpast`  - Hide or show past events of today, takes 1 or 0 as input (show or hide) i.e. `!displayoptions showpast 1` to show past events
 * `!displayoptions trim`      - Trim event names to n characters, with 0 being off. i.e. `!displayoptions trim 15` will limit event names to 5 characters and the rest being `...`
 * `!displayoptions days`      - Set the number of days to display i.e. `!displayoptions days 14` will try to show 2 weeks of events (discord limits may hit! use `!displayoptions emptydays 0`)
+* `!displayoptions style`     - use old or new event display style i.e. `!displayoptions style code` will use the old code format, `displayoptions style embed` will use the new embed format
+* `!displayoptions inline`    - show event days inline (see below for examples), takes 0 or 1 as input (on or off) i.e. `!displayoptions inline 1` will make days appear inline. 
+* `!displayoptions description` - hide/show event description (only compatible with embed style )
+
 
 ### !create formatting
 `!create` is entirely handled by Google Calendar.
@@ -67,6 +71,29 @@ Multi-day events can be created with keywords " - " or " to " etc...
 e.g. `01/30/2020 - 05/30/2020`
 
 There is no way to change it and no plans to add middleware to convert it (Natural Language Processing is out of the scope of Niles)
+
+### Style
+#### Code vs Embed
+- Code supports up to 2048 characters, embed supports 6000 characters
+- Descriptions can only be shown with embed
+
+<details>
+<summary>Code and Embed examples</summary>
+<br>
+
+Code
+
+![image](https://user-images.githubusercontent.com/15132783/97769587-84649180-1b02-11eb-8ac2-cbcb2550ac32.png)
+
+Embed (Yes Inline)
+
+![image](https://user-images.githubusercontent.com/15132783/88202500-f6316300-cc16-11ea-9959-8b504efd8f68.png)
+
+Embed (Not Inline)
+
+![image](https://user-images.githubusercontent.com/15132783/88202551-0ba68d00-cc17-11ea-9a6c-cb6a44db93c7.png)
+
+</details>
 
 ## Support
 
