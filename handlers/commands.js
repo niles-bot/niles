@@ -205,7 +205,6 @@ function generateCalendar(message, dayMap) {
   embed.setTitle("CALENDAR");
   embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
   embed.setColor("BLUE");
-  embed.setDescription(finalString);
   embed.setFooter("Last update");
   if (guildSettings.helpmenu === "1") {
     embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
@@ -306,7 +305,7 @@ function generateCalendarEmbed(message, dayMap) {
   let fields = [];
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
-    let duration = "";
+    let tempValue = "";
     let fieldObj = {
       name: "**" + dayMap[i].toLocaleString({ weekday: "long" }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit"}),
       inline: (guildSettings.inline === "1")
@@ -315,10 +314,11 @@ function generateCalendarEmbed(message, dayMap) {
       continue;
     }
     if (calendar[key].length === 0) {
-      fieldObj.value = "\u200b";
-    } else {  
+      tempValue = "\u200b";
+    } else {
       // Map events for each day
       for (let m = 0; m < calendar[key].length; m++) {
+        let duration = "";
         if (Object.keys(calendar[key][m].start).includes("date")) {
           // no need for temp start/fin dates
           duration = "All Day"
@@ -338,16 +338,16 @@ function generateCalendarEmbed(message, dayMap) {
         // construct field object with summary + description
         let eventTitle = helpers.trimEventName(calendar[key][m].summary, guildSettings.trim);
         let description = helpers.descriptionParser(calendar[key][m].description);
-        let tempValue = `**${duration}** | ${eventTitle}\n`;
+        tempValue += `**${duration}** | ${eventTitle}\n`;
         // if we should add description
-        if (description !== "undefined" && guildSettings.description === "1") {
-            tempValue += `\`${description}\``;
+        if ((description !== "undefined") && (guildSettings.description === "1")) {
+          tempValue += `\`${description}\`\n`;
         }
-        // finalize field object
-        fieldObj.value = tempValue;
-        fields.push(fieldObj);
       }
     }
+    // finalize field object
+    fieldObj.value = tempValue;
+    fields.push(fieldObj);
   }
   return fields; // return field array 
 }
