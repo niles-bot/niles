@@ -22,7 +22,10 @@ const defaultSettings = {
   "emptydays": "1",
   "showpast": "0",
   "trim": 0,
-  "days": 7
+  "days": 7,
+  "style": "code",
+  "inline": "0",
+  "description": "0"
 };
 
 let settings = require("../settings.js");
