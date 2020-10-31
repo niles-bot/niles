@@ -76,11 +76,24 @@ There is no way to change it and no plans to add middleware to convert it (Natur
 #### Code vs Embed
 - Code supports up to 2048 characters, embed supports 6000 characters
 - Descriptions can only be shown with embed
+
+<details>
+<summary>Code and Embed examples</summary>
+<br>
+
 Code
 
-Embed (No Inline)
+![image](https://user-images.githubusercontent.com/15132783/97769587-84649180-1b02-11eb-8ac2-cbcb2550ac32.png)
 
 Embed (Yes Inline)
+
+![image](https://user-images.githubusercontent.com/15132783/88202500-f6316300-cc16-11ea-9959-8b504efd8f68.png)
+
+Embed (Not Inline)
+
+![image](https://user-images.githubusercontent.com/15132783/88202551-0ba68d00-cc17-11ea-9a6c-cb6a44db93c7.png)
+
+</details>
 
 ## Support
 
