@@ -148,10 +148,9 @@ For details on display options, refer to Configuration/Display Options.
 ### admin
 
 Use `!admin <role>` or `@niles admin <role>` to restrict the usage of Niles to people with the role.
-i.e. `!admin scheduler` or `!admin captain`.
+i.e. `!admin scheduler` or `!admin captain`. The `<role>` *is* case sensitive.
 
 **Important**: Make sure *you* have the role that you are about to restrict the usage of Niles to. You can only restrict the usage to *one* role.
-
 ---
 
 ### help
