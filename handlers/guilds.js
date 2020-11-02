@@ -19,18 +19,7 @@ exports.create = (guild) => {
     "lastUpdate": "",
     "calendarMessageId": ""
   };
-  let defaultSettings = {
-    "prefix": "!",
-    "calendarID": "",
-    "calendarChannel": "",
-    "timezone": "",
-    "helpmenu": "1",
-    "format": 12,
-    "tzDisplay": "0",
-    "allowedRoles": [],
-    "emptydays": "1",
-    "trim": 0
-  };
+
   const guildData = {
     "guildid": guild.id,
     "name": guild.name,
@@ -44,7 +33,7 @@ exports.create = (guild) => {
   } else if (!fs.existsSync(guildPath)) { // create directory and new files
     fs.mkdirSync(guildPath); 
     helpers.writeGuildSpecific(guild.id, emptyCal, "calendar");
-    helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
+    helpers.writeGuildSpecific(guild.id, helpers.defaultSettings, "settings");
     helpers.amendGuildDatabase({ [guild.id]: guildData });
     helpers.log(`Guild ${guild.id} has been created`);
     //guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.  **NOTE**: Make sure I have the right permissions in the channel you try and use me in!");

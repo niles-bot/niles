@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
+const stripHtml = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 const eventType = {
   NOMATCH: "nm",
@@ -9,6 +10,24 @@ const eventType = {
   MULTIMID: "mm",
   MULTYEND: "me"
 };
+const defaultSettings = {
+  "prefix": "!",
+  "calendarID": "",
+  "calendarChannel": "",
+  "timezone": "",
+  "helpmenu": "1",
+  "format": 12,
+  "tzDisplay": "0",
+  "allowedRoles": [],
+  "emptydays": "1",
+  "showpast": "0",
+  "trim": 0,
+  "days": 7,
+  "style": "code",
+  "inline": "0",
+  "description": "0"
+};
+
 let settings = require("../settings.js");
 let bot = require("../bot.js");
 let minimumPermissions = settings.secrets.minimumPermissions;
@@ -21,7 +40,10 @@ function getGuildSettings(id, file) {
     filePath = path.join(__dirname, "..", "stores", id, "settings.json");
   }
   // read file
-  return readFile(filePath);
+  let storedData = readFile(filePath);
+  //merge defaults and stored settings to guarantee valid data
+  let combinedData = {...defaultSettings, ...storedData };
+  return combinedData
 }
 
 function getSettings() {
@@ -297,10 +319,22 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
   // multi-day event
   else if(!eventStartDate.hasSame(eventEndDate, "day"))
   {
-    if(checkDate.hasSame(eventStartDate, "day")){
+    // special case, Event ends as 12 AM spot on
+    if(checkDate.hasSame(eventStartDate, "day") && eventEndDate.diff(eventStartDate.endOf("day"),"minutes") <= 1){
+      eventMatchType = eventType.SINGLE;
+    }
+    // this removes the entry for the next day of a 12AM ending event
+    else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
+      let eventMatchType = eventType.NOMATCH;
+    }
+    else if(checkDate.hasSame(eventStartDate, "day")){
       eventMatchType = eventType.MULTISTART;
     }
     else if(checkDate.hasSame(eventEndDate, "day")){
+      eventMatchType = eventType.MULTYEND;
+    } 
+    // this makes the 12AM ending multi-day events show as ""..... - 12:00 AM"
+    else if(checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day") && eventEndDate.diff(checkDate.endOf("day"),"minutes") <= 1){
       eventMatchType = eventType.MULTYEND;
     } 
     else if(checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day")){
@@ -328,6 +362,16 @@ function trimEventName(eventName, trimLength){
   return eventName;
 }
 
+/**
+ * this helper function strips all html formatting from the description.
+ * @param {string} inputString - the unclean string
+ * @return {string} strippedString - string stripped of html
+ */
+function descriptionParser(inputString) {
+  const decoded = decodeURI(inputString); // decode URI
+  const replaced = decoded.replace(/(<br>)+/g, "\n"); // replace <br> with \n
+  return stripHtml(replaced); // strip html
+}
 
 module.exports = {
   fullname,
@@ -355,5 +399,7 @@ module.exports = {
   yesThenCollector,
   classifyEventMatch,
   eventType,
-  trimEventName
+  defaultSettings,
+  trimEventName,
+  descriptionParser
 };

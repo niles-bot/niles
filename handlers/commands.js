@@ -105,11 +105,15 @@ function deleteMessages(message) {
 function createDayMap(message) {
   let dayMap = [];
   let tz = helpers.getValidTz(message.guild.id);
-  // this is automatically the start of the day in current TimeZone
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   // allowing all days to be correctly TZ adjusted
-  let d = DateTime.fromJSDate(new Date()).setZone(tz).startOf("day");
+  let d = DateTime.fromJSDate(new Date()).setZone(tz);
+  // if Option to show past events is set, start at startOf Day instead of NOW()
+  if(guildSettings.showpast === "1") {
+    d = d.startOf("day");
+  }
   dayMap[0] =  d;
-  for (let i = 1; i < 7; i++) {
+  for (let i = 1; i < guildSettings.days; i++) {
     dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
   }
   return dayMap;
@@ -121,7 +125,7 @@ function getEvents(message, calendarID, dayMap) {
     let tz = helpers.getValidTz(message.guild.id);
     let params = {
       timeMin: dayMap[0].toISO(),
-      timeMax: dayMap[6].endOf("day").toISO(), // get all events of last day!
+      timeMax: dayMap[dayMap.length-1].endOf("day").toISO(), // get all events of last day!
       singleEvents: true,
       orderBy: "startTime",
       timeZone: tz
@@ -129,7 +133,7 @@ function getEvents(message, calendarID, dayMap) {
     let matches = [];
 
     cal.Events.list(calendarID, params).then((json) => {
-      for (let day = 0; day < 7; day++) {
+      for (let day = 0; day < dayMap.length; day++) {
         let key = "day" + String(day);
         matches = [];
 
@@ -155,6 +159,7 @@ function getEvents(message, calendarID, dayMap) {
               summary: json[i].summary,
               start: json[i].start,
               end: json[i].end,
+              description: json[i].description,
               type: eType
             });
           }
@@ -193,12 +198,44 @@ function getEvents(message, calendarID, dayMap) {
 }
 
 function generateCalendar(message, dayMap) {
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+  let p = defer();
+  // create embed
+  let embed = new bot.discord.MessageEmbed();
+  embed.setTitle("CALENDAR");
+  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
+  embed.setColor("BLUE");
+  embed.setFooter("Last update");
+  if (guildSettings.helpmenu === "1") {
+    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
+  }
+  if (guildSettings.tzDisplay === "1") { // display timezone
+    embed.addField("Timezone", guildSettings.timezone, false);
+  }
+  embed.setTimestamp(new Date());
+  // set description or fields
+  if (guildSettings.style === "code") {
+    embed.setDescription = generateCalendarCodeblock(message, dayMap);
+    // character check
+    //Handle Calendars Greater Than 2048 Characters Long
+    if (finalString.length>2048) {
+      message.channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
+      p.reject(2048);
+      return p.promise;
+    }
+  }
+  else if (guildSettings.style === "embed") {
+    embed.fields = generateCalendarEmbed(message, dayMap);
+  }
+  p.resolve(embed);
+  return p.promise;
+}
+
+function generateCalendarCodeblock(message, dayMap) {
   let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-  let format = guildSettings.format;
-  let p = defer();
   let finalString = "";
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
     let sendString = "";
     sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long"}) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
@@ -257,28 +294,62 @@ function generateCalendar(message, dayMap) {
       sendString += "```";
     }
     finalString += sendString;
-    //Handle Calendars Greater Than 2048 Characters Long
-    if (finalString.length>2048) {
-      message.channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
-      p.reject(2048);
-      return p.promise;
+  }
+  return finalString // return finalstring to generateCalendar
+}
+
+function generateCalendarEmbed(message, dayMap) {
+  let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+  // start formatting
+  let fields = [];
+  for (let i = 0; i < dayMap.length; i++) {
+    let key = "day" + String(i);
+    let tempValue = "";
+    let fieldObj = {
+      name: "**" + dayMap[i].toLocaleString({ weekday: "long" }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit"}),
+      inline: (guildSettings.inline === "1")
+    };
+    if (guildSettings.emptydays === "0" && calendar[key].length === 0) {
+      continue;
     }
+    if (calendar[key].length === 0) {
+      tempValue = "\u200b";
+    } else {
+      // Map events for each day
+      for (let m = 0; m < calendar[key].length; m++) {
+        let duration = "";
+        if (Object.keys(calendar[key][m].start).includes("date")) {
+          // no need for temp start/fin dates
+          duration = "All Day"
+        } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
+          if (calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
+            tempStartDate = helpers.getStringTime(calendar[key][m].start.dateTime, message.guild.id);
+          }
+          if (calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
+            tempFinDate = helpers.getStringTime(calendar[key][m].end.dateTime, message.guild.id);
+          }
+          if (calendar[key][m].type === eventType.MULTIMID) {
+            duration = "All Day";
+          } else {
+            duration = tempStartDate + " - " + tempFinDate;
+          }
+        }
+        // construct field object with summary + description
+        let eventTitle = helpers.trimEventName(calendar[key][m].summary, guildSettings.trim);
+        let description = helpers.descriptionParser(calendar[key][m].description);
+        tempValue += `**${duration}** | ${eventTitle}\n`;
+        // if we should add description
+        if ((description !== "undefined") && (guildSettings.description === "1")) {
+          tempValue += `\`${description}\`\n`;
+        }
+      }
+    }
+    // finalize field object
+    fieldObj.value = tempValue;
+    fields.push(fieldObj);
   }
-  let embed = new bot.discord.MessageEmbed();
-  embed.setTitle("CALENDAR");
-  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
-  embed.setColor("BLUE");
-  embed.setDescription(finalString);
-  embed.setFooter("Last update");
-  if (guildSettings.helpmenu === "1") {
-    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
-  }
-  if (guildSettings.tzDisplay === "1") { // display timezone
-    embed.addField("Timezone", guildSettings.timezone, false);
-  }
-  embed.setTimestamp(new Date());
-  p.resolve(embed);
-  return p.promise;
+  return fields; // return field array 
 }
 
 function startUpdateTimer(message) {
@@ -517,6 +588,18 @@ function displayOptions(message) {
     } else {
       message.channel.send("Please only use 0 or 1 for the calendar empty days display options, (off or on)");
     }
+  } else if (pieces[1] === "showpast") {
+    if (pieces[2] === "1") {
+      guildSettings.showpast = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of today's past events to 1 (on)");
+    } else if (pieces[2] === "0") {
+      guildSettings.showpast = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of today's past events 0 (off)");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the display of today's past events option. (off or on) ");
+    }
   } else if (pieces[1] === "trim") {
     if (pieces[2] !== null) {
       let size = parseInt(pieces[2]);
@@ -528,6 +611,65 @@ function displayOptions(message) {
       message.channel.send("Changed trimming of event titles to "+size+" (0 = off)");
     } else  {
       message.channel.send("Please provide a number to trim event titels. (0 = don't trim!)");
+    }
+  } else if (pieces[1] === "days") {
+    if (pieces[2] !== null) {
+      let size = parseInt(pieces[2]);
+      if(size.isNaN){
+        size = 7;
+      }
+      // limit the max value to keep effort and storage sanity
+      if(size > 90){
+        size = 90;
+      }
+      guildSettings.days = size;
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed days to display to: "+size + " (you may have to use `!displayoptions emptydays 0`)");
+    } else {
+      message.channel.send("Please provide a number of days to display. (7 = default, 90 = max)");
+    }
+  } else if (pieces[1] === "style") {
+    if (pieces[2] === "code") {
+      guildSettings.style = "code";
+      // revert dependent options
+      guildSettings.inline = "0";
+      guildSettings.description = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display style to `code`");
+    } else if (pieces[2] === "embed") {
+      guildSettings.style = "embed";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display style to `embed`");
+    } else {
+      message.channel.send("Please only use code or embed for the style choice. (see niles.seanecoffey.com#style)");
+    }
+  } else if (pieces[1] === "inline") {
+    if (guildSettings.style === "code") {
+      message.channel.send("This displayoption is only compatible with the `embed` display style") 
+    } else if (pieces[2] === "1") {
+      guildSettings.inline = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed inline events to 1 (on)");
+    } else if (pieces[2] === "0") {
+      guildSettings.inline = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed inline events to 0 (off)");
+    } else {
+      message.channel.send("Please only use 0 or 1 for inline events. (off or on) - see niles.seanecoffey.com#style");
+    }
+  } else if (pieces[1] === "description") {
+    if (guildSettings.style === "code") {
+      message.channel.send("This displayoption is only compatible with the `embed` display style") 
+    } else if (pieces[2] === "1") {
+      guildSettings.description = "1";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of descriptions to 1 (on)");
+    } else if (pieces[2] === "0") {
+      guildSettings.description = "0";
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+      message.channel.send("Changed display of descriptions to 0 (off)");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the display of descriptions (off or on)");
     }
   } else {
     message.channel.send(strings.DISPLAYOPTIONS_USAGE);
@@ -566,11 +708,11 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
 			for (let i = 0; i < json.length; i++) {
 				let event = {
 					id: json[i].id,
-					summary: json[i].summary,
+          summary: json[i].summary,
 					location: json[i].location,
 					start: json[i].start,
 					end: json[i].end,
-					status: json[i].status
+          status: json[i].status
 				};
 				eventsArray.push(event);
 			}
