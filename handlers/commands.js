@@ -641,7 +641,7 @@ function displayOptions(message) {
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
       message.channel.send("Changed display style to `embed`");
     } else {
-      message.channel.send("Please only use code or embed for the style choice. (see niles.seanecoffey.com#style)");
+      message.channel.send("Please only use code or embed for the style choice. (see niles.seanecoffey.com/customisation)");
     }
   } else if (pieces[1] === "inline") {
     if (guildSettings.style === "code") {
@@ -655,7 +655,7 @@ function displayOptions(message) {
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
       message.channel.send("Changed inline events to 0 (off)");
     } else {
-      message.channel.send("Please only use 0 or 1 for inline events. (off or on) - see niles.seanecoffey.com#style");
+      message.channel.send("Please only use 0 or 1 for inline events. (off or on) - see niles.seanecoffey.com/customisation");
     }
   } else if (pieces[1] === "description") {
     if (guildSettings.style === "code") {

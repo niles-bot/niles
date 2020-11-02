@@ -33,10 +33,10 @@ NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
 !adminrole           -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\n\
-Visit http://niles.seanecoffey.com/setup for more info.";
+Visit http://niles.seanecoffey.com/start for more info.";
 
 const SETUP_MESSAGE = "\
-Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/setup \n\
+Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/start \n\
 \n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to \'Make changes to events\' under the Permission Settings on the Google Calendar you want to use with Niles\n\
 2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id 123abc@123abc.com`\n\
 3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.\n\
@@ -54,14 +54,14 @@ const DISPLAYOPTIONS_USAGE =
     COMMAND                      PARAMS        EFFECT
     !displayoptions help         (0|1)         hide/show help
     !displayoptions pin          (0|1)         pin calendar message
-    !displayoptions format       (12|24)       12h or 24h clock display 
+    !displayoptions format       (12|24)       12h or 24h clock display
     !displayoptions tzdisplay    (0|1)         hide/show timezone
     !displayoptions emptydays    (0|1)         hide/show empty days
     !displayoptions showpast     (0|1)         hide/show today's past events
     !displayoptions trim         (n)           trim event names to n characters (0 = off)
     !displayoptions days         (n)           number of days to display (max 90)
-    !displayoptions style        (code|embed)  use old or new event display style (see niles.seanecoffey.com#style)
-    !displayoptions inline       (0|1)         makes embed display inline (see niles.seanecoffey.com#style)
+    !displayoptions style        (code|embed)  use old or new event display style (see niles.seanecoffey.com/customisation)
+    !displayoptions inline       (0|1)         makes embed display inline (see niles.seanecoffey.com/customisation)
     !displayoptions description  (0|1)         hide/show event description (only compatible with embed)
     \`\`\`
     `;
