@@ -3,7 +3,7 @@ layout: default
 title: Home
 nav_order: 1
 description: "Niles is a bot for displaying a simple calendar in Discord."
-permalink: /docs
+permalink: /
 ---
 
 <img src="../assets/images/butler_hr_clear.png" width="200"/>
