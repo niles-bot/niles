@@ -215,10 +215,10 @@ function generateCalendar(message, dayMap) {
   embed.setTimestamp(new Date());
   // set description or fields
   if (guildSettings.style === "code") {
-    embed.setDescription = generateCalendarCodeblock(message, dayMap);
+    embed.setDescription(generateCalendarCodeblock(message, dayMap));
     // character check
     //Handle Calendars Greater Than 2048 Characters Long
-    if (finalString.length>2048) {
+    if (embed.length>2048) {
       message.channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
       p.reject(2048);
       return p.promise;
@@ -349,7 +349,7 @@ function generateCalendarEmbed(message, dayMap) {
     fieldObj.value = tempValue;
     fields.push(fieldObj);
   }
-  return fields; // return field array 
+  return fields; // return field array
 }
 
 function startUpdateTimer(message) {
@@ -645,7 +645,7 @@ function displayOptions(message) {
     }
   } else if (pieces[1] === "inline") {
     if (guildSettings.style === "code") {
-      message.channel.send("This displayoption is only compatible with the `embed` display style") 
+      message.channel.send("This displayoption is only compatible with the `embed` display style")
     } else if (pieces[2] === "1") {
       guildSettings.inline = "1";
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
@@ -659,7 +659,7 @@ function displayOptions(message) {
     }
   } else if (pieces[1] === "description") {
     if (guildSettings.style === "code") {
-      message.channel.send("This displayoption is only compatible with the `embed` display style") 
+      message.channel.send("This displayoption is only compatible with the `embed` display style")
     } else if (pieces[2] === "1") {
       guildSettings.description = "1";
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
