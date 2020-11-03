@@ -13,7 +13,7 @@ Please visit the [Discord support server](https://discord.gg/jNyntBn) for furthe
 
 ## General Steps
 
-1. Clone or download the repository, `git clone https://github.com/seanecoffey/Niles`
+1. Clone or download the repository, `git clone https://github.com/niles-bot/Niles`
 
 2. Install using `npm install`.
 

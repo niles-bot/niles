@@ -13,19 +13,19 @@ nav_order: 4
 
 Use display options (!displayoptions) to customise the way the calendar appears in your Discord server.
 
-| Display Option                                      | Usage                               | Description                                             |
-|:------------------------------------------------------|-------------------------------------|---------------------------------------------------------|
-| [help](#calendar-help-message)                       | `!displayoptions help 0|1`         | Hide/show help message                                   |
-| [pin](#pin-calendar-to-channel)                      | `!displayoptions pin 0|1`          | Disable/enable pinning                                   |
-| [format](#time-format)                               | `!displayoptions format 12|24`     | 12h or 24h time display                                  |
-| [tzdisplay](#display-timezone)                       | `!displayoptions tzdisplay 0|1`    | Hide/show timezone                                       |
-| [emptydays](#hideshow-empty-days)                    | `!displayoptions 0|1 `             | Hide/show empty days                                     |
-| [showpast](#hideshow-past-events-on-today)           | `!displayoptions showpast 0|1`     | Hide/show past events on Today                           |
+| Display Option                                       | Usage                               | Description                                              |
+|:-----------------------------------------------------|-------------------------------------|----------------------------------------------------------|
+| [help](#calendar-help-message)                       | `!displayoptions help 0|1`          | Hide/show help message                                   |
+| [pin](#pin-calendar-to-channel)                      | `!displayoptions pin 0|1`           | Disable/enable pinning                                   |
+| [format](#time-format)                               | `!displayoptions format 12|24`      | 12h or 24h time display                                  |
+| [tzdisplay](#display-timezone)                       | `!displayoptions tzdisplay 0|1`     | Hide/show timezone                                       |
+| [emptydays](#hideshow-empty-days)                    | `!displayoptions emptydays 0|1 `    | Hide/show empty days                                     |
+| [showpast](#hideshow-past-events-on-today)           | `!displayoptions showpast 0|1`      | Hide/show past events on Today                           |
 | [trim](#trim-event-names-to-fixed-length)            | `!displayoptions trim <n>`          | Trim event names to length *n* (0 = off)                 |
 | [days](#increasedecrease-number-of-days-on-calendar) | `!displayoptions days <n>`          | Number of days to display (Max. 90)                      |
-| [style](#change-the-calendar-style)                      | `!displayoptions style code|embed` | Use code (old) or embed (new) display styles             |
-| [inline](#make-embed-style-calendar-inline)          | `!displayoptions inline 0|1`       | Makes embed display style use inline fields              |
-| [description](#hideshow-event-description)          | `!displayoptions description 0|1`  | Hide/show event descriptions (embed calendar style only) |
+| [style](#change-the-calendar-style)                  | `!displayoptions style code|embed`  | Use code (old) or embed (new) display styles             |
+| [inline](#make-embed-style-calendar-inline)          | `!displayoptions inline 0|1`        | Makes embed display style use inline fields              |
+| [description](#hideshow-event-description)           | `!displayoptions description 0|1`   | Hide/show event descriptions (embed calendar style only) |
 
 
 ---
@@ -85,7 +85,7 @@ Use `!displayoptions trim <n>` to trim the names of all events to the length `n`
 
 ### Increase/Decrease Number of Days on Calendar
 
-Use `!displayoptions days <n>` to choose the number of days that the calendar displays (Default = 7).
+Use `!displayoptions days <n>` to choose the number of days that the calendar displays *(Default = 7)*.
 Keep in mind the following Discord limitations:
 - Code [Default] style calendar - 2048 character limit per calendar
 - Embed style calendar - 6000 character limit per embed

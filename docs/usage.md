@@ -51,17 +51,17 @@ After using `update` Niles will continue to update this calendar every 5 minutes
 ### create
 
 Use `!create` or `@niles create` to add new events to your calendar. This command takes whatever input you give to it and uses the default Google Calendar interpreter.
-The form of use is `!create <event for Google to parse>`.  A reliable way of using this is `!create <event name> on <event day> from <start time> to <end time>`, i.e. `create Among Us on Friday from 5pm to 11pm`
+The form of use is `!create <event for Google to parse>`.
 
-`!create` is entirely handled by Google Calendar.
-Numerical date formats supported:
-* MM DD YY
-* M D YY
-* YYYY MM DD
+A reliable way of using this is `!create <event name> on <event day> from <start time> to <end time>`, i.e. `create Among Us on Friday from 5pm to 11pm`
 
-Textual date formats are supported in English only e.g. `September 4 2020`
-
-Multi-day events can be created with keywords " - " or " to " etc...
+#### Formatting
+* Numerical date formats supported:
+  * MM DD YY
+  * M D YY
+  * YYYY MM DD
+* Textual date formats are supported in English only e.g. `September 4 2020`
+* Multi-day events can be created with keywords " - " or " to " etc...
 e.g. `01/30/2020 - 05/30/2020`
 
 There is no way to change it and no plans to add middleware to convert it (Natural Language Processing is out of the scope of Niles)
