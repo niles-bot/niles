@@ -370,7 +370,7 @@ function trimEventName(eventName, trimLength){
 function descriptionParser(inputString) {
   const decoded = decodeURI(inputString); // decode URI
   const replaced = decoded.replace(/(<br>)+/g, "\n"); // replace <br> with \n
-  return stripHtml(replaced); // strip html
+  return stripHtml(replaced).result; // strip html
 }
 
 module.exports = {
