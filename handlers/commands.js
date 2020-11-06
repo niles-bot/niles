@@ -206,12 +206,6 @@ function generateCalendar(message, dayMap) {
   embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
   embed.setColor("BLUE");
   embed.setFooter("Last update");
-  if (guildSettings.helpmenu === "1") {
-    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
-  }
-  if (guildSettings.tzDisplay === "1") { // display timezone
-    embed.addField("Timezone", guildSettings.timezone, false);
-  }
   embed.setTimestamp(new Date());
   // set description or fields
   if (guildSettings.style === "code") {
@@ -226,6 +220,13 @@ function generateCalendar(message, dayMap) {
   }
   else if (guildSettings.style === "embed") {
     embed.fields = generateCalendarEmbed(message, dayMap);
+  }
+  // add other embeds after code
+  if (guildSettings.helpmenu === "1") {
+    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
+  }
+  if (guildSettings.tzDisplay === "1") { // display timezone
+    embed.addField("Timezone", guildSettings.timezone, false);
   }
   p.resolve(embed);
   return p.promise;
