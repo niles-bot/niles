@@ -43,3 +43,4 @@ node_modules/*
 config/*.json
 stores/**/*.json
 .ENV
+Gemfile.lock
