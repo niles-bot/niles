@@ -36,7 +36,7 @@ NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
 Visit http://nilesbot.com/start for more info.";
 
 const SETUP_MESSAGE = "\
-Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/start \n\
+Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit https://nilesbot.com/start/ \n\
 \n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to \'Make changes to events\' under the Permission Settings on the Google Calendar you want to use with Niles\n\
 2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id 123abc@123abc.com`\n\
 3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.\n\
@@ -46,8 +46,7 @@ const RESTRICT_ROLE_MESSAGE = "\
 You can restrict who can control Niles and the associated Google Calendar with roles. \n\
 Niles will only allow one role to be used, and it must have a unique name. \n\
 The person assigning the restriction must have the role being assigned. \n\
-i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)\n\
-**Warning - Experimental Feature - Please go to the Niles discord server and post if you have any issues with this feature**";
+i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)";
 
 const DISPLAYOPTIONS_USAGE =
 `**displayoptions USAGE**\`\`\`

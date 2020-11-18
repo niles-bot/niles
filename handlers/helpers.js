@@ -65,11 +65,10 @@ function log(...logItems) {
     if (!'${logChannelId}') {
       console.log("no log channel defined");
     }
-    // fetch log channel
-    const channel = this.channels.cache.get('${logChannelId}');
+    const channel = this.channels.cache.get('${logChannelId}'); // fetch log channel
     if (channel) { // check for channel on shard
       channel.send('${tripleGrave} ${logString} ${tripleGrave}');
-      if ('${logString}'.includes("Bot is logged in.") || '${logString}'.includes("error running main message handler")) {
+      if ('${logString}'.includes("all shards spawned")) {
         channel.send("<@${superAdmin}>");
       }
       console.log('${logString}'); // send to console only once to avoid multiple lines
@@ -89,8 +88,7 @@ function readFile(path) {
     return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
     log("error reading file " + err);
-    // return valid JSON to trigger update
-    return {};
+    return {}; // return valid JSON to trigger update
   }
 }
 
@@ -99,10 +97,7 @@ function readFileSettingsDefault(filePath, defaultValue) {
     const fileData = fs.readFileSync(filePath, "utf8");
     return JSON.parse(fileData);
   } catch (err) {
-    if (err.code !== "ENOENT") {
-      throw err;
-    }
-
+    if (err.code !== "ENOENT") throw err;
     fs.writeFileSync(filePath, defaultValue, {
       encoding: "utf8",
       flag: "wx"
@@ -122,10 +117,7 @@ function getGuildDatabase() {
 function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
-    if (!err) {
-      return;
-    }
-    return logError("writing the guild database", err);
+    if (err) return logError("writing the guild database", err);
   });
 }
 
@@ -156,9 +148,7 @@ function deleteFolderRecursive(path) {
 function writeGuildSpecific(guildid, json, file) {
   let fullPath = path.join(__dirname, "..", "stores", guildid, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-    if (err) {
-      return log("error writing guild specific database: " + err);
-    }
+    if (err) return log("error writing guild specific database: " + err);
   });
 }
 
@@ -173,10 +163,7 @@ function amendUserSettings(userId, partialSettings) {
 
   const formattedJson = JSON.stringify(users, "", "\t");
   fs.writeFile(userStorePath, formattedJson, (err) => {
-    if (!err) {
-      return;
-    }
-    return logError("writing the users database", err);
+    if (err) return logError("writing the users database", err);
   });
 }
 
@@ -185,16 +172,15 @@ function getUserSetting(userId, settingName) {
   return apparentSettings[settingName];
 }
 
-
-function mentioned(msg, x) {
-  if (!Array.isArray(x)) {
-    x = [x];
-  }
+/**
+ * checks if bot was mentioned and command issued
+ * @param {Snowflake} msg 
+ * @param {String} cmd - cmd to check for mention of
+ * @returns {bool} - if bot was mentioned with command word
+ */
+function mentioned(msg, cmd) {
+  if (!Array.isArray(cmd)) cmd = [cmd]; // make array from cmd if not already an array
   return msg.mentions.has(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
-}
-
-function firstUpper(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 // timezone validation
@@ -233,47 +219,38 @@ function sendMessageHandler(message, err) {
   }
 }
 
+/**
+ * Checks if user has required roles
+ * @param {Snowflake} message - message from user to be checked
+ * @returns {bool} - return if no allowed roles or user has role
+ */
 function checkRole(message) {
-  let guildSettings = getGuildSettings(message.guild.id, "settings");
-  let userRoles = message.member.roles.cache.map((role) => role.name);
-  if (guildSettings.allowedRoles.length === 0) {
-    return true;
-  }
-  if (guildSettings.allowedRoles.length > 0) {
-    if (userRoles.includes(guildSettings.allowedRoles[0])) {
-      return true;
+  let allowedRoles = getGuildSettings(message.guild.id, "settings").allowedRoles;
+  let userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
+  return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
+}
+
+/**
+ * Checks if any permissions are missing
+ * @param {Snowflake} message - message from guild to be checked
+ * @param {String} cmd - attempted command 
+ */
+function checkPermissions(message, cmd) {
+  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
+  let missingPermissions = "";
+  minimumPermissions.forEach(function(permission) {
+    if (!botPermissions[permission]) {
+      missingPermissions += "\n" + String(permission);
+    }
+  });
+  if (cmd) { // if cmd called explicitly
+    if (missingPermissions === "") {
+      message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
     } else {
-      return false;
+      message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
     }
   }
-}
-
-function checkPermissions(message) {
-  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
-    if (!botPermissions[permission]) {
-      missingPermissions += "\n" + String(permission);
-    }
-  });
-  if (missingPermissions !== "") {
-    return false;
-  }
-  return true;
-}
-
-function checkPermissionsManual(message, cmd) {
-  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
-    if (!botPermissions[permission]) {
-      missingPermissions += "\n" + String(permission);
-    }
-  });
-  if (missingPermissions !== "") {
-    return message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
-  }
-  return message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
+  return (missingPermissions === "") // return if any permissions are missing
 }
 
 function yesThenCollector(message) {
@@ -321,7 +298,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
     }
     // this removes the entry for the next day of a 12AM ending event
     else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
-      let eventMatchType = eventType.NOMATCH;
+      eventMatchType = eventType.NOMATCH;
     }
     else if(checkDate.hasSame(eventStartDate, "day")){
       eventMatchType = eventType.MULTISTART;
@@ -380,7 +357,6 @@ module.exports = {
   amendUserSettings,
   getUserSetting,
   mentioned,
-  firstUpper,
   validateTz,
   log,
   logError,
@@ -389,7 +365,6 @@ module.exports = {
   getValidTz,
   sendMessageHandler,
   checkPermissions,
-  checkPermissionsManual,
   checkRole,
   yesThenCollector,
   classifyEventMatch,
