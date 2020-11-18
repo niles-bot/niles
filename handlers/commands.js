@@ -642,7 +642,7 @@ function displayOptions(message) {
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
       message.channel.send("Changed display style to `embed`");
     } else {
-      message.channel.send("Please only use code or embed for the style choice. (see niles.seanecoffey.com/customisation)");
+      message.channel.send("Please only use code or embed for the style choice. (see nilesbot.com/customisation)");
     }
   } else if (pieces[1] === "inline") {
     if (guildSettings.style === "code") {
@@ -656,7 +656,7 @@ function displayOptions(message) {
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
       message.channel.send("Changed inline events to 0 (off)");
     } else {
-      message.channel.send("Please only use 0 or 1 for inline events. (off or on) - see niles.seanecoffey.com/customisation");
+      message.channel.send("Please only use 0 or 1 for inline events. (off or on) - see nilesbot.com/customisation");
     }
   } else if (pieces[1] === "description") {
     if (guildSettings.style === "code") {
@@ -817,7 +817,7 @@ function displayStats(message) {
     let embed = new bot.discord.MessageEmbed()
       .setColor("RED")
       .setTitle(`Niles Bot ${settings.secrets.current_version}`)
-      .setURL("https://github.com/seanecoffey/Niles")
+      .setURL("https://github.com/niles-bot/niles")
       .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
       .addField("Uptime", Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"), true)
       .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
@@ -825,7 +825,7 @@ function displayStats(message) {
         (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
       .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
       .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
-      .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/seanecoffey/Niles)", true)
+      .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)", true)
       .setFooter("Created by Sean#0420");
     message.channel.send({
       embed

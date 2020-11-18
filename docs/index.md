@@ -8,7 +8,7 @@ description: "Niles is a bot for displaying a simple calendar in Discord."
 <img src="../assets/images/butler_hr_clear.png" width="200"/>
 {: .text-center }
 
-[Niles](https://niles.seanecoffey.com/) is a bot for displaying a simple calendar in Discord.
+[Niles](https://nilesbot.com/) is a bot for displaying a simple calendar in Discord.
 {: .fs-8 .text-center }
 
 ---

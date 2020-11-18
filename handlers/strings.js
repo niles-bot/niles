@@ -16,7 +16,7 @@ const HELP_MESSAGE = "```\
 !admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\
-Visit http://niles.seanecoffey.com for more info.";
+Visit http://nilesbot.com for more info.";
 
 const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.\n\
 You should also check that you have entered the correct calendar id using `!id`.\n\
@@ -33,7 +33,7 @@ NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
 !adminrole           -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\n\
-Visit http://niles.seanecoffey.com/start for more info.";
+Visit http://nilesbot.com/start for more info.";
 
 const SETUP_MESSAGE = "\
 Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/start \n\
