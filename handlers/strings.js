@@ -1,3 +1,28 @@
+const path = require("path");
+const { I18n } = require('i18n');
+//Initiate i18n globally to produce list of available translations.
+const i18n = new I18n({
+  directory: path.join(__dirname, "..", "translations"),
+});
+
+//Translate function to fetch localised messages
+function translate(key, message, locale) {
+  //Register message as an i18n object
+  const i18n = new I18n({
+    directory: path.join(__dirname, "..", "translations"),
+    register: message
+  });
+
+  //Check if locale exists
+  if(i18n.getLocales().includes(locale)) {
+    return message.__({phrase: key, locale: locale});
+  } else {
+    return message.__({phrase: key, locale: 'en'});
+  }
+
+}
+
+
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\
@@ -72,5 +97,7 @@ module.exports = {
   SETUP_MESSAGE,
   SETUP_HELP,
   RESTRICT_ROLE_MESSAGE,
-  DISPLAYOPTIONS_USAGE
+  DISPLAYOPTIONS_USAGE,
+  translate,
+  i18n
 };

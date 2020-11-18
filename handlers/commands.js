@@ -677,6 +677,19 @@ function displayOptions(message) {
   }
 }
 
+function setLocale(message) {
+  let pieces = message.content.split(" ");
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+
+  if (strings.i18n.getLocales().includes(pieces[1])) {
+    guildSettings.locale = pieces[1];
+    helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+    message.channel.send(`Changed language to **${pieces[1]}**`);
+  } else {
+    message.channel.send(`Sorry, this language is not currently available. The currently available languages are: **${strings.i18n.getLocales()}**`);
+  }
+}
+
 function deleteEventById(eventId, calendarId, dayMap, message) {
   let params = {
     sendNotifications: true
@@ -868,7 +881,7 @@ function run(message) {
     });
   }
   if (cmd === "help" || helpers.mentioned(message, "help")) {
-    message.channel.send(strings.HELP_MESSAGE);
+    message.channel.send(strings.translate('HELP_MESSAGE', message, guildSettings.locale));
     message.delete({ timeout: 5000 });
   }
   if (cmd === "invite" || helpers.mentioned(message, "invite")) {
@@ -945,6 +958,10 @@ function run(message) {
   }
   if (cmd === "displayoptions" || helpers.mentioned(message, "displayoptions")) {
     displayOptions(message);
+    message.delete({ timeout: 5000 });
+  }
+  if (cmd === "language" || helpers.mentioned(message, "language")) {
+    setLocale(message);
     message.delete({ timeout: 5000 });
   }
   if (["stats", "info"].includes(cmd) || helpers.mentioned(message, ["stats", "info"])) {

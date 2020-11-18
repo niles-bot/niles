@@ -9,10 +9,11 @@
   "author": "Sean Coffey",
   "license": "MIT",
   "dependencies": {
+    "@mchangrh/node-google-calendar": "^2.0.3",
     "columnify": "^1.5.4",
     "discord.js": "^12.3.1",
+    "i18n": "^0.13.2",
     "luxon": "^1.25.0",
-    "@mchangrh/node-google-calendar": "^2.0.3",
     "promise-defer": "^1.0.0",
     "string-strip-html": "^6.2.0"
   },
