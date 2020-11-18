@@ -826,7 +826,7 @@ function displayStats(message) {
       .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
       .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
       .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)", true)
-      .setFooter("Created by Sean#0420");
+      .setFooter("Created by the Niles Bot Team");
     message.channel.send({
       embed
     }).catch((err) => {
