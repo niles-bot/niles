@@ -1,3 +1,18 @@
 {
-	"HELP_MESSAGE": "This is an English help message"
+	"HELP_MESSAGE": "This is an English help message",
+	"help1": "        Niles Usage",
+	"help2": "!display             -  Display your calendar",
+	"help3": "!update / !sync      -  Update the Calendar",
+	"help4": "!create / !scrim     -  Create events using GCal's default interpreter - works best like !scrim xeno June 5 8pm - 9pm",
+	"help5": "!delete              -  Delete an event using the form !delete <event_title>, ONLY works when the title matches the one in Google Calendar",
+	"help6": "!clean / !purge      -  Deletes messages in current channel, !clean <number>",
+	"help7": "!stats / !info       -  Display list of statistics and information about the Niles bot",
+	"help8": "!invite              -  Get the invite link for Niles to join your server!",
+	"help9": "!setup               -  Get details on how to setup Niles",
+	"help10": "!id                  -  Set the Google calendar ID for the guild",
+	"help11": "!tz                  -  Set the timezone for the guild",
+	"help12": "!prefix              -  View or change the prefix for Niles",
+	"help13": "!displayoptions      -  Change formatting of the calendar display",
+	"help14": "!admin               -  Restrict the usage of Niles to a specific role",
+	"help15": "!help                -  Display this message"
 }

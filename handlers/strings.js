@@ -13,13 +13,41 @@ function translate(key, message, locale) {
     register: message
   });
 
+  //Defer to help assembler - this is in a bad position - doesn't check if the locale exists first.
+  if(key === "HELP_MESSAGE" && i18n.getLocales().includes(locale)) {
+    return helpAssembler(message, locale);
+    //english fall back
+  } else if (key === "HELP_MESSAGE" && !i18n.getLocales().includes(locale)) {
+    return helpAssembler(message, "en");
+  }
   //Check if locale exists
   if(i18n.getLocales().includes(locale)) {
     return message.__({phrase: key, locale: locale});
   } else {
     return message.__({phrase: key, locale: 'en'});
   }
+}
 
+function helpAssembler(message, locale) {
+  var str = ""
+  return str.concat("```", message.__({phrase: 'help1', locale: locale}),
+  "\n---------------------------\n",
+  message.__({phrase: 'help2', locale: locale}), "\n",
+  message.__({phrase: 'help3', locale: locale}), "\n",
+  message.__({phrase: 'help4', locale: locale}), "\n",
+  message.__({phrase: 'help5', locale: locale}), "\n",
+  message.__({phrase: 'help6', locale: locale}), "\n",
+  message.__({phrase: 'help7', locale: locale}), "\n",
+  message.__({phrase: 'help8', locale: locale}), "\n",
+  message.__({phrase: 'help9', locale: locale}), "\n",
+  message.__({phrase: 'help10', locale: locale}), "\n",
+  message.__({phrase: 'help11', locale: locale}), "\n",
+  message.__({phrase: 'help12', locale: locale}), "\n",
+  message.__({phrase: 'help13', locale: locale}), "\n",
+  message.__({phrase: 'help14', locale: locale}), "\n",
+  message.__({phrase: 'help15', locale: locale}), "\n",
+  "```", "Visit https://nilesbot.com/ for more information."
+  );
 }
 
 
