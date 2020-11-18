@@ -111,6 +111,10 @@ function readFileSettingsDefault(filePath, defaultValue) {
   }
 }
 
+function fullname(user) {
+  return `${user.username}#${user.discriminator}`;
+}
+
 const guildDatabasePath = path.join(__dirname, "..", "stores", "guilddatabase.json");
 let guildDatabase;
 
@@ -370,6 +374,7 @@ function descriptionParser(inputString) {
 }
 
 module.exports = {
+  fullname,
   deleteFolderRecursive,
   getGuildDatabase,
   getGuildSettings,
