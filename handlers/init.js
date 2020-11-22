@@ -71,13 +71,13 @@ function matchCalType(message, calendarId) {
   } else if (groupCalId.test(calendarId)) {
     if (cGroupCalId.test(calendarId)) {
     } else if (domainCalId.test(calendarId)) {
-      message.channel.send('...domain warming...');
+      message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
     } else if (underscoreCalId.test(calendarId)) {
-      message.channel.send('...underscore warning...');
+      message.channel.send('If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format');
     }
-    return true // normal group id
+    return true // normal group id or any variation
   } else if (domainAddress.test(calendarId)) {
-    message.channel.send('...domain warming...');
+    message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
   } else {
     return false; // break and return false
   }
