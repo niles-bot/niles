@@ -41,7 +41,7 @@ Join the [Niles Discord server](https://discord.gg/jNyntBn) if you have need hel
 {% endfor %}
 </ul>
 
-The new artwork for Niles was created and supplied by #Meris2810
+The new artwork for Niles was created and supplied by Meris#2810
 
 ## License
 
