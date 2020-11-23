@@ -89,3 +89,19 @@ The calendar will automatically check for updates every 5 minutes, but you can m
 ## Customise it
 
 You can change the way Niles looks and behaves, depending on your needs. See the [detailed customisation documentation](../customisation).
+
+---
+
+## Warnings
+
+### GSuite/Workplace
+If Niles is unable to find your calendar and you are under a GSuite / Google Workplace account, it's possible that the administrator has limited external sharing.
+
+Google has a help article on how to enable external sharing  
+https://support.google.com/a/answer/60765?hl=en
+
+### New Calendar Format
+Google Calendar has a new format for calendar IDs  
+eg. `CAL1_qb9t3fb6mn9p52a4re0hc067d8@group.calendar.google.com`
+
+If your calendar isn't found, remove the `CAL1_` portion - everything before and including the underscore
