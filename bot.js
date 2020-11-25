@@ -115,7 +115,7 @@ client.on("message", (message) => {
   if (!restricted.allCommands.includes(cmd)) {
     return;
   } else {
-    helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
+    helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
   }
   if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
     if (restricted.allCommands.includes(cmd)) {
