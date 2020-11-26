@@ -903,7 +903,7 @@ function run(message) {
     }, 2000);
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "update" || helpers.mentioned(message, "update")) {
+  if (["update", "sync"].includes(cmd) || helpers.mentioned(message, ["update", "sync"])) {
     if (typeof calendar === "undefined") {
       message.channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
       helpers.log("calendar undefined in " + message.guild.id + ". Killing update timer.");
