@@ -244,9 +244,9 @@ function generateCalendarCodeblock(message, dayMap) {
       continue;
     }
     if (calendar[key].length === 0) {
-      sendString += "``` ```";
+      sendString += "```\n ```"; // patches #101
     } else {
-      sendString += "```";
+      sendString += "```\n"; // patches #101
       // Map events for each day
       for (let m = 0; m < calendar[key].length; m++) {
         let options = {
