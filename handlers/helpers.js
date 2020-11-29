@@ -369,6 +369,34 @@ function descriptionParser(inputString) {
   return stripHtml(replaced).result; // strip html
 }
 
+/**
+ * Validates guild settings
+ * @param {Snowflake} guildId 
+ */
+function guildValidator(guildId) {
+  let guildSettings = getGuildSettings(guildId, "settings");
+  // validate tz
+  if (!validateTz(guildSettings.timezone)) {
+    // bad tz
+  }
+  // validate id
+  if (!matchCalType(guildSettings.calendarID)) {
+    // bad caltype
+  }
+  // try to use id
+  const nowTime = DateTime.local()
+  let params = {
+    timeMin: nowTime,
+    timeMax: nowTime.plus({ days: 1 })
+  };
+  cal.Events.list(calendarID, params).then((json) => {
+    return true;
+  }).catch((err) => {
+    helpers.log(`function getEvents error in guild: ${guildId}: ${err}`);
+  });
+}
+  
+
 module.exports = {
   deleteFolderRecursive,
   getGuildDatabase,
