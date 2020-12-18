@@ -998,6 +998,28 @@ function run(message) {
       return;
     }
   }
+  if (cmd === "validate" || helpers.mentioned(message, "validate")) {
+    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+    // calendar test
+    const nowTime = DateTime.local()
+    let params = {
+      timeMin: nowTime.toISO(),
+      timeMax: nowTime.plus({ days: 1 }).toISO()
+    };
+    let calTest = cal.Events.list(guildSettings.calendarID, params).then((json) => {
+      return true
+    }).catch((err) => {
+      message.channel.send(`Error Fetching Calanedar: ${err}`);
+    });
+    console.log(`posttest ${calTest}`)
+    // results
+    message.channel.send(`**Checks**:
+    **Timezone:** ${helpers.passFail(helpers.validateTz(guildSettings.timezone))}
+    **Calendar ID:** ${helpers.passFail(helpers.matchCalType(guildSettings.calendarID, message))}
+    **Calendar Test:** ${helpers.passFail(calTest)}
+    `)
+    message.delete({ timeout: 5000 });
+  }
 }
 
 module.exports = {
