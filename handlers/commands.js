@@ -11,6 +11,7 @@ let settings = require("../settings.js");
 let init = require("./init.js");
 let helpers = require("./helpers.js");
 let guilds = require("./guilds.js");
+const { time } = require("console");
 let cal = new CalendarAPI(settings.calendarConfig);
 let autoUpdater = [];
 let timerCount = [];
@@ -121,7 +122,7 @@ function createDayMap(message) {
 
 function getEvents(message, calendarID, dayMap) {
   try {
-    let calendar = helpers.getGuildSettings(message.guild.id, "calendar");
+    let calendar = guilds.emptyCal
     let tz = helpers.getValidTz(message.guild.id);
     let params = {
       timeMin: dayMap[0].toISO(),
@@ -713,7 +714,8 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
 					location: json[i].location,
 					start: json[i].start,
 					end: json[i].end,
-          status: json[i].status
+          status: json[i].status,
+          description: json[i].description
 				};
 				eventsArray.push(event);
 			}
@@ -721,6 +723,29 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
 		}).catch((err) => {
 			helpers.log("Error: listSingleEventsWithinDateRange", err.message);
 		});
+}
+
+function nextEvent(message, calendarId, dayMap) {
+  const now = DateTime.utc();
+  listSingleEventsWithinDateRange(message, calendarId, dayMap).then((resp) => {
+    for (let i = 0; i < resp.length; i++) {
+      var isoDate = resp[i].start.dateTime;
+      var luxonDate = DateTime.fromISO(isoDate);
+      if (luxonDate > now) { // make sure event happens in the future
+        const eventTime = helpers.getStringTime(isoDate, message.guild.id); // event time can be passed in
+        // description is passed in - option to be added
+        // construct string
+        const timeTo = luxonDate.diff(now).shiftTo('days', 'hours', 'minutes', 'seconds').toObject();
+        var timeToString = "";
+        if (timeTo.days) timeToString += `${timeTo.days} days `;
+        if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
+        if (timeTo.minutes) timeToString += `${timeTo.minutes} minutes`;
+        return message.channel.send(`The next event is \`${resp[i].summary}\` in ${timeToString}`);
+      }
+    }
+  }).catch((err) => {
+    helpers.log(err);
+  });
 }
 
 function deleteEvent(message, calendarId, dayMap) {
@@ -962,6 +987,11 @@ function run(message) {
   if (cmd === "delete" || helpers.mentioned(message, "delete")) {
     deleteEvent(message, calendarID, dayMap);
     message.delete({ timeout: 5000 });
+  }
+  if (cmd === "next" || helpers.mentioned(message, "next")) {
+    console.log('next start')
+    nextEvent(message, calendarID, dayMap);
+    message.delete({ timeout: 5000 })
   }
   if (cmd === "count" || helpers.mentioned(message, "count")) {
     let theCount;

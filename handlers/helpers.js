@@ -36,14 +36,13 @@ function getGuildSettings(id, file) {
   // select file
   if (file === "calendar") {
     filePath = path.join(__dirname, "..", "stores", id, "calendar.json");
+    return readFile(filePath);
   } else if (file === "settings") {
     filePath = path.join(__dirname, "..", "stores", id, "settings.json");
+    let storedData = readFile(filePath);
+    //merge defaults and stored settings to guarantee valid data
+    return {...defaultSettings, ...storedData };
   }
-  // read file
-  let storedData = readFile(filePath);
-  //merge defaults and stored settings to guarantee valid data
-  let combinedData = {...defaultSettings, ...storedData };
-  return combinedData
 }
 
 function getSettings() {
