@@ -122,7 +122,8 @@ function createDayMap(message) {
 
 function getEvents(message, calendarID, dayMap) {
   try {
-    let calendar = guilds.emptyCal
+    let oldCalendar = helpers.getGuildSettings(message.guild.id, "calendar");
+    let calendar = (({ lastUpdate, calendarMessageId }) => ({ lastUpdate, calendarMessageId }))(oldCalendar);
     let tz = helpers.getValidTz(message.guild.id);
     let params = {
       timeMin: dayMap[0].toISO(),
