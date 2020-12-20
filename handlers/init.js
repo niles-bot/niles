@@ -33,7 +33,7 @@ function logId(message) {
     message.channel.send("You didn't enter a calendar ID, you are currently using `" + guildSettings["calendarID"] + "`");
     return;
   }
-  if (!matchCalType(message, calendarId)) {
+  if (!helpers.matchCalType(calendarId, message)) {
     message.channel.send("I don\'t think that\'s a valid calendar ID.. try again");
     return;
   }
@@ -47,41 +47,6 @@ function logId(message) {
   } else {
     writeSetting(message, calendarId, "calendarID");
   }
-}
-
-/**
- * This function makes sure that the calendar matches a specified type
- * @param {Snowflake} message - message to send warnings
- * @param {String} calendarId - calendar ID to classify
- * @returns {bool} - if calendar ID is valid
- */
-function matchCalType(message, calendarId) {
-  console.log(calendarId)
-  // regex filter groups
-  const groupCalId = RegExp('([a-z0-9]{26}@group.calendar.google.com)')
-  const cGroupCalId = RegExp('^(c_[a-z0-9]{26}@)')
-  const importCalId = RegExp('(^[a-z0-9]{32}@import.calendar.google.com)')
-  const gmailAddress = RegExp('^([a-z0-9.]+@gmail.com)')
-  const underscoreCalId = RegExp('^[a-z0-9](_[a-z0-9]{26}@)')
-  const domainCalId = RegExp('^([a-z0-9.]+_[a-z0-9]{26}@)')
-  const domainAddress = RegExp('(^[a-z0-9_.+-]+@[a-z0-9-]+\.[a-z0-9-.]+$)')
-  // filter through regex
-  if (gmailAddress.test(calendarId)) {
-  } else if (importCalId.test(calendarId)) {
-  } else if (groupCalId.test(calendarId)) {
-    if (cGroupCalId.test(calendarId)) {
-    } else if (domainCalId.test(calendarId)) {
-      message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
-    } else if (underscoreCalId.test(calendarId)) {
-      message.channel.send('If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format');
-    }
-    return true // normal group id or any variation
-  } else if (domainAddress.test(calendarId)) {
-    message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
-  } else {
-    return false; // break and return false
-  }
-  return true; // if did not reach false
 }
 
 function logTz(message) {
