@@ -15,6 +15,8 @@ const HELP_MESSAGE = "```\
 !displayoptions      -  Change formatting of the calendar display\n\
 !admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
+!next                -  Displays the next upcoming event\n\
+!validate            -  Checks for any errors with the timezone, calendar ID or calendar fetching\n\
 ```\
 Visit https://nilesbot.com for more info.";
 
