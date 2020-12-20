@@ -36,14 +36,13 @@ function getGuildSettings(id, file) {
   // select file
   if (file === "calendar") {
     filePath = path.join(__dirname, "..", "stores", id, "calendar.json");
+    return readFile(filePath);
   } else if (file === "settings") {
     filePath = path.join(__dirname, "..", "stores", id, "settings.json");
+    let storedData = readFile(filePath);
+    //merge defaults and stored settings to guarantee valid data
+    return {...defaultSettings, ...storedData };
   }
-  // read file
-  let storedData = readFile(filePath);
-  //merge defaults and stored settings to guarantee valid data
-  let combinedData = {...defaultSettings, ...storedData };
-  return combinedData
 }
 
 function getSettings() {
@@ -346,6 +345,48 @@ function descriptionParser(inputString) {
   return stripHtml(replaced).result; // strip html
 }
 
+/**
+ * This function makes sure that the calendar matches a specified type
+ * @param {Snowflake} [message] - message to send warnings
+ * @param {String} calendarId - calendar ID to classify
+ * @returns {bool} - if calendar ID is valid
+ */
+function matchCalType(calendarId, message) {
+  // regex filter groups
+  const groupCalId = RegExp('([a-z0-9]{26}@group.calendar.google.com)')
+  const cGroupCalId = RegExp('^(c_[a-z0-9]{26}@)')
+  const importCalId = RegExp('(^[a-z0-9]{32}@import.calendar.google.com)')
+  const gmailAddress = RegExp('^([a-z0-9.]+@gmail.com)')
+  const underscoreCalId = RegExp('^[a-z0-9](_[a-z0-9]{26}@)')
+  const domainCalId = RegExp('^([a-z0-9.]+_[a-z0-9]{26}@)')
+  const domainAddress = RegExp('(^[a-z0-9_.+-]+@[a-z0-9-]+\.[a-z0-9-.]+$)')
+  // filter through regex
+  if (gmailAddress.test(calendarId)) {
+  } else if (importCalId.test(calendarId)) {
+  } else if (groupCalId.test(calendarId)) {
+    if (cGroupCalId.test(calendarId)) {
+    } else if (domainCalId.test(calendarId)) {
+      if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
+    } else if (underscoreCalId.test(calendarId)) {
+      if (message) message.channel.send('If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format');
+    }
+    return true // normal group id or any variation
+  } else if (domainAddress.test(calendarId)) {
+    if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
+  } else {
+    return false; // break and return false
+  }
+  return true; // if did not reach false
+}
+
+/**
+ * Returns pass or fail instead of boolean
+ * @param {boolean} bool
+ */
+function passFail(bool) {
+  return (bool ? 'Passed 🟢': 'Failed 🔴');
+}
+
 module.exports = {
   deleteFolderRecursive,
   getGuildDatabase,
@@ -371,5 +412,7 @@ module.exports = {
   eventType,
   defaultSettings,
   trimEventName,
-  descriptionParser
+  descriptionParser,
+  matchCalType,
+  passFail
 };

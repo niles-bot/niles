@@ -15,8 +15,10 @@ const HELP_MESSAGE = "```\
 !displayoptions      -  Change formatting of the calendar display\n\
 !admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
+!next                -  Displays the next upcoming event\n\
+!validate            -  Checks for any errors with the timezone, calendar ID or calendar fetching\n\
 ```\
-Visit http://nilesbot.com for more info.";
+Visit https://nilesbot.com for more info.";
 
 const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.\n\
 You should also check that you have entered the correct calendar id using `!id`.\n\
@@ -33,7 +35,7 @@ NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
 !adminrole           -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\n\
-Visit http://nilesbot.com/start for more info.";
+Visit https://nilesbot.com/start for more info.";
 
 const SETUP_MESSAGE = "\
 Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit https://nilesbot.com/start/ \n\
@@ -59,8 +61,8 @@ const DISPLAYOPTIONS_USAGE =
     !displayoptions showpast     (0|1)         hide/show today's past events
     !displayoptions trim         (n)           trim event names to n characters (0 = off)
     !displayoptions days         (n)           number of days to display (max 90)
-    !displayoptions style        (code|embed)  use old or new event display style (see niles.seanecoffey.com/customisation)
-    !displayoptions inline       (0|1)         makes embed display inline (see niles.seanecoffey.com/customisation)
+    !displayoptions style        (code|embed)  use old or new event display style (see nilesbot.com/customisation)
+    !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
     !displayoptions description  (0|1)         hide/show event description (only compatible with embed)
     \`\`\`
     `;

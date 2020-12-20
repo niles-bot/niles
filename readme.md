@@ -12,7 +12,7 @@ Targeted towards eSports event scheduling (scrims, PCWs).
 
 Join the [Niles Discord server](https://discord.gg/jNyntBn) for support, bug reporting and feature requests.
 
-Visit the Niles [website](http://niles.seanecoffey.com/) or [setup guide](http://niles.seanecoffey.com/start) for more detailed use and setup descriptions.
+Visit the Niles [website](https://nilesbot.com/) or [setup guide](https://nilesbot.com/start) for more detailed use and setup descriptions.
 
 If you wanted to host your own version or similar, these instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 

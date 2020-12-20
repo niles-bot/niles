@@ -5,6 +5,11 @@ const helpers = require("./helpers.js");
 const commands = require("./commands.js");
 const bot = require("../bot.js");
 
+exports.emptyCal = {
+  "lastUpdate": "",
+  "calendarMessageId": ""
+}
+
 exports.create = (guild) => {
   let guildPath = path.join(__dirname, "..", "stores", guild.id);
   let emptyCal = {
