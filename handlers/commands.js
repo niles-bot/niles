@@ -200,7 +200,7 @@ function generateCalendar(message, dayMap) {
   let p = defer();
   // create embed
   let embed = new bot.discord.MessageEmbed();
-  embed.setTitle("CALENDAR");
+  embed.setTitle(guildSettings.calendarName);
   embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
   embed.setColor("BLUE");
   embed.setFooter("Last update");
