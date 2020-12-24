@@ -1,10 +1,7 @@
-const fs = require("fs");
 const path = require("path");
-const commands = require("./commands.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
 const strings = require("./strings.js");
-const defer = require("promise-defer");
 let bot = require("../bot.js");
 
 //functions
@@ -34,7 +31,7 @@ function logId(message) {
     return;
   }
   if (!helpers.matchCalType(calendarId, message)) {
-    message.channel.send("I don\'t think that\'s a valid calendar ID.. try again");
+    message.channel.send("I don't think that's a valid calendar ID.. try again");
     return;
   }
   if (guildSettings["calendarID"] !== "") {
@@ -121,7 +118,7 @@ function setRoles(message) {
     return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
   }
   if (!adminRole) {
-    return message.channel.send(`The admin role for this discord is \`${guildSettings.allowedRoles}\`. You can change this setting using \`${guildSettings.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n\ You can allow everyone to use Niles again by entering \`${guildSettings.prefix}admin everyone\``);
+    return message.channel.send(`The admin role for this discord is \`${guildSettings.allowedRoles}\`. You can change this setting using \`${guildSettings.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n You can allow everyone to use Niles again by entering \`${guildSettings.prefix}admin everyone\``);
   }
   if (adminRole) {
     if (["everyone", "Everyone", "EVERYONE"].includes(adminRole)) {

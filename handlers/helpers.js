@@ -34,6 +34,7 @@ let minimumPermissions = settings.secrets.minimumPermissions;
 
 function getGuildSettings(id, file) {
   // select file
+  let filePath;
   if (file === "calendar") {
     filePath = path.join(__dirname, "..", "stores", id, "calendar.json");
     return readFile(filePath);
@@ -140,7 +141,7 @@ function removeGuildFromDatabase(guildId) {
 
 function deleteFolderRecursive(path) {
   if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach(function(file, index) {
+    fs.readdirSync(path).forEach(function(file) {
       var curPath = path + "/" + file;
       if (fs.lstatSync(curPath).isDirectory()) {
         deleteFolderRecursive(curPath);
@@ -320,7 +321,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
     }
     // this removes the entry for the next day of a 12AM ending event
     else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
-      let eventMatchType = eventType.NOMATCH;
+      eventMatchType = eventType.NOMATCH;
     }
     else if(checkDate.hasSame(eventStartDate, "day")){
       eventMatchType = eventType.MULTISTART;
@@ -382,12 +383,12 @@ function matchCalType(calendarId, message) {
   const gmailAddress = RegExp('^([a-z0-9.]+@gmail.com)')
   const underscoreCalId = RegExp('^[a-z0-9](_[a-z0-9]{26}@)')
   const domainCalId = RegExp('^([a-z0-9.]+_[a-z0-9]{26}@)')
-  const domainAddress = RegExp('(^[a-z0-9_.+-]+@[a-z0-9-]+\.[a-z0-9-.]+$)')
+  const domainAddress = RegExp('(^[a-z0-9_.+-]+@[a-z0-9-]+.[a-z0-9-.]+$)')
   // filter through regex
-  if (gmailAddress.test(calendarId)) {
-  } else if (importCalId.test(calendarId)) {
+  if (gmailAddress.test(calendarId)) { // matches gmail
+  } else if (importCalId.test(calendarId)) { // matches import ID
   } else if (groupCalId.test(calendarId)) {
-    if (cGroupCalId.test(calendarId)) {
+    if (cGroupCalId.test(calendarId)) { // matches cGroup
     } else if (domainCalId.test(calendarId)) {
       if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
     } else if (underscoreCalId.test(calendarId)) {
