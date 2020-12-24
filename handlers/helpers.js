@@ -14,6 +14,7 @@ const defaultSettings = {
   "prefix": "!",
   "calendarID": "",
   "calendarChannel": "",
+  "calendarName": "",
   "timezone": "",
   "helpmenu": "1",
   "format": 12,

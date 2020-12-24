@@ -855,6 +855,28 @@ function displayStats(message) {
   });
 }
 
+function calName(message) {
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+  let newCalName;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    newCalName = message.content.split(" ")[1];
+  } else if (message.mentions.has(bot.client.user.id)) {
+    newCalName = message.content.split(" ")[2];
+  }
+  if (!newCalName) { // no name passed in
+    return message.channel.send(`You are currently using \`${guildSettings.calendarName}\` as the calendar name. To change the name use \`${guildSettings.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
+  } else if (newCalName.toLowerCase.toLowerCase().equals('calendar')) { // reset to default
+    newCalName = 'CALENDAR';
+  }
+  // set new calendar name
+  message.channel.send(`Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`);
+  helpers.yesThenCollector(message).then(() => {
+    writeSetting(message, newCalName, "calendarName");
+  }).catch((err) => {
+    helpers.log(err);
+  });
+}
+
 exports.deleteUpdater = function(guildid) {
   clearInterval(autoUpdater[guildid]);
   try {
@@ -982,7 +1004,6 @@ function run(message) {
     message.delete({ timeout: 5000 });
   }
   if (cmd === "next" || helpers.mentioned(message, "next")) {
-    console.log('next start')
     nextEvent(message, calendarID, dayMap);
     message.delete({ timeout: 5000 })
   }
@@ -1022,7 +1043,6 @@ function run(message) {
     }
   }
   if (cmd === "validate" || helpers.mentioned(message, "validate")) {
-    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
     // calendar test
     const nowTime = DateTime.local()
     let params = {
@@ -1034,13 +1054,16 @@ function run(message) {
     }).catch((err) => {
       message.channel.send(`Error Fetching Calanedar: ${err}`);
     });
-    console.log(`posttest ${calTest}`)
     // results
     message.channel.send(`**Checks**:
     **Timezone:** ${helpers.passFail(helpers.validateTz(guildSettings.timezone))}
     **Calendar ID:** ${helpers.passFail(helpers.matchCalType(guildSettings.calendarID, message))}
     **Calendar Test:** ${helpers.passFail(calTest)}
     `)
+    message.delete({ timeout: 5000 });
+  }
+  if (cmd === "calname" || helpers.mentioned(message, "calname")) {
+    calName(message);
     message.delete({ timeout: 5000 });
   }
 }

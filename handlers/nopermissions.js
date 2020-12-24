@@ -1,7 +1,7 @@
 const path = require("path");
 const helpers = require("./helpers.js");
 const strings = require("./strings.js");
-let allCommands = ["help", "clean", "purge", "init", "update", "sync", "display", "create", "scrim", "delete", "stats", "info", "id", "tz", "invite", "prefix", "admin", "setup", "shard", "count", "ping", "displayoptions", "timers", "reset", "next", "validate"];
+let allCommands = ["help", "clean", "purge", "init", "update", "sync", "display", "create", "scrim", "delete", "stats", "info", "id", "tz", "invite", "prefix", "admin", "setup", "shard", "count", "ping", "displayoptions", "timers", "reset", "next", "validate", "calname"];
 
 function run(message) {
   //remove later
