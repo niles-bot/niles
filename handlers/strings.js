@@ -48,8 +48,7 @@ const RESTRICT_ROLE_MESSAGE = "\
 You can restrict who can control Niles and the associated Google Calendar with roles. \n\
 Niles will only allow one role to be used, and it must have a unique name. \n\
 The person assigning the restriction must have the role being assigned. \n\
-i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)\n\
-**Warning - Experimental Feature - Please go to the Niles discord server and post if you have any issues with this feature**";
+i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)";
 
 const DISPLAYOPTIONS_USAGE =
 `**displayoptions USAGE**\`\`\`

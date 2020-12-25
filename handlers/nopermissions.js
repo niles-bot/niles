@@ -6,11 +6,9 @@ let allCommands = ["help", "clean", "purge", "init", "update", "sync", "display"
 function run(message) {
   //remove later
   if (!helpers.checkPermissions(message)) {
-
     let cmd = message.content.toLowerCase().substring(1).split(" ")[0];
-
     if (allCommands.includes(cmd)) {
-      helpers.checkPermissionsManual(message, cmd);
+      helpers.checkPermissions(message, cmd);
       return helpers.log("help & permissions DM sent");
     }
     return helpers.log("no permission to send messages.");
@@ -20,7 +18,7 @@ function run(message) {
   let guildSettings = helpers.readFile(guildSettingsPath);
   const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
   if (allCommands.includes(cmd) || helpers.mentioned(message, allCommands)) {
-    helpers.checkPermissionsManual(message, cmd);
+    helpers.checkPermissions(message, cmd);
   }
   if (cmd === "help" || helpers.mentioned(message, "help")) {
     message.channel.send(strings.HELP_MESSAGE);

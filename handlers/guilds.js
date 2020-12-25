@@ -10,7 +10,6 @@ exports.emptyCal = {
 
 exports.create = (guild) => {
   let guildPath = path.join(__dirname, "..", "stores", guild.id);
-  let d = new Date();
   let emptyCal = {
     "day0": [],
     "day1": [],
@@ -29,7 +28,7 @@ exports.create = (guild) => {
     "region": guild.region,
     "ownerName": "",
     "ownerId": guild.ownerID,
-    "timeAdded": d
+    "timeAdded": new Date()
   };
   if (fs.existsSync(guildPath)) { // directory already exists
     helpers.log(`Guild ${guild.id} has come back online`);
@@ -39,7 +38,6 @@ exports.create = (guild) => {
     helpers.writeGuildSpecific(guild.id, helpers.defaultSettings, "settings");
     helpers.amendGuildDatabase({ [guild.id]: guildData });
     helpers.log(`Guild ${guild.id} has been created`);
-    //guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.  **NOTE**: Make sure I have the right permissions in the channel you try and use me in!");
   }
 };
 
