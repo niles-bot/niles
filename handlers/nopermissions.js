@@ -1,6 +1,7 @@
 const path = require("path");
 const helpers = require("./helpers.js");
 const strings = require("./strings.js");
+let bot = require("../bot.js");
 let allCommands = ["help", "clean", "purge", "init", "update", "sync", "display", "create", "scrim", "delete", "stats", "info", "id", "tz", "invite", "prefix", "admin", "setup", "shard", "count", "ping", "displayoptions", "timers", "reset", "next", "validate"];
 
 function run(message) {
@@ -16,11 +17,14 @@ function run(message) {
   //remove later^^
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
-  const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
-  if (allCommands.includes(cmd) || helpers.mentioned(message, allCommands)) {
+  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+  // if mentioned return second object as command, if not - return first object as command
+  let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift())
+  cmd = cmd.toLowerCase();
+  if (allCommands.includes(cmd)) {
     helpers.checkPermissions(message, cmd);
   }
-  if (cmd === "help" || helpers.mentioned(message, "help")) {
+  if (["help"].includes(cmd)) {
     message.channel.send(strings.HELP_MESSAGE);
   }
 }

@@ -176,19 +176,6 @@ function getUserSetting(userId, settingName) {
   return apparentSettings[settingName];
 }
 
-/**
- * checks if bot was mentioned and command issued
- * @param {Snowflake} msg 
- * @param {String} cmd - cmd to check for mention of
- * @returns {bool} - if bot was mentioned with command word
- */
-function mentioned(msg, x) {
-  if (!Array.isArray(x)) {
-    x = [x];
-  }
-  return msg.mentions.has(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
-}
-
 // timezone validation
 function validateTz(tz) {
   return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
@@ -241,7 +228,7 @@ function checkRole(message) {
  * @param {Snowflake} message - message from guild to be checked
  * @param {String} cmd - attempted command 
  */
-function checkPermissions(message) {
+function checkPermissions(message, cmd) {
   let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
   let missingPermissions = "";
   minimumPermissions.forEach(function(permission) {
@@ -257,6 +244,7 @@ function checkPermissions(message) {
     }
     return (missingPermissions === "") // return if any permissions are missing
   }
+}
 
 function yesThenCollector(message) {
   let p = defer();
@@ -403,7 +391,6 @@ module.exports = {
   writeGuildSpecific,
   amendUserSettings,
   getUserSetting,
-  mentioned,
   validateTz,
   log,
   logError,

@@ -875,21 +875,24 @@ function run(message) {
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   let calendarID = guildSettings.calendarID;
   let dayMap = createDayMap(message);
-  const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
+  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+  // if mentioned return second object as command, if not - return first object as command
+  let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift())
+  cmd = cmd.toLowerCase();
   // print current shard number
-  if (cmd === "shard" || helpers.mentioned(message, "shard")) {
+  if (["shard"].include(cmd)) {
     return message.channel.send(`Shard: ${bot.client.shard.ids}`);
   }
-  if (cmd === "ping" || helpers.mentioned(message, "ping")) {
+  if (["ping"].includes(cmd)) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
       helpers.sendMessageHandler(message, err);
     });
   }
-  if (cmd === "help" || helpers.mentioned(message, "help")) {
+  if (["help"].includes(cmd)) {
     message.channel.send(strings.HELP_MESSAGE);
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "invite" || helpers.mentioned(message, "invite")) {
+  if (["invite"].includes(cmd)) {
     message.channel.send({
       embed: new bot.discord.MessageEmbed()
         .setColor("#FFFFF")
@@ -899,7 +902,7 @@ function run(message) {
     });
     message.delete({ timeout: 5000 });
   }
-  if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd) || helpers.mentioned(message, ["setup", "start", "id", "tz", "prefix", "admin"])) {
+  if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd)) {
     try {
       init.run(message);
     } catch (err) {
@@ -907,21 +910,21 @@ function run(message) {
     }
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "init" || helpers.mentioned(message, "init")) {
+  if (["init"].includes(cmd)) {
     guilds.create(message.guild);
     message.delete({ timeout: 5000 });
   }
-  if (["clean", "purge"].includes(cmd) || helpers.mentioned(message, ["clean", "purge"])) {
+  if (["clean", "purge"].includes(cmd)) {
     deleteMessages(message);
   }
-  if (cmd === "display" || helpers.mentioned(message, "display")) {
+  if (["display"].includes(cmd)) {
     delayGetEvents(message, calendarID, dayMap);
     setTimeout(function func() {
       postCalendar(message, dayMap);
     }, 2000);
     message.delete({ timeout: 5000 });
   }
-  if (["update", "sync"].includes(cmd) || helpers.mentioned(message, ["update", "sync"])) {
+  if (["update", "sync"].includes(cmd)) {
     if (typeof calendar === "undefined") {
       message.channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
       helpers.log("calendar undefined in " + message.guild.id + ". Killing update timer.");
@@ -949,7 +952,7 @@ function run(message) {
     }, 2000);
     message.delete({ timeout: 5000 });
   }
-  if (["create", "scrim"].includes(cmd) || helpers.mentioned(message, ["create", "scrim"])) {
+  if (["create", "scrim"].includes(cmd)) {
     quickAddEvent(message, calendarID).then(() => {
       getEvents(message, calendarID, dayMap);
     }).then(() => {
@@ -961,32 +964,31 @@ function run(message) {
     });
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "displayoptions" || helpers.mentioned(message, "displayoptions")) {
+  if (["displayoptions"].includes(cmd)) {
     displayOptions(message);
     message.delete({ timeout: 5000 });
   }
-  if (["stats", "info"].includes(cmd) || helpers.mentioned(message, ["stats", "info"])) {
+  if (["stats", "info"].includes(cmd)) {
     displayStats(message);
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "get" || helpers.mentioned(message, "get")) {
+  if (["get"].includes(cmd)) {
     getEvents(message, calendarID, dayMap);
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "stop" || helpers.mentioned(message, "stop")) {
+  if (["stop"].includes(cmd)) {
     clearInterval(autoUpdater[message.guild.id]);
     delete timerCount[message.guild.id];
   }
-  if (cmd === "delete" || helpers.mentioned(message, "delete")) {
+  if (["delete"].includes(cmd)) {
     deleteEvent(message, calendarID, dayMap);
     message.delete({ timeout: 5000 });
   }
-  if (cmd === "next" || helpers.mentioned(message, "next")) {
-    console.log('next start')
+  if (["next"].includes(cmd)) {
     nextEvent(message, calendarID, dayMap);
     message.delete({ timeout: 5000 })
   }
-  if (cmd === "count" || helpers.mentioned(message, "count")) {
+  if (["count"].includes(cmd)) {
     let theCount;
     if (!timerCount[message.guild.id]) {
       theCount = 0;
@@ -995,7 +997,7 @@ function run(message) {
     }
     message.channel.send("There are " + theCount + " timer threads running in this guild");
   }
-  if (cmd === "timers" || helpers.mentioned(message, "timers")) {
+  if (["timers"].includes(cmd)) {
     const authorId = message.author.id;
     if (authorId === settings.secrets.super_admin || settings.secrets.other_admin.includes(authorId)) {
       return message.channel.send("There are " + Object.keys(timerCount).length + " timers running across all guilds right now.");
@@ -1003,7 +1005,7 @@ function run(message) {
       return;
     }
   }
-  if (cmd === "reset" || helpers.mentioned(message, "reset")) {
+  if (["reset"].includes(cmd)) {
     const authorId = message.author.id;
     if (authorId === settings.secrets.super_admin || settings.secrets.other_admin.includes(authorId)) {
       let pieces = message.content.split(" ");
@@ -1021,7 +1023,7 @@ function run(message) {
       return;
     }
   }
-  if (cmd === "validate" || helpers.mentioned(message, "validate")) {
+  if (["validate"].includes(cmd)) {
     let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
     // calendar test
     const nowTime = DateTime.local()
