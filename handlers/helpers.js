@@ -310,7 +310,6 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
   return eventMatchType;
 }
 
-
 /**
  * This helper function limits the amount of chars in a string to max trimLength and adds "..." if shortened.
  * @param {string} eventName - The name/summary of an event

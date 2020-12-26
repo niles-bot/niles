@@ -880,7 +880,7 @@ function run(message) {
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift())
   cmd = cmd.toLowerCase();
   // print current shard number
-  if (["shard"].include(cmd)) {
+  if (["shard"].includes(cmd)) {
     return message.channel.send(`Shard: ${bot.client.shard.ids}`);
   }
   if (["ping"].includes(cmd)) {
