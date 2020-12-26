@@ -93,20 +93,6 @@ function readFile(path) {
   }
 }
 
-function readFileSettingsDefault(filePath, defaultValue) {
-  try {
-    const fileData = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(fileData);
-  } catch (err) {
-    if (err.code !== "ENOENT") throw err;
-    fs.writeFileSync(filePath, defaultValue, {
-      encoding: "utf8",
-      flag: "wx"
-    });
-    return JSON.parse(defaultValue);
-  }
-}
-
 const guildDatabasePath = path.join(__dirname, "..", "stores", "guilddatabase.json");
 let guildDatabase;
 
@@ -151,29 +137,6 @@ function writeGuildSpecific(guildid, json, file) {
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
     if (err) return log("error writing guild specific database: " + err);
   });
-}
-
-const userStorePath = path.join(__dirname, "..", "stores", "users.json");
-const users = readFileSettingsDefault(userStorePath, "{}");
-
-const userDefaults = {};
-
-//uses cached version of user database
-function amendUserSettings(userId, partialSettings) {
-  users[userId] = Object.assign({}, users[userId], partialSettings);
-
-  const formattedJson = JSON.stringify(users, "", "\t");
-  fs.writeFile(userStorePath, formattedJson, (err) => {
-    if (!err) {
-      return;
-    }
-    return logError("writing the users database", err);
-  });
-}
-
-function getUserSetting(userId, settingName) {
-  const apparentSettings = Object.assing({}, userDefaults, users[userId]);
-  return apparentSettings[settingName];
 }
 
 // timezone validation
@@ -320,7 +283,6 @@ function trimEventName(eventName, trimLength){
   if(trimLength === null || trimLength === 0){
     return eventName;
   }
-
   if(eventName.length > trimLength){
     eventName = eventName.trim().substring(0, trimLength-3) + "...";
   }
@@ -388,8 +350,6 @@ module.exports = {
   writeGuildDatabase,
   amendGuildDatabase,
   writeGuildSpecific,
-  amendUserSettings,
-  getUserSetting,
   validateTz,
   log,
   logError,
