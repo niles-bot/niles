@@ -13,11 +13,11 @@ let checks = require("./handlers/createMissingAttributes.js");
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
-  const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
+  const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildId) => {
     helpers.log("unknown guild found; creating");
     guilds.create(client.guilds.cache.get(guildId));
-  })
+  });
 }
 
 client.login(settings.secrets.bot_token);
@@ -27,7 +27,7 @@ client.on("ready", () => {
   client.user.setStatus("online");
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
-      .then(results => {
+      .then((results) => {
         const shardGuilds = [];
         results.forEach(function (item) { // iterate over shards
           item.forEach(function (item) { // iterate over servers
@@ -87,7 +87,7 @@ client.on("message", (message) => {
   if (!guildSettings.calendarID || !guildSettings.timezone) {
     try {
       if (!helpers.checkRole(message)) {
-        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server")
+        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server");
       }
       init.run(message);
     } catch (err) {

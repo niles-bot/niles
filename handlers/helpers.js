@@ -104,7 +104,9 @@ function getGuildDatabase() {
 function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
-    if (err) return logError("writing the guild database", err);
+    if (err) {
+      return logError("writing the guild database", err);
+    }
   });
 }
 
@@ -135,7 +137,9 @@ function deleteFolderRecursive(path) {
 function writeGuildSpecific(guildid, json, file) {
   let fullPath = path.join(__dirname, "..", "stores", guildid, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-    if (err) return log("error writing guild specific database: " + err);
+    if (err) {
+      return log("error writing guild specific database: " + err);
+    }
   });
 }
 
@@ -205,7 +209,7 @@ function checkPermissions(message, cmd) {
     } else {
       message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
     }
-    return (missingPermissions === "") // return if any permissions are missing
+    return (missingPermissions === ""); // return if any permissions are missing
   }
 }
 
@@ -308,26 +312,26 @@ function descriptionParser(inputString) {
  */
 function matchCalType(calendarId, message) {
   // regex filter groups
-  const groupCalId = RegExp('([a-z0-9]{26}@group.calendar.google.com)')
-  const cGroupCalId = RegExp('^(c_[a-z0-9]{26}@)')
-  const importCalId = RegExp('(^[a-z0-9]{32}@import.calendar.google.com)')
-  const gmailAddress = RegExp('^([a-z0-9.]+@gmail.com)')
-  const underscoreCalId = RegExp('^[a-z0-9](_[a-z0-9]{26}@)')
-  const domainCalId = RegExp('^([a-z0-9.]+_[a-z0-9]{26}@)')
-  const domainAddress = RegExp('(^[a-z0-9_.+-]+@[a-z0-9-]+.[a-z0-9-.]+$)')
+  const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
+  const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
+  const importCalId = RegExp("(^[a-z0-9]{32}@import.calendar.google.com)");
+  const gmailAddress = RegExp("^([a-z0-9.]+@gmail.com)");
+  const underscoreCalId = RegExp("^[a-z0-9](_[a-z0-9]{26}@)");
+  const domainCalId = RegExp("^([a-z0-9.]+_[a-z0-9]{26}@)");
+  const domainAddress = RegExp("(^[a-z0-9_.+-]+@[a-z0-9-]+.[a-z0-9-.]+$)");
   // filter through regex
   if (gmailAddress.test(calendarId)) { // matches gmail
   } else if (importCalId.test(calendarId)) { // matches import ID
   } else if (groupCalId.test(calendarId)) {
     if (cGroupCalId.test(calendarId)) { // matches cGroup
     } else if (domainCalId.test(calendarId)) {
-      if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
+      if (message) message.channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
     } else if (underscoreCalId.test(calendarId)) {
-      if (message) message.channel.send('If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format');
+      if (message) message.channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
     }
-    return true // normal group id or any variation
+    return true; // normal group id or any variation
   } else if (domainAddress.test(calendarId)) {
-    if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
+    if (message) message.channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
   } else {
     return false; // break and return false
   }
@@ -339,7 +343,7 @@ function matchCalType(calendarId, message) {
  * @param {boolean} bool
  */
 function passFail(bool) {
-  return (bool ? 'Passed 🟢': 'Failed 🔴');
+  return (bool ? "Passed 🟢": "Failed 🔴");
 }
 
 module.exports = {
