@@ -17,7 +17,7 @@ Please visit the [Discord support server](https://discord.gg/jNyntBn) for furthe
 
 2. Install using `npm install`.
 
-3. Create your `secrets.json` file (discussed below) inside `/config`.  Create 2 files, `guilddatabase.json` and `users.json` inside `/stores`, filling both with `{}` so that they are valid JSON files.
+3. Create your `secrets.json` file (discussed below) inside `/config`.  Create `guilddatabase.json` inside `/stores`, filling it with `{}` so that it is a valid JSON files.
 
 4. Run `node index.js` and you should be running!
 

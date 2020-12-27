@@ -5,7 +5,6 @@ COPY . .
 
 # set up stores
 RUN cp stores/store.json.example stores/guilddatabase.json && \
-    cp stores/store.json.example stores/users.json && \
     rm stores/store.json.example
 
 # npm setup
