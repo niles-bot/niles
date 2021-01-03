@@ -79,10 +79,6 @@ function log(...logItems) {
   });
 }
 
-function logError() {
-  log("[ERROR]", Array.from(arguments).slice(1).join(" "));
-}
-
 function readFile(path) {
   try {
     return JSON.parse(fs.readFileSync(path, "utf8"));
@@ -104,7 +100,7 @@ function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
     if (err) {
-      return logError("writing the guild database", err);
+      return log("writing the guild database", err);
     }
   });
 }
@@ -168,14 +164,6 @@ function getStringTime(date, guildid) {
   let format = guildSettings.format;
   let zDate = DateTime.fromISO(date, {setZone: true});
   return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
-}
-
-function sendMessageHandler(message, err) {
-  if (err.message === "Missing Permissions") {
-    return message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in! Toggle on all of the 'text permissions' for the **Niles** role");
-  } else {
-    return log(err);
-  }
 }
 
 /**
@@ -317,11 +305,17 @@ function matchCalType(calendarId, message) {
 /**
  * Returns pass or fail instead of boolean
  * @param {boolean} bool
+ * @returns {String}
  */
 function passFail(bool) {
   return (bool ? "Passed 🟢": "Failed 🔴");
 }
 
+/**
+ * Checks if the bot has all the nesseary permissions
+ * @param {Snowflake} message - message to check permissions agianst
+ * @returns {String} - returns missing permissions (if any)
+ */
 function permissionCheck(message) {
   const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
   const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
@@ -334,7 +328,12 @@ function permissionCheck(message) {
   return (missingPermissions ? missingPermissions : "None 🟢");
 }
 
-function validate(message, arg, cal) {
+/**
+ * Checks for any issues with guild configuration
+ * @param {Snowflake} message - message for guild to check agianst
+ * @param {Calendar} cal - Calendar API to check event agaianst
+ */
+function validate(message, cal) {
   let guildSettings = getGuildSettings(message.guild.id, "settings");
   const nowTime = DateTime.local();
     let params = {
@@ -374,11 +373,9 @@ module.exports = {
   writeGuildSpecific,
   validateTz,
   log,
-  logError,
   readFile,
   getStringTime,
   getValidTz,
-  sendMessageHandler,
   checkRole,
   yesThenCollector,
   classifyEventMatch,

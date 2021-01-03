@@ -885,7 +885,7 @@ function run(message) {
   }
   if (["ping"].includes(cmd)) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
-      helpers.sendMessageHandler(message, err);
+      log(err);
     });
   }
   if (["help"].includes(cmd)) {
@@ -898,7 +898,7 @@ function run(message) {
         .setColor("#FFFFF")
         .setDescription("Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
     }).catch((err) => {
-      helpers.sendMessageHandler(message, err);
+      log(err);
     });
     message.delete({ timeout: 5000 });
   }
