@@ -30,7 +30,6 @@ const defaultSettings = {
 
 let settings = require("../settings.js");
 let bot = require("../bot.js");
-let minimumPermissions = settings.secrets.minimumPermissions;
 
 function getGuildSettings(id, file) {
   // select file
@@ -190,29 +189,6 @@ function checkRole(message) {
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
 
-/**
- * Checks if any permissions are missing
- * @param {Snowflake} message - message from guild to be checked
- * @param {String} cmd - attempted command 
- */
-function checkPermissions(message, cmd) {
-  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
-    if (!botPermissions[permission]) {
-      missingPermissions += "\n" + String(permission);
-    }
-  });
-  if (cmd) { // if cmd called explicitly
-    if (missingPermissions === "") {
-      message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
-    } else {
-      message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
-    }
-    return (missingPermissions === ""); // return if any permissions are missing
-  }
-}
-
 function yesThenCollector(message) {
   let p = defer();
   const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
@@ -346,6 +322,47 @@ function passFail(bool) {
   return (bool ? "Passed 🟢": "Failed 🔴");
 }
 
+function validate(message, arg, cal) {
+  let guildSettings = getGuildSettings(message.guild.id, "settings");
+    let params = {
+      maxResults: 1
+    };
+    let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
+      // print next event
+      console.log(events)
+      const event = events[0];
+      message.channel.send(`**Next Event:**
+      **Summary:** \`${event.summary}\`
+      **Start:** \`${event.start.dateTime || event.start.date }\`
+      **Calendar ID:** \`${event.organizer.email}\`
+      `);
+      return true;
+    }).catch((err) => {
+      message.channel.send(`Error Fetching Calendar: ${err}`);
+    });
+    // basic check
+    message.channel.send(`**Checks**:
+    **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
+    **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
+    **Calendar Test:** ${passFail(calTest)}
+    **Missing Permissions:** ${permissionCheck(message)}
+    **Guild ID:** \`${message.guild.id}\`
+    `);
+    message.delete({ timeout: 5000 });
+}
+
+function permissionCheck(message) {
+  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
+  const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
+  let missingPermissions = "";
+  minimumPermissions.forEach(function(permission) {
+    if (!botPermissions[permission]) {
+      missingPermissions += `\`${String(permission)} \``
+    }
+  });
+  return (missingPermissions ? missingPermissions : "None 🟢");
+}
+
 module.exports = {
   deleteFolderRecursive,
   getGuildDatabase,
@@ -361,7 +378,6 @@ module.exports = {
   getStringTime,
   getValidTz,
   sendMessageHandler,
-  checkPermissions,
   checkRole,
   yesThenCollector,
   classifyEventMatch,
@@ -370,5 +386,5 @@ module.exports = {
   trimEventName,
   descriptionParser,
   matchCalType,
-  passFail
+  validate
 };
