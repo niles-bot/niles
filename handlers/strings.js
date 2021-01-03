@@ -16,7 +16,7 @@ const HELP_MESSAGE = "```\
 !admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 !next                -  Displays the next upcoming event\n\
-!validate            -  Checks for any errors with the timezone, calendar ID or calendar fetching\n\
+!validate            -  Checks for any errors with the timezone, calendar ID, calendar fetching or permissions\n\
 ```\
 Visit https://nilesbot.com for more info.";
 
@@ -32,7 +32,7 @@ NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
 !prefix              -  View or change the prefix for Niles\n\
 !id                  -  Set the Google calendar ID for the guild\n\
 !tz                  -  Set the timezone for the guild\n\
-!adminrole           -  Restrict the usage of Niles to a specific role\n\
+!admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\n\
 Visit https://nilesbot.com/start for more info.";

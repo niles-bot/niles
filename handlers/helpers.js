@@ -322,14 +322,27 @@ function passFail(bool) {
   return (bool ? "Passed 🟢": "Failed 🔴");
 }
 
+function permissionCheck(message) {
+  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
+  const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
+  let missingPermissions = "";
+  minimumPermissions.forEach(function(permission) {
+    if (!botPermissions[permission]) {
+      missingPermissions += `\`${String(permission)} \``;
+    }
+  });
+  return (missingPermissions ? missingPermissions : "None 🟢");
+}
+
 function validate(message, arg, cal) {
   let guildSettings = getGuildSettings(message.guild.id, "settings");
+  const nowTime = DateTime.local();
     let params = {
+      timeMin: nowTime.toISO(),
       maxResults: 1
     };
     let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
       // print next event
-      console.log(events)
       const event = events[0];
       message.channel.send(`**Next Event:**
       **Summary:** \`${event.summary}\`
@@ -349,18 +362,6 @@ function validate(message, arg, cal) {
     **Guild ID:** \`${message.guild.id}\`
     `);
     message.delete({ timeout: 5000 });
-}
-
-function permissionCheck(message) {
-  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
-  const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
-    if (!botPermissions[permission]) {
-      missingPermissions += `\`${String(permission)} \``
-    }
-  });
-  return (missingPermissions ? missingPermissions : "None 🟢");
 }
 
 module.exports = {

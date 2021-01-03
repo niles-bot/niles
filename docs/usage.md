@@ -86,6 +86,12 @@ We recommend deleting events in the Google Calendar Web UI, where possible.
 
 ---
 
+### next
+
+Use `!delete` or `@niles next` to display the next upcoming event within the set days to display.
+
+---
+
 ### clean
 
 Use `!clean <number of messages to clean>` or `@niles clean <number of messages to clean>` to tidy up your calendar channel etc. prior to or after posting your calendar.
@@ -115,6 +121,12 @@ This can be done using `!tz` i.e.
 `!tz EST`
 
 [Full list of TZ database names on Wikipedia](https://cutt.ly/tz)
+
+---
+
+### validate
+
+Use `!validate` or `@niles validate` to check for any errors with the timezone, calendar ID, calendar fetching or permissions.
 
 ---
 
