@@ -16,7 +16,7 @@ const HELP_MESSAGE = "```\
 !admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 !next                -  Displays the next upcoming event\n\
-!validate            -  Checks for any errors with the timezone, calendar ID or calendar fetching\n\
+!validate            -  Checks for any errors with the timezone, calendar ID, calendar fetching or permissions\n\
 ```\
 Visit https://nilesbot.com for more info.";
 
@@ -32,7 +32,7 @@ NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
 !prefix              -  View or change the prefix for Niles\n\
 !id                  -  Set the Google calendar ID for the guild\n\
 !tz                  -  Set the timezone for the guild\n\
-!adminrole           -  Restrict the usage of Niles to a specific role\n\
+!admin               -  Restrict the usage of Niles to a specific role\n\
 !help                -  Display this message\n\
 ```\n\
 Visit https://nilesbot.com/start for more info.";
@@ -48,8 +48,7 @@ const RESTRICT_ROLE_MESSAGE = "\
 You can restrict who can control Niles and the associated Google Calendar with roles. \n\
 Niles will only allow one role to be used, and it must have a unique name. \n\
 The person assigning the restriction must have the role being assigned. \n\
-i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)\n\
-**Warning - Experimental Feature - Please go to the Niles discord server and post if you have any issues with this feature**";
+i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)";
 
 const DISPLAYOPTIONS_USAGE =
 `**displayoptions USAGE**\`\`\`

@@ -30,7 +30,6 @@ const defaultSettings = {
 
 let settings = require("../settings.js");
 let bot = require("../bot.js");
-let minimumPermissions = settings.secrets.minimumPermissions;
 
 function getGuildSettings(id, file) {
   // select file
@@ -69,7 +68,7 @@ function log(...logItems) {
     const channel = this.channels.cache.get('${logChannelId}');
     if (channel) { // check for channel on shard
       channel.send('${tripleGrave} ${logString} ${tripleGrave}');
-      if ('${logString}'.includes("Bot is logged in.") || '${logString}'.includes("error running main message handler")) {
+      if ('${logString}'.includes("all shards spawned")) {
         channel.send("<@${superAdmin}>");
       }
       console.log('${logString}'); // send to console only once to avoid multiple lines
@@ -80,34 +79,12 @@ function log(...logItems) {
   });
 }
 
-function logError() {
-  log("[ERROR]", Array.from(arguments).slice(1).join(" "));
-}
-
 function readFile(path) {
   try {
     return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
     log("error reading file " + err);
-    // return valid JSON to trigger update
-    return {};
-  }
-}
-
-function readFileSettingsDefault(filePath, defaultValue) {
-  try {
-    const fileData = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(fileData);
-  } catch (err) {
-    if (err.code !== "ENOENT") {
-      throw err;
-    }
-
-    fs.writeFileSync(filePath, defaultValue, {
-      encoding: "utf8",
-      flag: "wx"
-    });
-    return JSON.parse(defaultValue);
+    return {}; // return valid JSON to trigger update
   }
 }
 
@@ -122,10 +99,9 @@ function getGuildDatabase() {
 function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
-    if (!err) {
-      return;
+    if (err) {
+      return log("writing the guild database", err);
     }
-    return logError("writing the guild database", err);
   });
 }
 
@@ -162,41 +138,6 @@ function writeGuildSpecific(guildid, json, file) {
   });
 }
 
-const userStorePath = path.join(__dirname, "..", "stores", "users.json");
-const users = readFileSettingsDefault(userStorePath, "{}");
-
-const userDefaults = {};
-
-//uses cached version of user database
-function amendUserSettings(userId, partialSettings) {
-  users[userId] = Object.assign({}, users[userId], partialSettings);
-
-  const formattedJson = JSON.stringify(users, "", "\t");
-  fs.writeFile(userStorePath, formattedJson, (err) => {
-    if (!err) {
-      return;
-    }
-    return logError("writing the users database", err);
-  });
-}
-
-function getUserSetting(userId, settingName) {
-  const apparentSettings = Object.assing({}, userDefaults, users[userId]);
-  return apparentSettings[settingName];
-}
-
-
-function mentioned(msg, x) {
-  if (!Array.isArray(x)) {
-    x = [x];
-  }
-  return msg.mentions.has(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
-}
-
-function firstUpper(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 // timezone validation
 function validateTz(tz) {
   return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
@@ -225,55 +166,15 @@ function getStringTime(date, guildid) {
   return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
 }
 
-function sendMessageHandler(message, err) {
-  if (err.message === "Missing Permissions") {
-    return message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in! Toggle on all of the 'text permissions' for the **Niles** role");
-  } else {
-    return log(err);
-  }
-}
-
+/**
+ * Checks if user has required roles
+ * @param {Snowflake} message - message from user to be checked
+ * @returns {bool} - return if no allowed roles or user has role
+ */
 function checkRole(message) {
-  let guildSettings = getGuildSettings(message.guild.id, "settings");
-  let userRoles = message.member.roles.cache.map((role) => role.name);
-  if (guildSettings.allowedRoles.length === 0) {
-    return true;
-  }
-  if (guildSettings.allowedRoles.length > 0) {
-    if (userRoles.includes(guildSettings.allowedRoles[0])) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-}
-
-function checkPermissions(message) {
-  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
-    if (!botPermissions[permission]) {
-      missingPermissions += "\n" + String(permission);
-    }
-  });
-  if (missingPermissions !== "") {
-    return false;
-  }
-  return true;
-}
-
-function checkPermissionsManual(message, cmd) {
-  let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
-    if (!botPermissions[permission]) {
-      missingPermissions += "\n" + String(permission);
-    }
-  });
-  if (missingPermissions !== "") {
-    return message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
-  }
-  return message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
+  let allowedRoles = getGuildSettings(message.guild.id, "settings").allowedRoles;
+  let userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
+  return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
 
 function yesThenCollector(message) {
@@ -340,7 +241,6 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
   return eventMatchType;
 }
 
-
 /**
  * This helper function limits the amount of chars in a string to max trimLength and adds "..." if shortened.
  * @param {string} eventName - The name/summary of an event
@@ -351,7 +251,6 @@ function trimEventName(eventName, trimLength){
   if(trimLength === null || trimLength === 0){
     return eventName;
   }
-
   if(eventName.length > trimLength){
     eventName = eventName.trim().substring(0, trimLength-3) + "...";
   }
@@ -377,26 +276,26 @@ function descriptionParser(inputString) {
  */
 function matchCalType(calendarId, message) {
   // regex filter groups
-  const groupCalId = RegExp('([a-z0-9]{26}@group.calendar.google.com)')
-  const cGroupCalId = RegExp('^(c_[a-z0-9]{26}@)')
-  const importCalId = RegExp('(^[a-z0-9]{32}@import.calendar.google.com)')
-  const gmailAddress = RegExp('^([a-z0-9.]+@gmail.com)')
-  const underscoreCalId = RegExp('^[a-z0-9](_[a-z0-9]{26}@)')
-  const domainCalId = RegExp('^([a-z0-9.]+_[a-z0-9]{26}@)')
-  const domainAddress = RegExp('(^[a-z0-9_.+-]+@[a-z0-9-]+.[a-z0-9-.]+$)')
+  const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
+  const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
+  const importCalId = RegExp("(^[a-z0-9]{32}@import.calendar.google.com)");
+  const gmailAddress = RegExp("^([a-z0-9.]+@gmail.com)");
+  const underscoreCalId = RegExp("^[a-z0-9](_[a-z0-9]{26}@)");
+  const domainCalId = RegExp("^([a-z0-9.]+_[a-z0-9]{26}@)");
+  const domainAddress = RegExp("(^[a-z0-9_.+-]+@[a-z0-9-]+.[a-z0-9-.]+$)");
   // filter through regex
   if (gmailAddress.test(calendarId)) { // matches gmail
   } else if (importCalId.test(calendarId)) { // matches import ID
   } else if (groupCalId.test(calendarId)) {
     if (cGroupCalId.test(calendarId)) { // matches cGroup
     } else if (domainCalId.test(calendarId)) {
-      if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
+      if (message) message.channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
     } else if (underscoreCalId.test(calendarId)) {
-      if (message) message.channel.send('If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format');
+      if (message) message.channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
     }
-    return true // normal group id or any variation
+    return true; // normal group id or any variation
   } else if (domainAddress.test(calendarId)) {
-    if (message) message.channel.send('If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace');
+    if (message) message.channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
   } else {
     return false; // break and return false
   }
@@ -406,9 +305,62 @@ function matchCalType(calendarId, message) {
 /**
  * Returns pass or fail instead of boolean
  * @param {boolean} bool
+ * @returns {String}
  */
 function passFail(bool) {
-  return (bool ? 'Passed 🟢': 'Failed 🔴');
+  return (bool ? "Passed 🟢": "Failed 🔴");
+}
+
+/**
+ * Checks if the bot has all the nesseary permissions
+ * @param {Snowflake} message - message to check permissions agianst
+ * @returns {String} - returns missing permissions (if any)
+ */
+function permissionCheck(message) {
+  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
+  const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
+  let missingPermissions = "";
+  minimumPermissions.forEach(function(permission) {
+    if (!botPermissions[permission]) {
+      missingPermissions += `\`${String(permission)} \``;
+    }
+  });
+  return (missingPermissions ? missingPermissions : "None 🟢");
+}
+
+/**
+ * Checks for any issues with guild configuration
+ * @param {Snowflake} message - message for guild to check agianst
+ * @param {Calendar} cal - Calendar API to check event agaianst
+ */
+function validate(message, cal) {
+  let guildSettings = getGuildSettings(message.guild.id, "settings");
+  const nowTime = DateTime.local();
+    let params = {
+      timeMin: nowTime.toISO(),
+      maxResults: 1
+    };
+    let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
+      // print next event
+      const event = events[0];
+      message.channel.send(`**Next Event:**
+      **Summary:** \`${event.summary}\`
+      **Start:** \`${event.start.dateTime || event.start.date }\`
+      **Calendar ID:** \`${event.organizer.email}\`
+      `);
+      return true;
+    }).catch((err) => {
+      message.channel.send(`Error Fetching Calendar: ${err}`);
+    });
+    // basic check
+    message.channel.send(`**Checks**:
+    **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
+    **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
+    **Calendar Test:** ${passFail(calTest)}
+    **Missing Permissions:** ${permissionCheck(message)}
+    **Guild ID:** \`${message.guild.id}\`
+    `);
+    message.delete({ timeout: 5000 });
 }
 
 module.exports = {
@@ -419,19 +371,11 @@ module.exports = {
   writeGuildDatabase,
   amendGuildDatabase,
   writeGuildSpecific,
-  amendUserSettings,
-  getUserSetting,
-  mentioned,
-  firstUpper,
   validateTz,
   log,
-  logError,
   readFile,
   getStringTime,
   getValidTz,
-  sendMessageHandler,
-  checkPermissions,
-  checkPermissionsManual,
   checkRole,
   yesThenCollector,
   classifyEventMatch,
@@ -440,5 +384,5 @@ module.exports = {
   trimEventName,
   descriptionParser,
   matchCalType,
-  passFail
+  validate
 };

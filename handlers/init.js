@@ -142,9 +142,6 @@ function setRoles(message) {
 }
 
 exports.run = function(message) {
-  if (!helpers.checkPermissions(message)) {
-    return helpers.log("no permission to send messages.");
-  }
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
   let cmd;

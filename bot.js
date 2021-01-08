@@ -3,24 +3,21 @@ let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
 const path = require("path");
-const users = require("./stores/users.json");
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
 let helpers = require("./handlers/helpers.js");
-let restricted = require("./handlers/nopermissions.js");
-let dm = require("./handlers/dm.js");
 let checks = require("./handlers/createMissingAttributes.js");
 
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
-  const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
+  const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildId) => {
     helpers.log("unknown guild found; creating");
     guilds.create(client.guilds.cache.get(guildId));
-  })
+  });
 }
 
 client.login(settings.secrets.bot_token);
@@ -30,7 +27,7 @@ client.on("ready", () => {
   client.user.setStatus("online");
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
-      .then(results => {
+      .then((results) => {
         const shardGuilds = [];
         results.forEach(function (item) { // iterate over shards
           item.forEach(function (item) { // iterate over servers
@@ -59,14 +56,6 @@ client.on("message", (message) => {
   if (message.author.bot) {
     return;
   }
-  if (message.channel.type === "dm") {
-    try {
-      dm.run(message);
-    } catch (err) {
-      helpers.log("error in dm channel" + err);
-    }
-    return;
-  }
   //only load guild settings after checking that message is not direct message.
   let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
   try {
@@ -82,17 +71,6 @@ client.on("message", (message) => {
     message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
     return helpers.log("settings file not created properly in guild: " + message.guild.id + ". Attempted re-creation");
   }
-  //Check calendar file becoming corrupted.
-  try {
-    let calendarID = guildSettings.calendarID;
-    let calendarPath = path.join(__dirname, "stores", message.guild.id, "calendar.json");
-    let calendar = helpers.readFile(calendarPath);
-    (calendar.day0);
-  } catch (err) {
-    guilds.create(message.guild);
-    message.channel.send("Sorry, the database for this server had to be re-created, you'll have to run the setup process again :(");
-    return helpers.log("calendar file not created properly in guild: " + message.guild.id + ". Attempted re-creation");
-  }
   //Check if the database structure is up to date.
   try {
     if (checks.allowedRoles(message)) {
@@ -105,37 +83,11 @@ client.on("message", (message) => {
   if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
     return;
   }
-  //Ignore if the command isn't one of the commands.
-  let cmd;
-  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
-    cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
-  } else if (message.mentions.has(client.user.id)) {
-    cmd = message.content.toLowerCase().split(" ")[1];
-  }
-  if (!restricted.allCommands.includes(cmd)) {
-    return;
-  } else {
-    helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
-  }
-  if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
-    if (restricted.allCommands.includes(cmd)) {
-      if (!helpers.checkRole(message)) {
-        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server");
-      }
-      try {
-        restricted.run(message);
-      } catch (err) {
-        helpers.log("error in restricted permissions " + err);
-      }
-      return;
-    }
-  } else if (!helpers.checkPermissions(message)) {
-    return;
-  }
+  helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
   if (!guildSettings.calendarID || !guildSettings.timezone) {
     try {
       if (!helpers.checkRole(message)) {
-        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server")
+        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server");
       }
       init.run(message);
     } catch (err) {
