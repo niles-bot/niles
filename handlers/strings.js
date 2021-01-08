@@ -60,7 +60,7 @@ const DISPLAYOPTIONS_USAGE =
     !displayoptions emptydays    (0|1)         hide/show empty days
     !displayoptions showpast     (0|1)         hide/show today's past events
     !displayoptions trim         (n)           trim event names to n characters (0 = off)
-    !displayoptions days         (n)           number of days to display (max 90)
+    !displayoptions days         (n)           number of days to display (max 25)
     !displayoptions style        (code|embed)  use old or new event display style (see nilesbot.com/customisation)
     !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
     !displayoptions description  (0|1)         hide/show event description (only compatible with embed)

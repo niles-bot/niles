@@ -333,7 +333,7 @@ function permissionCheck(message) {
  * @param {Snowflake} message - message for guild to check agianst
  * @param {Calendar} cal - Calendar API to check event agaianst
  */
-function validate(message, arg, cal) {
+function validate(message, cal) {
   let guildSettings = getGuildSettings(message.guild.id, "settings");
   const nowTime = DateTime.local();
     let params = {

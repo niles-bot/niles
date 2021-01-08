@@ -69,7 +69,7 @@ client.on("message", (message) => {
   } catch (err) {
     guilds.create(message.guild);
     message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
-    return helpers.log("settings file not created properly in guild: " + message.guild.id + ". Attempted re-creation");
+    return helpers.log(`settings file not created properly in guild: ${message.guild.id}. Attempted re-creation`);
   }
   //Check if the database structure is up to date.
   try {
@@ -87,21 +87,21 @@ client.on("message", (message) => {
   if (!guildSettings.calendarID || !guildSettings.timezone) {
     try {
       if (!helpers.checkRole(message)) {
-        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server");
+        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
       }
       init.run(message);
     } catch (err) {
-      helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
+      helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
       return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");
     }
   } else {
     try {
       if (!helpers.checkRole(message)) {
-        return message.channel.send("You must have the `" + guildSettings.allowedRoles[0] + "` role to use Niles in this server")
+        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
       }
       commands.run(message);
     } catch (err) {
-      return helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
+      return helpers.log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
     }
   }
 });
