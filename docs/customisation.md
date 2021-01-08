@@ -22,7 +22,7 @@ Use display options (!displayoptions) to customise the way the calendar appears 
 | [emptydays](#hideshow-empty-days)                    | `!displayoptions emptydays 0|1 `    | Hide/show empty days                                     |
 | [showpast](#hideshow-past-events-on-today)           | `!displayoptions showpast 0|1`      | Hide/show past events on Today                           |
 | [trim](#trim-event-names-to-fixed-length)            | `!displayoptions trim <n>`          | Trim event names to length *n* (0 = off)                 |
-| [days](#increasedecrease-number-of-days-on-calendar) | `!displayoptions days <n>`          | Number of days to display (Max. 90)                      |
+| [days](#increasedecrease-number-of-days-on-calendar) | `!displayoptions days <n>`          | Number of days to display (Max. 25)                      |
 | [style](#change-the-calendar-style)                  | `!displayoptions style code|embed`  | Use code (old) or embed (new) display styles             |
 | [inline](#make-embed-style-calendar-inline)          | `!displayoptions inline 0|1`        | Makes embed display style use inline fields              |
 | [description](#hideshow-event-description)           | `!displayoptions description 0|1`   | Hide/show event descriptions (embed calendar style only) |
