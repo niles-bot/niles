@@ -200,7 +200,7 @@ function generateCalendar(message, dayMap) {
   let p = defer();
   // create embed
   let embed = new bot.discord.MessageEmbed();
-  embed.setTitle("CALENDAR");
+  embed.setTitle(guildSettings.calendarName);
   embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
   embed.setColor("BLUE");
   embed.setFooter("Last update");
@@ -855,6 +855,27 @@ function displayStats(message) {
   });
 }
 
+function calName(message) {
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+  let newCalName;
+  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
+    newCalName = message.content.split(" ")[1];
+  } else if (message.mentions.has(bot.client.user.id)) {
+    newCalName = message.content.split(" ")[2];
+  }
+  if (!newCalName) { // no name passed in
+    return message.channel.send(`You are currently using \`${guildSettings.calendarName}\` as the calendar name. To change the name use \`${guildSettings.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
+  }
+  message.channel.send(`Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`);
+  helpers.yesThenCollector(message).then(() => {
+    guildSettings.calendarName = newCalName;
+    helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+    message.channel.send(`Changed calendar name to \`${newCalName}\``);
+  }).catch((err) => {
+    helpers.log(err);
+  });
+}
+
 exports.deleteUpdater = function(guildid) {
   clearInterval(autoUpdater[guildid]);
   try {
@@ -885,7 +906,7 @@ function run(message) {
   }
   if (["ping"].includes(cmd)) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
-      log(err);
+      helpers.log(err);
     });
   }
   if (["help"].includes(cmd)) {
@@ -898,7 +919,7 @@ function run(message) {
         .setColor("#FFFFF")
         .setDescription("Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") to invite me to your server")
     }).catch((err) => {
-      log(err);
+      helpers.log(err);
     });
     message.delete({ timeout: 5000 });
   }
@@ -1025,6 +1046,11 @@ function run(message) {
   }
   if (["validate"].includes(cmd)) {
     helpers.validate(message, args[0], cal);
+    message.delete({ timeout: 5000 });
+  }
+  if (["calname"].includes(cmd)) {
+    calName(message);
+    message.delete({ timeout: 5000 });
   }
 }
 

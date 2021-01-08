@@ -14,6 +14,7 @@ const defaultSettings = {
   "prefix": "!",
   "calendarID": "",
   "calendarChannel": "",
+  "calendarName": "CALENDAR",
   "timezone": "",
   "helpmenu": "1",
   "format": 12,
@@ -28,7 +29,6 @@ const defaultSettings = {
   "description": "0"
 };
 
-let settings = require("../settings.js");
 let bot = require("../bot.js");
 
 function getGuildSettings(id, file) {
@@ -308,7 +308,7 @@ function matchCalType(calendarId, message) {
  * @returns {String}
  */
 function passFail(bool) {
-  return (bool ? "Passed 🟢": "Failed 🔴");
+  return (bool ? "Passed 🟢" : "Failed 🔴");
 }
 
 /**
@@ -333,7 +333,7 @@ function permissionCheck(message) {
  * @param {Snowflake} message - message for guild to check agianst
  * @param {Calendar} cal - Calendar API to check event agaianst
  */
-function validate(message, cal) {
+function validate(message, arg, cal) {
   let guildSettings = getGuildSettings(message.guild.id, "settings");
   const nowTime = DateTime.local();
     let params = {
@@ -344,9 +344,9 @@ function validate(message, cal) {
       // print next event
       const event = events[0];
       message.channel.send(`**Next Event:**
-      **Summary:** \`${event.summary}\`
-      **Start:** \`${event.start.dateTime || event.start.date }\`
-      **Calendar ID:** \`${event.organizer.email}\`
+        **Summary:** \`${event.summary}\`
+        **Start:** \`${event.start.dateTime || event.start.date }\`
+        **Calendar ID:** \`${event.organizer.email}\`
       `);
       return true;
     }).catch((err) => {
@@ -354,13 +354,12 @@ function validate(message, cal) {
     });
     // basic check
     message.channel.send(`**Checks**:
-    **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
-    **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
-    **Calendar Test:** ${passFail(calTest)}
-    **Missing Permissions:** ${permissionCheck(message)}
-    **Guild ID:** \`${message.guild.id}\`
+      **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
+      **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
+      **Calendar Test:** ${passFail(calTest)}
+      **Missing Permissions:** ${permissionCheck(message)}
+      **Guild ID:** \`${message.guild.id}\`
     `);
-    message.delete({ timeout: 5000 });
 }
 
 module.exports = {
