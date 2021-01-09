@@ -201,7 +201,9 @@ function generateCalendar(message, dayMap) {
   embed.setFooter("Last update");
   embed.setTimestamp(new Date());
   // set description or fields
-  if (guildSettings.style === "code") {
+  if (checkEmptyCalendar(message.guild.id, dayMap)) {
+    embed.setDescription('```No Upcoming Events```');
+  } else if (guildSettings.style === "code") {
     embed.setDescription(generateCalendarCodeblock(message, dayMap));
     // character check
     //Handle Calendars Greater Than 2048 Characters Long
@@ -210,8 +212,7 @@ function generateCalendar(message, dayMap) {
       p.reject(2048);
       return p.promise;
     }
-  }
-  else if (guildSettings.style === "embed") {
+  } else if (guildSettings.style === "embed") {
     embed.fields = generateCalendarEmbed(message, dayMap);
   }
   // add other embeds after code
@@ -223,6 +224,21 @@ function generateCalendar(message, dayMap) {
   }
   p.resolve(embed);
   return p.promise;
+}
+
+
+function checkEmptyCalendar(guildid, dayMap) {
+  let noEmpty = true
+  const calendar = helpers.getGuildSettings(guildid, "calendar");
+  for (let i = 0; i < dayMap.length; i++) {
+    let key = "day" + String(i);
+    if (calendar[key]) {
+      if (calendar[key].length === 0) {
+        noEmpty = false
+      }
+    }
+  }
+  return noEmpty;
 }
 
 function generateCalendarCodeblock(message, dayMap) {
@@ -698,6 +714,8 @@ function nextEvent(message, calendarId, dayMap) {
         return message.channel.send(`The next event is \`${resp[i].summary}\` in ${timeToString}`);
       }
     }
+    // run if message not sent
+    message.channel.send('No upcoming events within date range')
   }).catch((err) => {
     helpers.log(err);
   });
@@ -814,16 +832,16 @@ function displayStats(message) {
   });
 }
 
-function calName(message) {
+function calName(message, args) {
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-  let newCalName;
-  if (message.content.toLowerCase().startsWith(guildSettings.prefix)) {
-    newCalName = message.content.split(" ")[1];
-  } else if (message.mentions.has(bot.client.user.id)) {
-    newCalName = message.content.split(" ")[2];
-  }
+  let newCalName = args[0];
   if (!newCalName) { // no name passed in
-    return message.channel.send(`You are currently using \`${guildSettings.calendarName}\` as the calendar name. To change the calendar name use \`${guildSettings.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
+    return message.channel.send(`You are currently using \`${guildSettings.calendarName}\` as the calendar name. To change the name use \`${guildSettings.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
+  } else {
+    newCalName= ''; // reset
+    for (let i = 0; i < args.length; i++) {
+      newCalName += args[i] + " ";
+    }
   }
   message.channel.send(`Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`);
   helpers.yesThenCollector(message).then(() => {
@@ -1007,7 +1025,7 @@ function run(message) {
     message.delete({ timeout: 5000 });
   }
   if (["calname"].includes(cmd)) {
-    calName(message);
+    calName(message, args);
     message.delete({ timeout: 5000 });
   }
 }

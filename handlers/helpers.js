@@ -338,10 +338,11 @@ function validate(message, cal) {
   const nowTime = DateTime.local();
     let params = {
       timeMin: nowTime.toISO(),
+      singleEvents: true,
+      orderBy: "startTime",
       maxResults: 1
     };
     let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
-      // print next event
       const event = events[0];
       message.channel.send(`**Next Event:**
         **Summary:** \`${event.summary}\`
