@@ -28,13 +28,17 @@ function isValidCmd(message) {
     "ping", "displayoptions", "timers", "reset", "next",
     "validate", "calname"
   ];
-  // repeated command parser
-  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
-  // if mentioned return second object as command, if not - return first object as command
-  let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
-  cmd = cmd.toLowerCase();
-  return validCmds.includes(cmd);
+  try {
+    // repeated command parser
+    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+    const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+    // if mentioned return second object as command, if not - return first object as command
+    let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
+    cmd = cmd.toLowerCase();
+    return validCmds.includes(cmd);
+  } catch (err) { // catch out of bounds for smaller messages
+    return false;
+  }
 }
 
 client.login(settings.secrets.bot_token);
