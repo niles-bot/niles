@@ -835,7 +835,7 @@ function displayStats(message) {
 function calName(message, args) {
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   let newCalName = args[0];
-  if (!newCalName) { // no name passed in
+  if (!newCalName) { // no name passed inno
     return message.channel.send(`You are currently using \`${guildSettings.calendarName}\` as the calendar name. To change the name use \`${guildSettings.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
   } else {
     newCalName= ''; // reset

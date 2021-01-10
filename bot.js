@@ -20,6 +20,22 @@ function addMissingGuilds(availableGuilds) {
   });
 }
 
+function checkValidCmd(message) {
+  const validCmd = ["help", "clean", "purge", "init", "update",
+    "sync", "display", "create", "scrim", "delete",
+    "stats", "info", "id", "tz", "invite",
+    "prefix", "admin", "setup", "shard", "count",
+    "ping", "displayoptions", "timers", "reset", "next",
+    "validate", "calname"
+  ];
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+  // if mentioned return second object as command, if not - return first object as command
+  let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
+  cmd = cmd.toLowerCase();
+  return validCmd.includes(cmd);
+}
+
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
@@ -81,6 +97,10 @@ client.on("message", (message) => {
   }
   //Ignore messages that dont use guild prefix or mentions.
   if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
+    return;
+  }
+  // ignore messages that do not have one of the whitelisted commands
+  if (!checkValidCmd(message)) { 
     return;
   }
   helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
