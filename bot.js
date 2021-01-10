@@ -20,20 +20,21 @@ function addMissingGuilds(availableGuilds) {
   });
 }
 
-function checkValidCmd(message) {
-  const validCmd = ["help", "clean", "purge", "init", "update",
+function isValidCmd(message) {
+  const validCmds = ["help", "clean", "purge", "init", "update",
     "sync", "display", "create", "scrim", "delete",
     "stats", "info", "id", "tz", "invite",
     "prefix", "admin", "setup", "shard", "count",
     "ping", "displayoptions", "timers", "reset", "next",
     "validate", "calname"
   ];
+  // repeated command parser
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
-  return validCmd.includes(cmd);
+  return validCmds.includes(cmd);
 }
 
 client.login(settings.secrets.bot_token);
@@ -72,26 +73,9 @@ client.on("message", (message) => {
   if (message.author.bot) {
     return;
   }
-  //only load guild settings after checking that message is not direct message.
   let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
   try {
     var guildSettings = helpers.readFile(guildSettingsPath);
-  } catch (err) {
-    return helpers.log(err);
-  }
-  //Check that there is a prefix - need more robust check of database files.
-  try {
-    (guildSettings.prefix);
-  } catch (err) {
-    guilds.create(message.guild);
-    message.channel.send("Sorry, I've had to re-create your database files, you'll have to run the setup process again :(");
-    return helpers.log(`settings file not created properly in guild: ${message.guild.id}. Attempted re-creation`);
-  }
-  //Check if the database structure is up to date.
-  try {
-    if (checks.allowedRoles(message)) {
-      return message.channel.send("Sorry, I just had to update your database files. Please try again.");
-    }
   } catch (err) {
     return helpers.log(err);
   }
@@ -100,7 +84,7 @@ client.on("message", (message) => {
     return;
   }
   // ignore messages that do not have one of the whitelisted commands
-  if (!checkValidCmd(message)) { 
+  if (!isValidCmd(message)) { 
     return;
   }
   helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);

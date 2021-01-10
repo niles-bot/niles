@@ -201,7 +201,7 @@ function generateCalendar(message, dayMap) {
   embed.setFooter("Last update");
   embed.setTimestamp(new Date());
   // set description or fields
-  if (checkEmptyCalendar(message.guild.id, dayMap)) {
+  if (isEmptyCalendar(message.guild.id, dayMap)) {
     embed.setDescription('```No Upcoming Events```');
   } else if (guildSettings.style === "code") {
     embed.setDescription(generateCalendarCodeblock(message, dayMap));
@@ -226,19 +226,16 @@ function generateCalendar(message, dayMap) {
   return p.promise;
 }
 
-
-function checkEmptyCalendar(guildid, dayMap) {
-  let noEmpty = true
+function isEmptyCalendar(guildid, dayMap) {
+  let isEmpty = true;
   const calendar = helpers.getGuildSettings(guildid, "calendar");
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
-    if (calendar[key]) {
-      if (calendar[key].length === 0) {
-        noEmpty = false
-      }
+    if (calendar[key] && calendar[key].length) { // if key exists & has length in days
+      isEmpty = false;
     }
   }
-  return noEmpty;
+  return isEmpty;
 }
 
 function generateCalendarCodeblock(message, dayMap) {
@@ -253,9 +250,9 @@ function generateCalendarCodeblock(message, dayMap) {
       continue;
     }
     if (calendar[key].length === 0) {
-      sendString += "```\n ```"; // patches #101
+      sendString += "```\n ```";
     } else {
-      sendString += "```\n"; // patches #101
+      sendString += "```\n";
       // Map events for each day
       for (let m = 0; m < calendar[key].length; m++) {
         let options = {
