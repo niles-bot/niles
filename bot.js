@@ -74,43 +74,40 @@ client.on("guildDelete", (guild) => {
 });
 
 client.on("message", (message) => {
-  if (message.author.bot) {
-    return;
-  }
-  let guildSettingsPath = path.join(__dirname, "stores", message.guild.id, "settings.json");
   try {
-    var guildSettings = helpers.readFile(guildSettingsPath);
-  } catch (err) {
-    return helpers.log(err);
-  }
-  //Ignore messages that dont use guild prefix or mentions.
-  if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
-    return;
-  }
-  // ignore messages that do not have one of the whitelisted commands
-  if (!isValidCmd(message)) { 
-    return;
-  }
-  helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
-  if (!guildSettings.calendarID || !guildSettings.timezone) {
-    try {
-      if (!helpers.checkRole(message)) {
-        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
-      }
-      init.run(message);
-    } catch (err) {
-      helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
-      return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");
+    if (message.channel.type === "dm") { // do not handle DMs
+      return;
+    } else if (message.author.bot) {
+      return;
     }
-  } else {
-    try {
+    var guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+    //Ignore messages that dont use guild prefix or mentions.
+    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
+      return;
+    }
+    // ignore messages that do not have one of the whitelisted commands
+    if (!isValidCmd(message)) { 
+      return;
+    }
+    helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
+    if (!guildSettings.calendarID || !guildSettings.timezone) {
+      try {
+        if (!helpers.checkRole(message)) {
+          return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
+        }
+        init.run(message);
+      } catch (err) {
+        helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
+        return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");
+      }
+    } else {
       if (!helpers.checkRole(message)) {
         return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
       }
       commands.run(message);
-    } catch (err) {
-      return helpers.log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
     }
+  } catch (err) {
+    helpers.log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
   }
 });
 
