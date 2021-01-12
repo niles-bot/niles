@@ -360,6 +360,7 @@ function validate(message, cal) {
       **Calendar Test:** ${passFail(calTest)}
       **Missing Permissions:** ${permissionCheck(message)}
       **Guild ID:** \`${message.guild.id}\`
+      **Shard:** ${bot.client.shard.ids}
     `);
 }
 
