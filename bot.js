@@ -101,7 +101,7 @@ client.on("message", (message) => {
       }
     } else {
       if (!helpers.checkRole(message)) {
-        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
+        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
       }
       commands.run(message);
     }

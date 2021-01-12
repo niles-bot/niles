@@ -15,11 +15,6 @@ const emptyCal = {
   "calendarMessageId": ""
 };
 
-function recreateGuild(guild) {
-  deleteGuild(guild)
-  createGuild(guild)
-}
-
 /**
  * Create new guild files
  * @param {Snowflake} guild - Guild to create files for
@@ -52,6 +47,11 @@ function deleteGuild(guild) {
   commands.deleteUpdater(guild.id);
   helpers.log(`Guild ${guild.id} has been deleted`);
 };
+
+function recreateGuild(guild) {
+  deleteGuild(guild);
+  createGuild(guild);
+}
 
 module.exports = {
   createGuild,

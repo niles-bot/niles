@@ -107,6 +107,19 @@ function deleteMessages(message, args) {
 }
 
 /**
+ * Safely deletes update timer
+ * @param {Snowflake} guildid - guild to remove from timers
+ */
+function killUpdateTimer(guildid) {
+  clearInterval(autoUpdater[guildid]);
+  try {
+    delete timerCount[guildid];
+  } catch (err) {
+    helpers.log(err);
+  }
+}
+
+/**
  * Creates daymap or use in other functions.
  * Standardized way of represending an array of days
  * Indexed by day[x] - x being integer starting from 0
@@ -137,7 +150,7 @@ function createDayMap(guildid) {
  * @param {daymap} dayMap - dayMap to create events from
  */
 function getEvents(message, calendarID, dayMap) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   try {
     let oldCalendar = helpers.getGuildSettings(guildid, "calendar");
     let calendar = (({ lastUpdate, calendarMessageId }) => ({ lastUpdate, calendarMessageId }))(oldCalendar);
@@ -203,48 +216,6 @@ function getEvents(message, calendarID, dayMap) {
     message.channel.send(err.code);
     return helpers.log(`Error in function getEvents in guild: ${message.guild.id} : ${err}`);
   }
-}
-
-/**
- * Generate calendar message
- * @param {Snowflake} message - Message that initiated change
- * @param {daymap} dayMap - daymap for corresponding guild
- */
-function generateCalendar(message, dayMap) {
-  const guildid = message.guild.id
-  let guildSettings = helpers.getGuildSettings(guildid, "settings");
-  let p = defer();
-  // create embed
-  let embed = new bot.discord.MessageEmbed();
-  embed.setTitle(guildSettings.calendarName);
-  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
-  embed.setColor("BLUE");
-  embed.setFooter("Last update");
-  embed.setTimestamp(new Date());
-  // set description or fields
-  if (isEmptyCalendar(guildid, dayMap)) {
-    embed.setDescription('```No Upcoming Events```');
-  } else if (guildSettings.style === "code") {
-    embed.setDescription(generateCalendarCodeblock(guildid, dayMap));
-    // character check
-    //Handle Calendars Greater Than 2048 Characters Long
-    if (embed.length>2048) {
-      message.channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
-      p.reject(2048);
-      return p.promise;
-    }
-  } else if (guildSettings.style === "embed") {
-    embed.fields = generateCalendarEmbed(guildid, dayMap);
-  }
-  // add other embeds after code
-  if (guildSettings.helpmenu === "1") {
-    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
-  }
-  if (guildSettings.tzDisplay === "1") { // display timezone
-    embed.addField("Timezone", guildSettings.timezone, false);
-  }
-  p.resolve(embed);
-  return p.promise;
 }
 
 /**
@@ -397,6 +368,48 @@ function generateCalendarEmbed(guildid, dayMap) {
   return fields; // return field array
 }
 
+/**
+ * Generate calendar message
+ * @param {Snowflake} message - Message that initiated change
+ * @param {daymap} dayMap - daymap for corresponding guild
+ */
+function generateCalendar(message, dayMap) {
+  const guildid = message.guild.id;
+  let guildSettings = helpers.getGuildSettings(guildid, "settings");
+  let p = defer();
+  // create embed
+  let embed = new bot.discord.MessageEmbed();
+  embed.setTitle(guildSettings.calendarName);
+  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
+  embed.setColor("BLUE");
+  embed.setFooter("Last update");
+  embed.setTimestamp(new Date());
+  // set description or fields
+  if (isEmptyCalendar(guildid, dayMap)) {
+    embed.setDescription('```No Upcoming Events```');
+  } else if (guildSettings.style === "code") {
+    embed.setDescription(generateCalendarCodeblock(guildid, dayMap));
+    // character check
+    //Handle Calendars Greater Than 2048 Characters Long
+    if (embed.length>2048) {
+      message.channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
+      p.reject(2048);
+      return p.promise;
+    }
+  } else if (guildSettings.style === "embed") {
+    embed.fields = generateCalendarEmbed(guildid, dayMap);
+  }
+  // add other embeds after code
+  if (guildSettings.helpmenu === "1") {
+    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
+  }
+  if (guildSettings.tzDisplay === "1") { // display timezone
+    embed.addField("Timezone", guildSettings.timezone, false);
+  }
+  p.resolve(embed);
+  return p.promise;
+}
+
 function startUpdateTimer(message) {
   const guildid = message.guild.id
   if (!timerCount[guildid]) {
@@ -476,19 +489,6 @@ function postCalendar(message, dayMap) {
   } catch (err) {
     message.channel.send(err.code);
     return helpers.log(`Error in post calendar in guild: ${guildid} : ${err}`);
-  }
-}
-
-/**
- * Safely deletes update timer
- * @param {Snowflake} guildid - guild to remove from timers
- */
-function killUpdateTimer(guildid) {
-  clearInterval(autoUpdater[guildid]);
-  try {
-    delete timerCount[guildid];
-  } catch (err) {
-    helpers.log(err);
   }
 }
 
@@ -694,7 +694,7 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
     timeZone: tz
   };
 	return cal.Events.list(calendarId, params)
-		.then(json => {
+		.then((json) => {
 			for (let i = 0; i < json.length; i++) {
 				let event = {
 					id: json[i].id,
@@ -899,7 +899,7 @@ function run(message) {
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   let calendarID = guildSettings.calendarID;
   let dayMap = createDayMap(guildid);
-  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+  const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
@@ -944,11 +944,11 @@ function run(message) {
     }, 2000);
   }
   if (["update", "sync"].includes(cmd)) {
-    calendarUpdater(message, calendarId, dayMap, true)
+    calendarUpdater(message, calendarId, dayMap, true);
   }
   if (["create", "scrim"].includes(cmd)) {
     quickAddEvent(message, args, calendarID).then(() => {
-      calendarUpdater(message, calendarId, dayMap, true)
+      calendarUpdater(message, calendarId, dayMap, true);
     }).catch((err) => {
       helpers.log(`error creating event in guild: ${guildid} : ${err}`);
     });
@@ -963,7 +963,7 @@ function run(message) {
     getEvents(message, calendarID, dayMap);
   }
   if (["stop"].includes(cmd)) {
-    killUpdateTimer(guildId)
+    killUpdateTimer(guildId);
   }
   if (["delete"].includes(cmd)) {
     deleteEvent(message, args, calendarID, dayMap);
@@ -972,7 +972,7 @@ function run(message) {
     nextEvent(message, calendarID, dayMap);
   }
   if (["count"].includes(cmd)) {
-    const theCount = (timerCount[guildid] ? 0 : timerCount[guildid])
+    const theCount = (timerCount[guildid] ? 0 : timerCount[guildid]);
     message.channel.send(`There are ${theCount} timer threads running in this guild`);
   }
   if (["timers"].includes(cmd)) {

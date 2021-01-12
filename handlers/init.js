@@ -135,7 +135,7 @@ function setRoles(message, args, guildSettings) {
 
 exports.run = function(message) {
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+  const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
