@@ -8,7 +8,6 @@ let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
 let helpers = require("./handlers/helpers.js");
-let checks = require("./handlers/createMissingAttributes.js");
 
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
@@ -16,7 +15,7 @@ function addMissingGuilds(availableGuilds) {
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildId) => {
     helpers.log("unknown guild found; creating");
-    guilds.create(client.guilds.cache.get(guildId));
+    guilds.createGuild(client.guilds.cache.get(guildId));
   });
 }
 
@@ -24,7 +23,7 @@ function isValidCmd(message) {
   const validCmds = ["help", "clean", "purge", "init", "update",
     "sync", "display", "create", "scrim", "delete",
     "stats", "info", "id", "tz", "invite",
-    "prefix", "admin", "setup", "shard", "count",
+    "prefix", "admin", "setup", "count",
     "ping", "displayoptions", "timers", "reset", "next",
     "validate", "calname"
   ];
@@ -66,11 +65,11 @@ client.on("ready", () => {
     });
 
 client.on("guildCreate", (guild) => {
-  guilds.create(guild);
+  guilds.createGuild(guild);
 });
 
 client.on("guildDelete", (guild) => {
-  guilds.delete(guild);
+  guilds.deleteGuild(guild);
 });
 
 client.on("message", (message) => {

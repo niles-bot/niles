@@ -143,7 +143,7 @@ exports.run = function(message) {
   let setup = () => message.channel.send(strings.SETUP_MESSAGE);
   let id = () => logId(message, args, guildSettings);
   let tz = () => logTz(message, args, guildSettings);
-  let init = () => guilds.create(message.guild);
+  let init = () => guilds.createGuild(message.guild);
   let prefix = () => setPrefix(message, args, guildSettings);
   let admin = () => setRoles(message, args, guildSettings);
   let restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");

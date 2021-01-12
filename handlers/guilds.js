@@ -3,25 +3,29 @@ const path = require("path");
 const helpers = require("./helpers.js");
 const commands = require("./commands.js");
 
-exports.emptyCal = {
+const emptyCal = {
+  "day0": [],
+  "day1": [],
+  "day2": [],
+  "day3": [],
+  "day4": [],
+  "day5": [],
+  "day6": [],
   "lastUpdate": "",
   "calendarMessageId": ""
+};
+
+function recreateGuild(guild) {
+  deleteGuild(guild)
+  createGuild(guild)
 }
 
-exports.create = (guild) => {
+/**
+ * Create new guild files
+ * @param {Snowflake} guild - Guild to create files for
+ */
+function createGuild(guild) {
   let guildPath = path.join(__dirname, "..", "stores", guild.id);
-  let emptyCal = {
-    "day0": [],
-    "day1": [],
-    "day2": [],
-    "day3": [],
-    "day4": [],
-    "day5": [],
-    "day6": [],
-    "lastUpdate": "",
-    "calendarMessageId": ""
-  };
-
   const guildData = {
     "guildid": guild.id,
     "name": guild.name,
@@ -41,10 +45,16 @@ exports.create = (guild) => {
   }
 };
 
-exports.delete = (guild) => {
+function deleteGuild(guild) {
   let guildPath = path.join(__dirname, "..", "stores", guild.id);
   helpers.deleteFolderRecursive(guildPath);
   helpers.removeGuildFromDatabase(guild.id);
   commands.deleteUpdater(guild.id);
   helpers.log(`Guild ${guild.id} has been deleted`);
+};
+
+module.exports = {
+  createGuild,
+  deleteGuild,
+  recreateGuild
 };
