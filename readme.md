@@ -1,5 +1,9 @@
 # Niles Discord Bot
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a1440f5f9d23451a867348e5f9c1724e)](https://www.codacy.com/app/seanecoffey/Niles?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=seanecoffey/Niles&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/42ad70ef7e0842da99a2176d5684e0a3)](https://www.codacy.com/gh/niles-bot/niles/dashboard)
+[![codebeat Badge](https://codebeat.co/badges/dc7cdd12-2d64-48b4-95c7-7fe3f5cf81a4)](https://codebeat.co/projects/github-com-niles-bot-niles-master)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/mchangrh/niles)](https://hub.docker.com/r/mchangrh/niles)
+[![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m786400338-c0cc4ceea17d04b822cc83d9)](https://status.mchang.icu/786400338)
+![node-current](https://img.shields.io/node/v/discord.js)
 
 A [Discord](https://discord.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
 Targeted towards eSports event scheduling (scrims, PCWs).
