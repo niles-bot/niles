@@ -2,7 +2,6 @@ let discord = require("discord.js");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-const path = require("path");
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
@@ -38,7 +37,7 @@ function isValidCmd(message) {
   try {
     // repeated command parser
     let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-    const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+    const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
     // if mentioned return second object as command, if not - return first object as command
     let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
     cmd = cmd.toLowerCase();
@@ -55,22 +54,22 @@ client.on("ready", () => {
   client.user.setStatus("online");
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
-      .then((results) => {
-        const shardGuilds = [];
-        results.forEach(function (item) { // iterate over shards
-          item.forEach(function (item) { // iterate over servers
-            shardGuilds.push(item.id); // add server id to shardGuilds
-          });
-        })
-        addMissingGuilds(shardGuilds); // start adding missing guilds
-        helpers.log("all shards spawned"); // all shards spawned
-      })
-      .catch((err) => {
-        if (err.name === "Error [SHARDING_IN_PROCESS]") {
-          console.log("spawning shards ..."); // send error to console - still sharding
-        }
+    .then((results) => {
+      const shardGuilds = [];
+      results.forEach(function (item) { // iterate over shards
+        item.forEach(function (item) { // iterate over servers
+          shardGuilds.push(item.id); // add server id to shardGuilds
+        });
       });
+      addMissingGuilds(shardGuilds); // start adding missing guilds
+      helpers.log("all shards spawned"); // all shards spawned
+    })
+    .catch((err) => {
+      if (err.name === "Error [SHARDING_IN_PROCESS]") {
+        console.log("spawning shards ..."); // send error to console - still sharding
+      }
     });
+});
 
 client.on("guildCreate", (guild) => {
   guilds.createGuild(guild);
@@ -141,4 +140,4 @@ process.on("unhandledRejection", (err) => {
 });
 
 // exports
-module.exports.isValidCmd = isValidCmd
+module.exports.isValidCmd = isValidCmd;

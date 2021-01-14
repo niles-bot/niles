@@ -166,4 +166,4 @@ exports.run = function(message) {
   } else if (bot.isValidCmd(message)) {
     message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
   }
-}
+};

@@ -89,9 +89,9 @@ function log(...logItems) {
       console.log('${logString}'); // send to console only once to avoid multiple lines
     }
   `)
-  .catch((err) => {
-    console.log(err);
-  });
+    .catch((err) => {
+      console.log(err);
+    });
 }
 
 /**
@@ -383,32 +383,32 @@ function permissionCheck(message) {
 function validate(message, cal) {
   let guildSettings = getGuildSettings(message.guild.id, "settings");
   const nowTime = DateTime.local();
-    let params = {
-      timeMin: nowTime.toISO(),
-      singleEvents: true,
-      orderBy: "startTime",
-      maxResults: 1
-    };
-    let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
-      const event = events[0];
-      message.channel.send(`**Next Event:**
-        **Summary:** \`${event.summary}\`
-        **Start:** \`${event.start.dateTime || event.start.date }\`
-        **Calendar ID:** \`${event.organizer.email}\`
-      `);
-      return true;
-    }).catch((err) => {
-      message.channel.send(`Error Fetching Calendar: ${err}`);
-    });
-    // basic check
-    message.channel.send(`**Checks**:
-      **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
-      **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
-      **Calendar Test:** ${passFail(calTest)}
-      **Missing Permissions:** ${permissionCheck(message)}
-      **Guild ID:** \`${message.guild.id}\`
-      **Shard:** ${bot.client.shard.ids}
+  let params = {
+    timeMin: nowTime.toISO(),
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 1
+  };
+  let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
+    const event = events[0];
+    message.channel.send(`**Next Event:**
+      **Summary:** \`${event.summary}\`
+      **Start:** \`${event.start.dateTime || event.start.date }\`
+      **Calendar ID:** \`${event.organizer.email}\`
     `);
+    return true;
+  }).catch((err) => {
+    message.channel.send(`Error Fetching Calendar: ${err}`);
+  });
+  // basic check
+  message.channel.send(`**Checks**:
+    **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
+    **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
+    **Calendar Test:** ${passFail(calTest)}
+    **Missing Permissions:** ${permissionCheck(message)}
+    **Guild ID:** \`${message.guild.id}\`
+    **Shard:** ${bot.client.shard.ids}
+  `);
 }
 
 module.exports = {

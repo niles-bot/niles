@@ -304,7 +304,7 @@ function generateCalendarCodeblock(guildid, dayMap) {
     }
     finalString += sendString;
   }
-  return finalString // return finalstring to generateCalendar
+  return finalString; // return finalstring to generateCalendar
 }
 
 /**
@@ -335,7 +335,7 @@ function generateCalendarEmbed(guildid, dayMap) {
         let duration = "";
         if (Object.keys(calendar[key][m].start).includes("date")) {
           // no need for temp start/fin dates
-          duration = "All Day"
+          duration = "All Day";
         } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
           let tempStartDate;
           let tempFinDate;
@@ -453,7 +453,7 @@ function startUpdateTimer(message) {
  * @param {daymap} dayMap - daymap of events to post 
  */
 function postCalendar(message, dayMap) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   try {
     let calendar = helpers.getGuildSettings(guildid, "calendar");
     let guildSettings = helpers.getGuildSettings(guildid, "settings");
@@ -490,10 +490,10 @@ function postCalendar(message, dayMap) {
       }, 2000);
     }).catch((err) => {
       if(err===2048) {
-          helpers.log(`function postCalendar error in guild: ${guildid} : ${err} - Calendar too long`);
-        } else {
-          helpers.log(`function postCalendar error in guild: ${guildid} : ${err}`);
-        }
+        helpers.log(`function postCalendar error in guild: ${guildid} : ${err} - Calendar too long`);
+      } else {
+        helpers.log(`function postCalendar error in guild: ${guildid} : ${err}`);
+      }
     });
   } catch (err) {
     message.channel.send(err.code);
@@ -508,18 +508,18 @@ function postCalendar(message, dayMap) {
  * @param {bool} human - if command was initiated by a human
  */
 function updateCalendar(message, dayMap, human) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   let calendar = helpers.getGuildSettings(guildid, "calendar");
   if (typeof calendar === "undefined" || calendar.calendarMessageId === "") {
     message.channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
     helpers.log(`calendar undefined in ${guildid}. Killing update timer.`);
-    killUpdateTimer(guildid)
+    killUpdateTimer(guildid);
   }
   let messageId = calendar.calendarMessageId;
   message.channel.messages.fetch(messageId).then((m) => {
     generateCalendar(message, dayMap).then((embed) => {
       if (embed === 2048) {
-        return
+        return;
       }
       m.edit({
         embed
@@ -563,7 +563,7 @@ function quickAddEvent(message, args, calendarId) {
         m.delete({ timeout: 5000 });
       });
   }
-  const text = args.join(" ") // join
+  const text = args.join(" "); // join
   let params = {
     text
   };
@@ -594,14 +594,14 @@ function displayOptionHelper(guildSettings, setting, value, message) {
     tzDisplay: "calendar timezone display",
     emptydays: "calendar empty days",
     showpast: "display of today's past events"
-  }
+  };
   if (value) {
     message.channel.send(value ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
     guildSettings[setting] = value; // set value
   } else {
     message.channel.send(`Please only use 0 or 1 for the *${optionName[setting]}* setting, (off or on)`);
   }
-  return guildSettings
+  return guildSettings;
 }
 
 /**
@@ -610,15 +610,15 @@ function displayOptionHelper(guildSettings, setting, value, message) {
  * @param {[String]} args - args passed in
  */
 function displayOptions(message, args) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   const dispCmd = args[0];
   const dispOption = args[1];
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   const binaryDisplayOptions = [
     "help", "pin", "tzdisplay", "emptydays", "showpast"
-  ]
+  ];
   if (binaryDisplayOptions.includes(dispCmd)) {
-    guildSettings = displayOptionHelper(guildSettings, setting, value, message)
+    guildSettings = displayOptionHelper(guildSettings, dispCmd, dispOption, message);
   } else if (dispCmd === "format") {
     if (dispOption) {
       guildSettings.format = dispOption;
@@ -629,7 +629,7 @@ function displayOptions(message, args) {
   } else if (dispCmd === "trim") {
     if (dispOption) {
       let size = parseInt(dispOption);
-      guildSettings.trim = (isNaN(size) ? 0 : size) // set to 0 if invalid, otherwise take number
+      guildSettings.trim = (isNaN(size) ? 0 : size); // set to 0 if invalid, otherwise take number
       message.channel.send(`Set trimming of event titles to ${size} (0 = off)`);
     } else  {
       message.channel.send("Please provide a number to trim event titles. (0 = off)");
@@ -639,8 +639,8 @@ function displayOptions(message, args) {
       let size = parseInt(dispOption);
       guildSettings.days = 
         isNaN(size) ? 7 // if not a number - default to 7
-        : size > 25 ? 25 // discord field limit is 25
-        : size // otherwise defualt to size
+          : size > 25 ? 25 // discord field limit is 25
+            : size; // otherwise defualt to size
       message.channel.send(`Changed days to display to: ${guildSettings.days} (you may have to use \`!displayoptions emptydays 0\`)`);
     } else {
       message.channel.send("Please provide a number of days to display. (7 = default, 25 = max)");
@@ -660,7 +660,7 @@ function displayOptions(message, args) {
     }
   } else if (dispCmd === "inline") {
     if (guildSettings.style === "code") {
-      message.channel.send("This displayoption is only compatible with the `embed` display style")
+      message.channel.send("This displayoption is only compatible with the `embed` display style");
     } else if (dispOption) {
       guildSettings.inline = dispOption;
       message.channel.send(guildSettings.inline === "1" ? "Set inline events to 1 (on)" : "Set inline events to 0 (off)");
@@ -710,7 +710,7 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
  * @param {*} dayMap - daymap and number of days to fetch from
  */
 function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
-	let eventsArray = [];
+  let eventsArray = [];
   let tz = helpers.getValidTz(message.guild.id);
   let startDate = dayMap[0].toISO();
   let endDate = dayMap[6].toISO();
@@ -720,24 +720,24 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
     singleEvents: true,
     timeZone: tz
   };
-	return cal.Events.list(calendarId, params)
-		.then((json) => {
-			for (let i = 0; i < json.length; i++) {
-				let event = {
-					id: json[i].id,
+  return cal.Events.list(calendarId, params)
+    .then((json) => {
+      for (let i = 0; i < json.length; i++) {
+        let event = {
+          id: json[i].id,
           summary: json[i].summary,
-					location: json[i].location,
-					start: json[i].start,
-					end: json[i].end,
+          location: json[i].location,
+          start: json[i].start,
+          end: json[i].end,
           status: json[i].status,
           description: json[i].description
-				};
-				eventsArray.push(event);
-			}
-			return eventsArray;
-		}).catch((err) => {
-			helpers.log("Error: listSingleEventsWithinDateRange", err.message);
-		});
+        };
+        eventsArray.push(event);
+      }
+      return eventsArray;
+    }).catch((err) => {
+      helpers.log("Error: listSingleEventsWithinDateRange", err.message);
+    });
 }
 
 /**
@@ -756,7 +756,7 @@ function nextEvent(message, calendarId, dayMap) {
       if (luxonDate > now) { // make sure event happens in the future
         // description is passed in - option to be added
         // construct string
-        const timeTo = luxonDate.diff(now).shiftTo('days', 'hours', 'minutes', 'seconds').toObject();
+        const timeTo = luxonDate.diff(now).shiftTo("days", "hours", "minutes", "seconds").toObject();
         var timeToString = "";
         if (timeTo.days) timeToString += `${timeTo.days} days `;
         if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
@@ -765,7 +765,7 @@ function nextEvent(message, calendarId, dayMap) {
       }
     }
     // run if message not sent
-    message.channel.send('No upcoming events within date range')
+    message.channel.send("No upcoming events within date range");
   }).catch((err) => {
     helpers.log(err);
   });
@@ -781,18 +781,18 @@ function nextEvent(message, calendarId, dayMap) {
 function deleteEvent(message, args, calendarId, dayMap) {
   if (!args[0]) {
     return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
-    .then((m) => {
-      m.delete({ timeout: 5000 });
-    });
+      .then((m) => {
+        m.delete({ timeout: 5000 });
+      });
   }
-  const text = args.join(" ") // join
+  const text = args.join(" "); // join
   listSingleEventsWithinDateRange(message, calendarId, dayMap).then((resp) => {
     for (let i = 0; i < resp.length; i++) {
-      const curEvent = resp[i]
+      const curEvent = resp[i];
       if (curEvent.summary) {
         if (text.toUpperCase().trim() == curEvent.summary.toUpperCase().trim()) {
           let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
-          message.channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`)
+          message.channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`);
           helpers.yesThenCollector(message).then(() => { // collect yes
             deleteEventById(curEvent.id, calendarId, dayMap, message).then(() => {
               message.channel.send(`Event **${curEvent.summary}** deleted`).then((res) => {
@@ -807,11 +807,13 @@ function deleteEvent(message, args, calendarId, dayMap) {
       }
     }
     return message.channel.send("Couldn't find event with that name - make sure you use exactly what the event is named!").then((res) => {
-      res.delete({ timeout: 5000 })});
+      res.delete({ timeout: 5000 });
+    });
   }).catch((err) => {
     helpers.log(err); //FIX THIS
     return message.channel.send("There was an error finding this event").then((res) => {
-      res.delete({ timeout: 5000 })});
+      res.delete({ timeout: 5000 });
+    });
   });
 }
 
@@ -823,7 +825,7 @@ function deleteEvent(message, args, calendarId, dayMap) {
  * @param {bool} human - if initiated by human
  */
 function calendarUpdater(message, calendarId, dayMap, human) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   try {
     dayMap = createDayMap(guildid);
     setTimeout(function func() {
@@ -834,7 +836,7 @@ function calendarUpdater(message, calendarId, dayMap, human) {
     }, 4000);
   } catch (err) {
     helpers.log(`error in autoupdater in guild: ${guildid} : ${err}`);
-    killUpdateTimer(guildid)
+    killUpdateTimer(guildid);
   }
 }
 
@@ -844,8 +846,8 @@ function calendarUpdater(message, calendarId, dayMap, human) {
  */
 function displayStats(message) {
   bot.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
-    const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`
-    const totalMem = (os.totalmem()>1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")
+    const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
+    const totalMem = (os.totalmem()>1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB");
     let embed = new bot.discord.MessageEmbed()
       .setColor("RED")
       .setTitle(`Niles Bot ${settings.secrets.current_version}`)
@@ -858,9 +860,7 @@ function displayStats(message) {
       .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
       .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
       .setFooter("Created by the Niles Bot Team");
-    message.channel.send({
-      embed
-    })
+    message.channel.send({ embed });
   }).catch((err) => {
     helpers.log(err);
   });
@@ -877,7 +877,7 @@ function calName(message, args) {
   if (!newCalName) { // no name passed inno
     return message.channel.send(`You are currently using \`${guildSettings.calendarName}\` as the calendar name. To change the name use \`${guildSettings.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
   } else {
-    newCalName = args.join(" ") // join
+    newCalName = args.join(" "); // join
   }
   message.channel.send(`Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`);
   helpers.yesThenCollector(message).then(() => {
@@ -920,7 +920,7 @@ function delayGetEvents(message, calendarId, dayMap) {
  * @param {Snowflake} message 
  */
 function run(message) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   let calendarID = guildSettings.calendarID;
   let dayMap = createDayMap(guildid);
@@ -929,7 +929,7 @@ function run(message) {
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
   // check if author is admin
-  const sentByAdmin = (message.author.id === settings.secrets.super_admin || settings.secrets.other_admin.includes(authorId))
+  const sentByAdmin = (message.author.id === settings.secrets.super_admin || settings.secrets.other_admin.includes(message.author.id));
   // start commands
   if (["ping"].includes(cmd)) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
@@ -941,8 +941,8 @@ function run(message) {
     const inviteEmbed = {
       color: 0xFFFFF,
       description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`
-    }
-    message.channel.send({ embed: inviteEmbed })
+    };
+    message.channel.send({ embed: inviteEmbed });
   } else if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd)) {
     try {
       init.run(message);
@@ -950,7 +950,7 @@ function run(message) {
       helpers.log(`error trying to run init message catcher in guild: ${guildid} : ${err}`);
     }
   } else if (["init"].includes(cmd)) {
-    message.channel.send("Resetting Niles to default")
+    message.channel.send("Resetting Niles to default");
     guilds.recreateGuild(message.guild);
   } else if (["clean", "purge"].includes(cmd)) {
     deleteMessages(message, args);
@@ -960,10 +960,10 @@ function run(message) {
       postCalendar(message, dayMap);
     }, 2000);
   } else if (["update", "sync"].includes(cmd)) {
-    calendarUpdater(message, calendarId, dayMap, true);
+    calendarUpdater(message, guildSettings.calendarId, dayMap, true);
   } else if (["create", "scrim"].includes(cmd)) {
     quickAddEvent(message, args, calendarID).then(() => {
-      calendarUpdater(message, calendarId, dayMap, true);
+      calendarUpdater(message, guildSettings.calendarId, dayMap, true);
     }).catch((err) => {
       helpers.log(`error creating event in guild: ${guildid} : ${err}`);
     });
@@ -974,7 +974,7 @@ function run(message) {
   } else if (["get"].includes(cmd)) {
     getEvents(message, calendarID, dayMap);
   } else if (["stop"].includes(cmd)) {
-    killUpdateTimer(guildId);
+    killUpdateTimer(guildid);
   } else if (["delete"].includes(cmd)) {
     deleteEvent(message, args, calendarID, dayMap);
   } else if (["next"].includes(cmd)) {

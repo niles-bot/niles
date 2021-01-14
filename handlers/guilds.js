@@ -50,7 +50,7 @@ function deleteGuild(guild) {
   helpers.removeGuildFromDatabase(guild.id);
   commands.deleteUpdater(guild.id);
   helpers.log(`Guild ${guild.id} has been deleted`);
-};
+}
 
 /**
  * Delete and recreate guild settings
