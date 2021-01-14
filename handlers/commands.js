@@ -210,7 +210,7 @@ function getEvents(message, calendarID, dayMap) {
         return helpers.log(`function getEvents error in guild: ${guildid} : 401 invalid credentials`);
       }
       message.channel.send("update timer has been killed.");
-      killUpdateTimer(guildid)
+      killUpdateTimer(guildid);
     });
   } catch (err) {
     message.channel.send(err.code);
@@ -386,7 +386,7 @@ function generateCalendar(message, dayMap) {
   embed.setTimestamp(new Date());
   // set description or fields
   if (isEmptyCalendar(guildid, dayMap)) {
-    embed.setDescription('```No Upcoming Events```');
+    embed.setDescription("```No Upcoming Events```");
   } else if (guildSettings.style === "code") {
     embed.setDescription(generateCalendarCodeblock(guildid, dayMap));
     // character check
@@ -410,8 +410,12 @@ function generateCalendar(message, dayMap) {
   return p.promise;
 }
 
+/**
+ * Start update timer for guild mentioned
+ * @param {Snowflake} message - Initiating Message
+ */
 function startUpdateTimer(message) {
-  const guildid = message.guild.id
+  const guildid = message.guild.id;
   if (!timerCount[guildid]) {
     timerCount[guildid] = 0;
   }
@@ -436,13 +440,18 @@ function startUpdateTimer(message) {
       }, settings.secrets.calendar_update_interval);
     } catch (err) {
       helpers.log(`error starting the autoupdater ${err}`);
-      killUpdateTimer(guildid)
+      killUpdateTimer(guildid);
     }
   } else {
     return helpers.log(`timer not started in guild: ${guildid}`);
   }
 }
 
+/**
+ * Post calendar in message channel
+ * @param {Snowflake} message - Initiating message
+ * @param {daymap} dayMap - daymap of events to post 
+ */
 function postCalendar(message, dayMap) {
   const guildid = message.guild.id
   try {
@@ -571,6 +580,13 @@ function quickAddEvent(message, args, calendarId) {
   return p.promise;
 }
 
+/**
+ * handle binary display options
+ * @param {Object} guildSettings - guild settings 
+ * @param {*} setting - setting to change
+ * @param {*} value - value to change to
+ * @param {*} message - callback message
+ */
 function displayOptionHelper(guildSettings, setting, value, message) {
   const optionName = {
     helpmenu: "calendar help menu",
@@ -588,6 +604,11 @@ function displayOptionHelper(guildSettings, setting, value, message) {
   return guildSettings
 }
 
+/**
+ * Change Display Options
+ * @param {Snowflake} message
+ * @param {[String]} args - args passed in
+ */
 function displayOptions(message, args) {
   const guildid = message.guild.id
   const dispCmd = args[0];
@@ -606,28 +627,21 @@ function displayOptions(message, args) {
       message.channel.send("Please only use 12 or 24 for the clock display options");
     }
   } else if (dispCmd === "trim") {
-    if (dispOption !== null) {
+    if (dispOption) {
       let size = parseInt(dispOption);
-      if(size.isNaN){
-        size = 0;
-      }
-      guildSettings.trim = size;
+      guildSettings.trim = (isNaN(size) ? 0 : size) // set to 0 if invalid, otherwise take number
       message.channel.send(`Set trimming of event titles to ${size} (0 = off)`);
     } else  {
-      message.channel.send("Please provide a number to trim event titles. (0 = don't trim!)");
+      message.channel.send("Please provide a number to trim event titles. (0 = off)");
     }
   } else if (dispCmd === "days") {
-    if (dispOption !== null) {
+    if (dispOption) {
       let size = parseInt(dispOption);
-      if(size.isNaN){
-        size = 7;
-      }
-      // discord field limit is 25
-      if(size > 25){
-        size = 25;
-      }
-      guildSettings.days = size;
-      message.channel.send(`Changed days to display to: ${size} (you may have to use \`!displayoptions emptydays 0\`)`);
+      guildSettings.days = 
+        isNaN(size) ? 7 // if not a number - default to 7
+        : size > 25 ? 25 // discord field limit is 25
+        : size // otherwise defualt to size
+      message.channel.send(`Changed days to display to: ${guildSettings.days} (you may have to use \`!displayoptions emptydays 0\`)`);
     } else {
       message.channel.send("Please provide a number of days to display. (7 = default, 25 = max)");
     }
@@ -668,6 +682,13 @@ function displayOptions(message, args) {
   helpers.writeGuildSpecific(guildid, guildSettings, "settings");
 }
 
+/**
+ * Delete specific event by ID
+ * @param {String} eventId - ID of event to delete
+ * @param {String} calendarId - ID of calendar to delete event form
+ * @param {daymap} dayMap - daymap to fetch events from 
+ * @param {Snowflake} message - message to update calendar according to 
+ */
 function deleteEventById(eventId, calendarId, dayMap, message) {
   let params = {
     sendNotifications: true
@@ -682,6 +703,12 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
   });
 }
 
+/**
+ * List events within date range
+ * @param {Snowflake} message - Initiating message
+ * @param {*} calendarId - ID of calendar to fetch from
+ * @param {*} dayMap - daymap and number of days to fetch from
+ */
 function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
 	let eventsArray = [];
   let tz = helpers.getValidTz(message.guild.id);
@@ -713,6 +740,12 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
 		});
 }
 
+/**
+ * Displays the next upcoming event in the calendar file
+ * @param {Snowflake} message - Initiating messages
+ * @param {String} calendarId - ID of calendar to fetch from
+ * @param {daymap} dayMap - daymap and number of days to fetch from
+ */
 function nextEvent(message, calendarId, dayMap) {
   const tz = helpers.getValidTz(message.guild.id);
   const now = DateTime.local().setZone(tz);
@@ -738,54 +771,36 @@ function nextEvent(message, calendarId, dayMap) {
   });
 }
 
+/**
+ * Delete event on daymap with specific name
+ * @param {Snowflake} message - Initiating Message
+ * @param {[String]} args - command arguments
+ * @param {String} calendarId - ID of calendar to pull events from
+ * @param {daymap} dayMap - daymap and number of days to fetch from
+ */
 function deleteEvent(message, args, calendarId, dayMap) {
-  let deleteMessages = [];
   if (!args[0]) {
     return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
-      .then((m) => {
-        m.delete({ timeout: 5000 });
-      });
+    .then((m) => {
+      m.delete({ timeout: 5000 });
+    });
   }
   const text = args.join(" ") // join
   listSingleEventsWithinDateRange(message, calendarId, dayMap).then((resp) => {
     for (let i = 0; i < resp.length; i++) {
-      if (resp[i].summary) {
-        if (text.toUpperCase().trim() == resp[i].summary.toUpperCase().trim()) {
-          let promptDate;
-          if (resp[i].start.dateTime) {promptDate=resp[i].start.dateTime;} else {promptDate=resp[i].start.date;}
-          message.channel.send(`Are you sure you want to delete the event **${resp[i].summary}** on ${promptDate}? **(y/n)**`)
-            .then((res) => {
-              res.delete({ timeout: 10000 });
+      const curEvent = resp[i]
+      if (curEvent.summary) {
+        if (text.toUpperCase().trim() == curEvent.summary.toUpperCase().trim()) {
+          let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
+          message.channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`)
+          helpers.yesThenCollector(message).then(() => { // collect yes
+            deleteEventById(curEvent.id, calendarId, dayMap, message).then(() => {
+              message.channel.send(`Event **${curEvent.summary}** deleted`).then((res) => {
+                res.delete({ timeout: 10000 });
+              });
+            }).catch((err) => {
+              helpers.log(err);
             });
-          const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
-            time: 10000
-          });
-          collector.on("collect", (m) => {
-            deleteMessages.push(m.id);
-            if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-              deleteEventById(resp[i].id, calendarId, dayMap, message).then(() => {
-                message.channel.send(`Event **${resp[i].summary}** deleted`).then((res) => {
-                  res.delete({ timeout: 10000 });
-                });
-              });
-            } else {
-              message.channel.send("Okay, I won't do that").then((res) => {
-                res.delete({ timeout: 5000 });
-              });
-            }
-            for (let k = 0; k < deleteMessages.length; k++) {
-              message.channel.messages.fetch(deleteMessages[k]).then((m) => {
-                m.delete({ timeout: 5000 });
-              });
-            }
-            return collector.stop();
-          });
-          collector.on("end", (collected, reason) => {
-            if (reason === "time") {
-              message.channel.send("command response timeout").then((res) => {
-                res.delete({ timeout: 5000 });
-              });
-            }
           });
           return;
         }
@@ -823,8 +838,14 @@ function calendarUpdater(message, calendarId, dayMap, human) {
   }
 }
 
+/**
+ * Display current bot stats
+ * @param {Snowflake} message 
+ */
 function displayStats(message) {
   bot.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
+    const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`
+    const totalMem = (os.totalmem()>1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")
     let embed = new bot.discord.MessageEmbed()
       .setColor("RED")
       .setTitle(`Niles Bot ${settings.secrets.current_version}`)
@@ -832,11 +853,10 @@ function displayStats(message) {
       .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
       .addField("Uptime", Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"), true)
       .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
-      .addField("RAM Usage", `${(process.memoryUsage().rss / 1048576).toFixed()}MB/${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB")}
-        (${(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2)}%)`, true)
-      .addField("System Info", `${process.platform} (${process.arch})\n${(os.totalmem() > 1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed(2) + " MB")}`, true)
+      .addField("RAM Usage", `${usedMem}/${totalMem}`, true)
+      .addField("System Info", `${process.platform} (${process.arch})\n${totalMem}`, true)
       .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
-      .addField("Links", "[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=" + bot.client.user.id + ") | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)", true)
+      .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
       .setFooter("Created by the Niles Bot Team");
     message.channel.send({
       embed
@@ -869,6 +889,11 @@ function calName(message, args) {
   });
 }
 
+/**
+ * Updater Deleter
+ * safely deletes timer count and removes from autoupdater
+ * @param {String} guildid - ID of guild to delete updates for
+ */
 exports.deleteUpdater = function(guildid) {
   clearInterval(autoUpdater[guildid]);
   try {
@@ -910,77 +935,58 @@ function run(message) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
       helpers.log(err);
     });
-  }
-  if (["help"].includes(cmd)) {
+  } else if (["help"].includes(cmd)) {
     message.channel.send(strings.HELP_MESSAGE);
-  }
-  if (["invite"].includes(cmd)) {
-    message.channel.send({
-      embed: new bot.discord.MessageEmbed()
-        .setColor("#FFFFF")
-        .setDescription(`Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`)
-    }).catch((err) => {
-      helpers.log(err);
-    });
-  }
-  if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd)) {
+  } else if (["invite"].includes(cmd)) {
+    const inviteEmbed = {
+      color: 0xFFFFF,
+      description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`
+    }
+    message.channel.send({ embed: inviteEmbed })
+  } else if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd)) {
     try {
       init.run(message);
     } catch (err) {
       helpers.log(`error trying to run init message catcher in guild: ${guildid} : ${err}`);
     }
-  }
-  if (["init"].includes(cmd)) {
+  } else if (["init"].includes(cmd)) {
     message.channel.send("Resetting Niles to default")
     guilds.recreateGuild(message.guild);
-  }
-  if (["clean", "purge"].includes(cmd)) {
+  } else if (["clean", "purge"].includes(cmd)) {
     deleteMessages(message, args);
-  }
-  if (["display"].includes(cmd)) {
+  } else if (["display"].includes(cmd)) {
     delayGetEvents(message, calendarID, dayMap);
     setTimeout(function func() {
       postCalendar(message, dayMap);
     }, 2000);
-  }
-  if (["update", "sync"].includes(cmd)) {
+  } else if (["update", "sync"].includes(cmd)) {
     calendarUpdater(message, calendarId, dayMap, true);
-  }
-  if (["create", "scrim"].includes(cmd)) {
+  } else if (["create", "scrim"].includes(cmd)) {
     quickAddEvent(message, args, calendarID).then(() => {
       calendarUpdater(message, calendarId, dayMap, true);
     }).catch((err) => {
       helpers.log(`error creating event in guild: ${guildid} : ${err}`);
     });
-  }
-  if (["displayoptions"].includes(cmd)) {
+  } else if (["displayoptions"].includes(cmd)) {
     displayOptions(message, args);
-  }
-  if (["stats", "info"].includes(cmd)) {
+  } else if (["stats", "info"].includes(cmd)) {
     displayStats(message);
-  }
-  if (["get"].includes(cmd)) {
+  } else if (["get"].includes(cmd)) {
     getEvents(message, calendarID, dayMap);
-  }
-  if (["stop"].includes(cmd)) {
+  } else if (["stop"].includes(cmd)) {
     killUpdateTimer(guildId);
-  }
-  if (["delete"].includes(cmd)) {
+  } else if (["delete"].includes(cmd)) {
     deleteEvent(message, args, calendarID, dayMap);
-  }
-  if (["next"].includes(cmd)) {
+  } else if (["next"].includes(cmd)) {
     nextEvent(message, calendarID, dayMap);
-  }
-  if (["count"].includes(cmd)) {
+  } else if (["count"].includes(cmd)) {
     const theCount = (timerCount[guildid] ? 0 : timerCount[guildid]);
     message.channel.send(`There are ${theCount} timer threads running in this guild`);
-  }
-  if (["timers"].includes(cmd)) {
+  } else if (["timers"].includes(cmd)) {
     if (sentByAdmin) {
       return message.channel.send(`There are ${Object.keys(timerCount).length} timers running across all guilds right now.`);
     }
-  }
-  if (["reset"].includes(cmd)) {
+  } else if (["reset"].includes(cmd)) {
     if (sentByAdmin) {
       let response = "";
       const shardNo = parseInt(args[0]); // check for valid shard
@@ -993,11 +999,9 @@ function run(message) {
       }
       message.client.send(response);
     }
-  }
-  if (["validate"].includes(cmd)) {
+  } else if (["validate"].includes(cmd)) {
     helpers.validate(message, cal);
-  }
-  if (["calname"].includes(cmd)) {
+  } else if (["calname"].includes(cmd)) {
     calName(message, args);
   }
   message.delete({ timeout: 5000 });

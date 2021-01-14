@@ -9,6 +9,10 @@ let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
 let helpers = require("./handlers/helpers.js");
 
+/**
+ * Add any missing guilds to guilds database
+ * @param {*} availableGuilds 
+ */
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
@@ -19,6 +23,10 @@ function addMissingGuilds(availableGuilds) {
   });
 }
 
+/**
+ * Check if command is on whitelist
+ * @param {*} message 
+ */
 function isValidCmd(message) {
   const validCmds = ["help", "clean", "purge", "init", "update",
     "sync", "display", "create", "scrim", "delete",
@@ -89,20 +97,17 @@ client.on("message", (message) => {
       return;
     }
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
+    if (!helpers.checkRole(message)) { // if no permissions, warn
+      return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
+    }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
       try {
-        if (!helpers.checkRole(message)) {
-          return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
-        }
         init.run(message);
       } catch (err) {
         helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
         return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");
       }
     } else {
-      if (!helpers.checkRole(message)) {
-        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
-      }
       commands.run(message);
     }
   } catch (err) {
@@ -134,3 +139,6 @@ process.on("unhandledRejection", (err) => {
     process.exit();
   }
 });
+
+// exports
+module.exports.isValidCmd = isValidCmd

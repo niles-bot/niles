@@ -38,8 +38,12 @@ function createGuild(guild) {
     helpers.amendGuildDatabase({ [guild.id]: guildData });
     helpers.log(`Guild ${guild.id} has been created`);
   }
-};
+}
 
+/**
+ * Delete guild settings
+ * @param {Snowflake} guild - guild to delete configuration for
+ */
 function deleteGuild(guild) {
   let guildPath = path.join(__dirname, "..", "stores", guild.id);
   helpers.deleteFolderRecursive(guildPath);
@@ -48,6 +52,10 @@ function deleteGuild(guild) {
   helpers.log(`Guild ${guild.id} has been deleted`);
 };
 
+/**
+ * Delete and recreate guild settings
+ * @param {Snowflake} guild 
+ */
 function recreateGuild(guild) {
   deleteGuild(guild);
   createGuild(guild);
