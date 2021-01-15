@@ -208,13 +208,15 @@ function getEvents(message, calendarID, dayMap) {
         return killUpdateTimer(guildid);
       } else if (err.message.includes("Invalid Credentials")) { //Catching periodic google rejections;
         return helpers.log(`function getEvents error in guild: ${guildid} : 401 invalid credentials`);
+      } else {
+        helpers.log(`Error in function getEvents in guild: ${guildid} : ${err}`);
       }
       message.channel.send("update timer has been killed.");
       killUpdateTimer(guildid);
     });
   } catch (err) {
     message.channel.send(err.code);
-    return helpers.log(`Error in function getEvents in guild: ${message.guild.id} : ${err}`);
+    return helpers.log(`Error in function getEvents in guild: ${guildid} : ${err}`);
   }
 }
 
@@ -589,17 +591,42 @@ function quickAddEvent(message, args, calendarId) {
  */
 function displayOptionHelper(guildSettings, setting, value, message) {
   const optionName = {
-    helpmenu: "calendar help menu",
+    help: "calendar help menu",
     pin: "calendar pinning",
     tzDisplay: "calendar timezone display",
     emptydays: "calendar empty days",
     showpast: "display of today's past events"
   };
   if (value) {
-    message.channel.send(value ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
+    message.channel.send(value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
     guildSettings[setting] = value; // set value
   } else {
-    message.channel.send(`Please only use 0 or 1 for the *${optionName[setting]}* setting, (off or on)`);
+    message.channel.send(`Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on)`);
+  }
+  return guildSettings;
+}
+
+/**
+ * Handle embed display options
+ * @param {Object} guildSettings - guild settings 
+ * @param {*} setting - setting to change
+ * @param {*} value - value to change to
+ * @param {*} message - callback message
+ */
+function embedStyleHelper(guildSettings, setting, value, message) {
+  // current option
+  const curStyle = guildSettings.style;
+  const optionName = {
+    inline: "inline events",
+    description: "display of descriptions"
+  };
+  if (curStyle === "code") { // if set to code, do not allow
+    return message.channel.send("This displayoption is only compatible with the `embed` display style");
+  } else if (value) { // if set to embed, set
+    message.channel.send(value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
+    guildSettings[setting] = value; // set value
+  } else { // if no response, prompt with customization
+    message.channel.send(`Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on) - see nilesbot.com/customisation`);
   }
   return guildSettings;
 }
@@ -616,6 +643,9 @@ function displayOptions(message, args) {
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   const binaryDisplayOptions = [
     "help", "pin", "tzdisplay", "emptydays", "showpast"
+  ];
+  const embedStyleOptions = [
+    "inline", "description"
   ];
   if (binaryDisplayOptions.includes(dispCmd)) {
     guildSettings = displayOptionHelper(guildSettings, dispCmd, dispOption, message);
@@ -647,7 +677,6 @@ function displayOptions(message, args) {
     }
   } else if (dispCmd === "style") {
     if (dispOption === "code") {
-      guildSettings.style = "code";
       // revert dependent options
       guildSettings.inline = "0";
       guildSettings.description = "0";
@@ -658,24 +687,8 @@ function displayOptions(message, args) {
     } else {
       message.channel.send("Please only use code or embed for the style choice. (see nilesbot.com/customisation)");
     }
-  } else if (dispCmd === "inline") {
-    if (guildSettings.style === "code") {
-      message.channel.send("This displayoption is only compatible with the `embed` display style");
-    } else if (dispOption) {
-      guildSettings.inline = dispOption;
-      message.channel.send(guildSettings.inline === "1" ? "Set inline events to 1 (on)" : "Set inline events to 0 (off)");
-    } else {
-      message.channel.send("Please only use 0 or 1 for inline events. (off or on) - see nilesbot.com/customisation");
-    }
-  } else if (dispCmd === "description") {
-    if (guildSettings.style === "code") {
-      message.channel.send("This displayoption is only compatible with the `embed` display style");
-    } else if (dispOption) {
-      guildSettings.description = dispOption;
-      message.channel.send(guildSettings.description === "1" ? "Set display of descriptions to 1 (on)" : "Set display of descriptions to 0 (off)");
-    } else {
-      message.channel.send("Please only use 0 or 1 for the display of descriptions (off or on)");
-    }
+  } else if (embedStyleOptions.includes(dispCmd)) {
+    guildSettings = embedStyleHelper(guildSettings, dispCmd, dispOption, message);
   } else {
     message.channel.send(strings.DISPLAYOPTIONS_USAGE);
   }
@@ -960,10 +973,10 @@ function run(message) {
       postCalendar(message, dayMap);
     }, 2000);
   } else if (["update", "sync"].includes(cmd)) {
-    calendarUpdater(message, guildSettings.calendarId, dayMap, true);
+    calendarUpdater(message, calendarID, dayMap, true);
   } else if (["create", "scrim"].includes(cmd)) {
     quickAddEvent(message, args, calendarID).then(() => {
-      calendarUpdater(message, guildSettings.calendarId, dayMap, true);
+      calendarUpdater(message, calendarID, dayMap, true);
     }).catch((err) => {
       helpers.log(`error creating event in guild: ${guildid} : ${err}`);
     });
@@ -980,11 +993,11 @@ function run(message) {
   } else if (["next"].includes(cmd)) {
     nextEvent(message, calendarID, dayMap);
   } else if (["count"].includes(cmd)) {
-    const theCount = (timerCount[guildid] ? 0 : timerCount[guildid]);
+    const theCount = (!timerCount[guildid] ? 0 : timerCount[guildid]);
     message.channel.send(`There are ${theCount} timer threads running in this guild`);
   } else if (["timers"].includes(cmd)) {
     if (sentByAdmin) {
-      return message.channel.send(`There are ${Object.keys(timerCount).length} timers running across all guilds right now.`);
+      return message.channel.send(`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);
     }
   } else if (["reset"].includes(cmd)) {
     if (sentByAdmin) {
