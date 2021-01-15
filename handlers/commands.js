@@ -585,11 +585,12 @@ function quickAddEvent(message, args, calendarId) {
 /**
  * handle binary display options
  * @param {Object} guildSettings - guild settings 
- * @param {*} setting - setting to change
- * @param {*} value - value to change to
- * @param {*} message - callback message
+ * @param {[String]} args - Arguments passed in
+ * @param {Snowflake} message - callback message
  */
-function displayOptionHelper(guildSettings, setting, value, message) {
+function displayOptionHelper(guildSettings, args, message) {
+  const setting = args[0];
+  const value = args[1];
   const optionName = {
     help: "calendar help menu",
     pin: "calendar pinning",
@@ -609,11 +610,12 @@ function displayOptionHelper(guildSettings, setting, value, message) {
 /**
  * Handle embed display options
  * @param {Object} guildSettings - guild settings 
- * @param {*} setting - setting to change
- * @param {*} value - value to change to
- * @param {*} message - callback message
+ * @param {[String]} args - Arguments passed in
+ * @param {Snowflake} message - callback message
  */
-function embedStyleHelper(guildSettings, setting, value, message) {
+function embedStyleHelper(guildSettings, args, message) {
+  const setting = args[0];
+  const value = args[1];
   // current option
   const curStyle = guildSettings.style;
   const optionName = {
