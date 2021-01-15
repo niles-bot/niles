@@ -16,7 +16,9 @@
     "promise-defer": "^1.0.0",
     "string-strip-html": "^7.0.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^7.17.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/niles-bot/niles/"

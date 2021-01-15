@@ -4,7 +4,12 @@ const guilds = require("./guilds.js");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
 
-//functions
+/**
+ * Write Settings
+ * @param {Snowflake} message - Initiating Message
+ * @param {String} value - Value to write
+ * @param {String} setting - Setting name to write to
+ */
 function writeSetting(message, value, setting) {
   let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
@@ -133,45 +138,32 @@ function setRoles(message, args, guildSettings) {
   }
 }
 
+/**
+ * Runs commands
+ * @param {Snowlfkae} message - Initiating Message
+ */
 exports.run = function(message) {
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-  const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+  const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
-  // Function Mapping
-  let setup = () => message.channel.send(strings.SETUP_MESSAGE);
-  let id = () => logId(message, args, guildSettings);
-  let tz = () => logTz(message, args, guildSettings);
-  let init = () => guilds.create(message.guild);
-  let prefix = () => setPrefix(message, args, guildSettings);
-  let admin = () => setRoles(message, args, guildSettings);
-  let restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
-  let help = () => message.channel.send(strings.SETUP_HELP);
-
-  let cmdFns = {
-    setup,
-    id,
-    tz,
-    init,
-    prefix,
-    admin,
-    help,
-    "start": setup,
-    "display": restricted,
-    "clean": restricted,
-    "update": restricted,
-    "sync": restricted,
-    "invite": restricted,
-    "stats": restricted,
-    "create": restricted,
-    "scrim": restricted,
-    "delete": restricted,
-    "info": restricted
-  };
-
-  let cmdFn = cmdFns[cmd];
-  if (cmdFn) {
-    cmdFn();
+  // command parsers
+  if (["setup"].includes(cmd)) {
+    message.channel.send(strings.SETUP_MESSAGE);
+  } else if (["id"].includes(cmd)) {
+    logId(message, args, guildSettings);
+  } else if (["tz"].includes(cmd)) {
+    logTz(message, args, guildSettings);
+  } else if (["init"].includes(cmd)) {
+    guilds.recreateGuild(message.guild);
+  } else if (["prefix"].includes(cmd)) {
+    setPrefix(message, args, guildSettings);
+  } else if (["admin"].includes(cmd)) {
+    setRoles(message, args, guildSettings);
+  } else if (["help"].includes(cmd)) {
+    message.channel.send(strings.SETUP_HELP);
+  } else if (bot.isValidCmd(message)) {
+    message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
   }
 };

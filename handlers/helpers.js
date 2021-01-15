@@ -3,6 +3,9 @@ const path = require("path");
 const defer = require("promise-defer");
 const stripHtml = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
+let bot = require("../bot.js");
+
+// event types
 const eventType = {
   NOMATCH: "nm",
   SINGLE: "se",
@@ -10,6 +13,7 @@ const eventType = {
   MULTIMID: "mm",
   MULTYEND: "me"
 };
+// default guild settings
 const defaultSettings = {
   "prefix": "!",
   "calendarID": "",
@@ -29,11 +33,13 @@ const defaultSettings = {
   "description": "0"
 };
 
-let bot = require("../bot.js");
-
+/**
+ * Get Guild Settings
+ * @param {String} id - ID of guild to fetch settings for
+ * @param {String} file - file to fetch - calendar / settings
+ */
 function getGuildSettings(id, file) {
-  // select file
-  let filePath;
+  let filePath; // select file
   if (file === "calendar") {
     filePath = path.join(__dirname, "..", "stores", id, "calendar.json");
     return readFile(filePath);
@@ -49,10 +55,19 @@ function getSettings() {
   return require("../settings.js");
 }
 
+/**
+ * Format log messages with DateTime string
+ * [Sun, 10 Sep 2001 00:00:00 GMT]
+ * @param {Snowflake} message 
+ */
 function formatLogMessage(message) {
   return `[${new Date().toUTCString()}] ${message}`;
 }
 
+/**
+ * Log Messages to discord channel and console
+ * @param  {...any} logItems - items to log
+ */
 function log(...logItems) {
   const logMessage = logItems.join(" ");
   const tripleGrave = "```";
@@ -74,11 +89,15 @@ function log(...logItems) {
       console.log('${logString}'); // send to console only once to avoid multiple lines
     }
   `)
-  .catch((err) => {
-    console.log(err);
-  });
+    .catch((err) => {
+      console.log(err);
+    });
 }
 
+/**
+ * Try and read file
+ * @param {String} path - path of file to read
+ */
 function readFile(path) {
   try {
     return JSON.parse(fs.readFileSync(path, "utf8"));
@@ -91,11 +110,17 @@ function readFile(path) {
 const guildDatabasePath = path.join(__dirname, "..", "stores", "guilddatabase.json");
 let guildDatabase;
 
+/**
+ * Fetch current guilds database if already loaded or read from file
+ */
 function getGuildDatabase() {
   guildDatabase = guildDatabase || readFile(guildDatabasePath);
   return guildDatabase;
 }
 
+/**
+ * Write changes to guilds database
+ */
 function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
@@ -105,16 +130,28 @@ function writeGuildDatabase() {
   });
 }
 
+/**
+ * Add values to guilds database
+ * @param {Object} partialGuildDb - Objects to add to guilds database
+ */
 function amendGuildDatabase(partialGuildDb) {
   Object.assign(guildDatabase, partialGuildDb);
   writeGuildDatabase();
 }
 
+/**
+ * Remove guild from guilds database
+ * @param {String} guildId 
+ */
 function removeGuildFromDatabase(guildId) {
   delete guildDatabase[guildId];
   writeGuildDatabase();
 }
 
+/**
+ * Delete folder recursively
+ * @param {String} path 
+ */
 function deleteFolderRecursive(path) {
   if (fs.existsSync(path)) {
     fs.readdirSync(path).forEach(function(file) {
@@ -129,6 +166,12 @@ function deleteFolderRecursive(path) {
   }
 }
 
+/**
+ * Writes guild-specific setting
+ * @param {String} guildid - ID of guild to write setting to 
+ * @param {Object} json - json array of values to write
+ * @param {String} file - file name to write to - calendar/settings 
+ */
 function writeGuildSpecific(guildid, json, file) {
   let fullPath = path.join(__dirname, "..", "stores", guildid, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
@@ -177,6 +220,10 @@ function checkRole(message) {
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
 
+/**
+ * Collects rsponse for a message
+ * @param {Snowflake} message - Initiating Message
+ */
 function yesThenCollector(message) {
   let p = defer();
   const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
@@ -191,7 +238,7 @@ function yesThenCollector(message) {
     }
     collector.stop();
   });
-  collector.on("end", (collected, reason) => {
+  collector.on("end", (reason) => {
     if (reason === "time") {
       return message.channel.send("Command response timeout");
     }
@@ -336,31 +383,32 @@ function permissionCheck(message) {
 function validate(message, cal) {
   let guildSettings = getGuildSettings(message.guild.id, "settings");
   const nowTime = DateTime.local();
-    let params = {
-      timeMin: nowTime.toISO(),
-      singleEvents: true,
-      orderBy: "startTime",
-      maxResults: 1
-    };
-    let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
-      const event = events[0];
-      message.channel.send(`**Next Event:**
-        **Summary:** \`${event.summary}\`
-        **Start:** \`${event.start.dateTime || event.start.date }\`
-        **Calendar ID:** \`${event.organizer.email}\`
-      `);
-      return true;
-    }).catch((err) => {
-      message.channel.send(`Error Fetching Calendar: ${err}`);
-    });
-    // basic check
-    message.channel.send(`**Checks**:
-      **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
-      **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
-      **Calendar Test:** ${passFail(calTest)}
-      **Missing Permissions:** ${permissionCheck(message)}
-      **Guild ID:** \`${message.guild.id}\`
+  let params = {
+    timeMin: nowTime.toISO(),
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 1
+  };
+  let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
+    const event = events[0];
+    message.channel.send(`**Next Event:**
+      **Summary:** \`${event.summary}\`
+      **Start:** \`${event.start.dateTime || event.start.date }\`
+      **Calendar ID:** \`${event.organizer.email}\`
     `);
+    return true;
+  }).catch((err) => {
+    message.channel.send(`Error Fetching Calendar: ${err}`);
+  });
+  // basic check
+  message.channel.send(`**Checks**:
+    **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
+    **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
+    **Calendar Test:** ${passFail(calTest)}
+    **Missing Permissions:** ${permissionCheck(message)}
+    **Guild ID:** \`${message.guild.id}\`
+    **Shard:** ${bot.client.shard.ids}
+  `);
 }
 
 module.exports = {

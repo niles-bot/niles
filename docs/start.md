@@ -35,6 +35,9 @@ Scroll down and under 'Share with specific people', add `niles-291@niles-169605.
 ![gcalexample](../../assets/images/gcal-example-1.gif)
 {: .text-center}
 
+### Warning
+Since Oct 15, 2020, there has been an issue adding Niles to Google Calendar - the only workaround seems to be getting a friend to invite Niles - ***switching accounts locally does not work***
+
 ---
 
 ## Add Google Calendar to your Niles Configuration

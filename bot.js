@@ -2,36 +2,42 @@ let discord = require("discord.js");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-const path = require("path");
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
 let helpers = require("./handlers/helpers.js");
-let checks = require("./handlers/createMissingAttributes.js");
 
+/**
+ * Add any missing guilds to guilds database
+ * @param {*} availableGuilds 
+ */
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildId) => {
     helpers.log("unknown guild found; creating");
-    guilds.create(client.guilds.cache.get(guildId));
+    guilds.createGuild(client.guilds.cache.get(guildId));
   });
 }
 
+/**
+ * Check if command is on whitelist
+ * @param {*} message 
+ */
 function isValidCmd(message) {
   const validCmds = ["help", "clean", "purge", "init", "update",
     "sync", "display", "create", "scrim", "delete",
     "stats", "info", "id", "tz", "invite",
-    "prefix", "admin", "setup", "shard", "count",
+    "prefix", "admin", "setup", "count",
     "ping", "displayoptions", "timers", "reset", "next",
     "validate", "calname"
   ];
   try {
     // repeated command parser
     let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-    const args = message.content.slice(guildSettings.prefix.length).trim().split(' ');
+    const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
     // if mentioned return second object as command, if not - return first object as command
     let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
     cmd = cmd.toLowerCase();
@@ -48,29 +54,29 @@ client.on("ready", () => {
   client.user.setStatus("online");
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
-      .then((results) => {
-        const shardGuilds = [];
-        results.forEach(function (item) { // iterate over shards
-          item.forEach(function (item) { // iterate over servers
-            shardGuilds.push(item.id); // add server id to shardGuilds
-          });
-        })
-        addMissingGuilds(shardGuilds); // start adding missing guilds
-        helpers.log("all shards spawned"); // all shards spawned
-      })
-      .catch((err) => {
-        if (err.name === "Error [SHARDING_IN_PROCESS]") {
-          console.log("spawning shards ..."); // send error to console - still sharding
-        }
+    .then((results) => {
+      const shardGuilds = [];
+      results.forEach(function (item) { // iterate over shards
+        item.forEach(function (item) { // iterate over servers
+          shardGuilds.push(item.id); // add server id to shardGuilds
+        });
       });
+      addMissingGuilds(shardGuilds); // start adding missing guilds
+      helpers.log("all shards spawned"); // all shards spawned
+    })
+    .catch((err) => {
+      if (err.name === "Error [SHARDING_IN_PROCESS]") {
+        console.log("spawning shards ..."); // send error to console - still sharding
+      }
     });
+});
 
 client.on("guildCreate", (guild) => {
-  guilds.create(guild);
+  guilds.createGuild(guild);
 });
 
 client.on("guildDelete", (guild) => {
-  guilds.delete(guild);
+  guilds.deleteGuild(guild);
 });
 
 client.on("message", (message) => {
@@ -90,20 +96,17 @@ client.on("message", (message) => {
       return;
     }
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
+    if (!helpers.checkRole(message)) { // if no permissions, warn
+      return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
+    }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
       try {
-        if (!helpers.checkRole(message)) {
-          return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
-        }
         init.run(message);
       } catch (err) {
         helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
         return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");
       }
     } else {
-      if (!helpers.checkRole(message)) {
-        return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
-      }
       commands.run(message);
     }
   } catch (err) {
@@ -135,3 +138,6 @@ process.on("unhandledRejection", (err) => {
     process.exit();
   }
 });
+
+// exports
+module.exports.isValidCmd = isValidCmd;
