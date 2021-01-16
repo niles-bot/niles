@@ -367,7 +367,7 @@ function permissionCheck(message) {
   const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
   const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
   let missingPermissions = "";
-  minimumPermissions.forEach(function(permission) {
+  minimumPermissions.map((permission) => {
     if (!botPermissions[permission]) {
       missingPermissions += `\`${String(permission)} \``;
     }

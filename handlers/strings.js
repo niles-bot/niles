@@ -64,6 +64,7 @@ const DISPLAYOPTIONS_USAGE =
     !displayoptions style        (code|embed)  use old or new event display style (see nilesbot.com/customisation)
     !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
     !displayoptions description  (0|1)         hide/show event description (only compatible with embed)
+    !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
     \`\`\`
     `;
 
