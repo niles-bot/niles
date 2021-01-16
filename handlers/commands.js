@@ -163,41 +163,39 @@ function getEvents(message, calendarID, dayMap) {
       timeZone: tz
     };
     let matches = [];
-
     cal.Events.list(calendarID, params).then((json) => {
       for (let day = 0; day < dayMap.length; day++) {
         let key = "day" + String(day);
         matches = [];
-
-        for (let i = 0; i < json.length; i++) {
+        json.map((event) => {
           let eStartDate;
           let eEndDate;
           //Handle dateTime-based Events
-          if (json[i].start.dateTime) {
-            eStartDate = DateTime.fromISO(json[i].start.dateTime, {setZone: true});
-            eEndDate = DateTime.fromISO(json[i].end.dateTime, {setZone: true});
+          if (event.start.dateTime) {
+            eStartDate = DateTime.fromISO(event.start.dateTime, {setZone: true});
+            eEndDate = DateTime.fromISO(event.end.dateTime, {setZone: true});
           }
           //Handle All Day Events
-          else if (json[i].start.date) {
-            eStartDate = DateTime.fromISO(json[i].start.date, {zone: tz});
+          else if (event.start.date) {
+            eStartDate = DateTime.fromISO(event.start.date, {zone: tz});
             // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
-            eEndDate = DateTime.fromISO(json[i].end.date, {zone: tz}).minus({days: 1});
+            eEndDate = DateTime.fromISO(event.end.date, {zone: tz}).minus({days: 1});
           }
 
           let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
           if (eType !== eventType.NOMATCH) {
             matches.push({
-              id: json[i].id,
-              summary: json[i].summary,
-              start: json[i].start,
-              end: json[i].end,
-              description: json[i].description,
-              location: json[i].location,
+              id: event.id,
+              summary: event.summary,
+              start: event.start,
+              end: event.end,
+              description: event.description,
+              location: event.location,
               type: eType
             });
           }
           calendar[key] = matches;
-        }
+        });
       }
       let d = new Date();
       calendar.lastUpdate = d;
@@ -274,7 +272,7 @@ function generateCalendarCodeblock(guildid, dayMap) {
     } else {
       sendString += "```\n";
       // Map events for each day
-      for (let m = 0; m < calendar[key].length; m++) {
+      calendar[key].map((event) => {
         let options = {
           showHeaders: false,
           columnSplitter: " | ",
@@ -289,35 +287,34 @@ function generateCalendarCodeblock(guildid, dayMap) {
             }
           }
         };
-        let eventTitle = helpers.trimEventName(calendar[key][m].summary, guildSettings.trim);
-        if (Object.keys(calendar[key][m].start).includes("date")) {
+        let eventTitle = helpers.trimEventName(event.summary, guildSettings.trim);
+        if (Object.keys(event.start).includes("date")) {
           let tempString = {};
           // no need for temp start/fin dates
           tempString["All Day"] = eventTitle;
           sendString += columnify(tempString, options) + "\n";
-        } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
+        } else if (Object.keys(event.start).includes("dateTime")) {
           let tempString = {};
           // keep the - centered depending on format option
           let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
           let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
           let tempStringKey = "";
-          if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(calendar[key][m].start.dateTime, guildid);
+          if(event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
+            tempStartDate = helpers.getStringTime(event.start.dateTime, guildid);
           }
-          if(calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(calendar[key][m].end.dateTime, guildid);
+          if(event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
+            tempFinDate = helpers.getStringTime(event.end.dateTime, guildid);
           }
-          if(calendar[key][m].type === eventType.MULTIMID){
+          if(event.type === eventType.MULTIMID){
             tempStringKey = "All Day";
           }
-          else
-          {
+          else {
             tempStringKey = tempStartDate + " - " + tempFinDate;
           }
           tempString[tempStringKey] = eventTitle;
           sendString += columnify(tempString, options) + "\n";
         }
-      }
+      });
       sendString += "```";
     }
     finalString += sendString;
@@ -349,22 +346,21 @@ function generateCalendarEmbed(guildid, dayMap) {
       tempValue = "\u200b";
     } else {
       // Map events for each day
-      for (let m = 0; m < calendar[key].length; m++) {
-        const curEvent = calendar[key][m];
+      calendar[key].map((event) => {
         let duration = "";
-        if (Object.keys(curEvent.start).includes("date")) {
+        if (Object.keys(event.start).includes("date")) {
           // no need for temp start/fin dates
           duration = "All Day";
-        } else if (Object.keys(curEvent.start).includes("dateTime")) {
+        } else if (Object.keys(event.start).includes("dateTime")) {
           let tempStartDate;
           let tempFinDate;
-          if (curEvent.type === eventType.SINGLE || curEvent.type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(curEvent.start.dateTime, guildid);
+          if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
+            tempStartDate = helpers.getStringTime(event.start.dateTime, guildid);
           }
-          if (curEvent.type === eventType.SINGLE || curEvent.type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(curEvent.end.dateTime, guildid);
+          if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
+            tempFinDate = helpers.getStringTime(event.end.dateTime, guildid);
           }
-          if (curEvent.type === eventType.MULTIMID) {
+          if (event.type === eventType.MULTIMID) {
             duration = "All Day";
           } else {
             duration = tempStartDate + " - " + tempFinDate;
@@ -372,14 +368,14 @@ function generateCalendarEmbed(guildid, dayMap) {
         }
         // construct field object with summary + description
         // add link if there is a location
-        let eventTitle = eventNameCreator(curEvent, guildSettings);
-        let description = helpers.descriptionParser(curEvent.description);
+        let eventTitle = eventNameCreator(event, guildSettings);
+        let description = helpers.descriptionParser(event.description);
         tempValue += `**${duration}** | ${eventTitle}\n`;
         // if we should add description
-        if ((description !== "undefined") && (guildSettings.description === "1")) {
+        if ((description) && (guildSettings.description === "1")) {
           tempValue += `\`${description}\`\n`;
         }
-      }
+      });
     }
     // finalize field object
     fieldObj.value = tempValue;
@@ -762,18 +758,18 @@ function listSingleEventsWithinDateRange(message, calendarId, dayMap) {
   };
   return cal.Events.list(calendarId, params)
     .then((json) => {
-      for (let i = 0; i < json.length; i++) {
+      json.map((calEvent) => {
         let event = {
-          id: json[i].id,
-          summary: json[i].summary,
-          location: json[i].location,
-          start: json[i].start,
-          end: json[i].end,
-          status: json[i].status,
-          description: json[i].description
+          id: calEvent.id,
+          summary: calEvent.summary,
+          location: calEvent.location,
+          start: calEvent.start,
+          end: calEvent.end,
+          status: calEvent.status,
+          description: calEvent.description
         };
         eventsArray.push(event);
-      }
+      });
       return eventsArray;
     }).catch((err) => {
       helpers.log("Error: listSingleEventsWithinDateRange", err.message);
