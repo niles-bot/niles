@@ -192,6 +192,7 @@ function getEvents(message, calendarID, dayMap) {
               start: json[i].start,
               end: json[i].end,
               description: json[i].description,
+              location: json[i].location,
               type: eType
             });
           }
@@ -235,6 +236,21 @@ function isEmptyCalendar(guildid, dayMap) {
     }
   }
   return isEmpty;
+}
+
+/**
+ * Create appropiate description
+ * @param {Object} event - Event Resources from GCal 
+ * @param {Object} guildSettings - guild settings
+ */
+function eventNameCreator(event, guildSettings) {
+  const titleName = helpers.trimEventName(event.summary, guildSettings.trim);
+  let urlPattern = new RegExp("(http|https)://(\\w+:{0,1}\\w*)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%!-/]))?");
+  if (urlPattern.test(event.location) && guildSettings.url === "1") { // if location is url & setting is on
+    return `[${titleName}](${event.location})`;
+  } else {
+    return titleName;
+  }
 }
 
 /**
@@ -334,28 +350,30 @@ function generateCalendarEmbed(guildid, dayMap) {
     } else {
       // Map events for each day
       for (let m = 0; m < calendar[key].length; m++) {
+        const curEvent = calendar[key][m];
         let duration = "";
-        if (Object.keys(calendar[key][m].start).includes("date")) {
+        if (Object.keys(curEvent.start).includes("date")) {
           // no need for temp start/fin dates
           duration = "All Day";
-        } else if (Object.keys(calendar[key][m].start).includes("dateTime")) {
+        } else if (Object.keys(curEvent.start).includes("dateTime")) {
           let tempStartDate;
           let tempFinDate;
-          if (calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(calendar[key][m].start.dateTime, guildid);
+          if (curEvent.type === eventType.SINGLE || curEvent.type === eventType.MULTISTART) {
+            tempStartDate = helpers.getStringTime(curEvent.start.dateTime, guildid);
           }
-          if (calendar[key][m].type === eventType.SINGLE || calendar[key][m].type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(calendar[key][m].end.dateTime, guildid);
+          if (curEvent.type === eventType.SINGLE || curEvent.type === eventType.MULTYEND) {
+            tempFinDate = helpers.getStringTime(curEvent.end.dateTime, guildid);
           }
-          if (calendar[key][m].type === eventType.MULTIMID) {
+          if (curEvent.type === eventType.MULTIMID) {
             duration = "All Day";
           } else {
             duration = tempStartDate + " - " + tempFinDate;
           }
         }
         // construct field object with summary + description
-        let eventTitle = helpers.trimEventName(calendar[key][m].summary, guildSettings.trim);
-        let description = helpers.descriptionParser(calendar[key][m].description);
+        // add link if there is a location
+        let eventTitle = eventNameCreator(curEvent, guildSettings);
+        let description = helpers.descriptionParser(curEvent.description);
         tempValue += `**${duration}** | ${eventTitle}\n`;
         // if we should add description
         if ((description !== "undefined") && (guildSettings.description === "1")) {
@@ -592,7 +610,6 @@ function displayOptionHelper(guildSettings, args, message) {
   const setting = args[0];
   const value = args[1];
   const optionName = {
-    help: "calendar help menu",
     pin: "calendar pinning",
     tzDisplay: "calendar timezone display",
     emptydays: "calendar empty days",
@@ -620,7 +637,8 @@ function embedStyleHelper(guildSettings, args, message) {
   const curStyle = guildSettings.style;
   const optionName = {
     inline: "inline events",
-    description: "display of descriptions"
+    description: "display of descriptions",
+    url: "embedded link"
   };
   if (curStyle === "code") { // if set to code, do not allow
     return message.channel.send("This displayoption is only compatible with the `embed` display style");
@@ -628,7 +646,7 @@ function embedStyleHelper(guildSettings, args, message) {
     message.channel.send(value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
     guildSettings[setting] = value; // set value
   } else { // if no response, prompt with customization
-    message.channel.send(`Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on) - see nilesbot.com/customisation`);
+    message.channel.send(`Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on) - see https://nilesbot.com/customisation`);
   }
   return guildSettings;
 }
@@ -644,13 +662,20 @@ function displayOptions(message, args) {
   const dispOption = args[1];
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   const binaryDisplayOptions = [
-    "help", "pin", "tzdisplay", "emptydays", "showpast"
+    "pin", "tzdisplay", "emptydays", "showpast"
   ];
   const embedStyleOptions = [
-    "inline", "description"
+    "inline", "description", "url"
   ];
   if (binaryDisplayOptions.includes(dispCmd)) {
-    guildSettings = displayOptionHelper(guildSettings, dispCmd, dispOption, message);
+    guildSettings = displayOptionHelper(guildSettings, args, message);
+  } else if (dispCmd === "help") {
+    if (dispOption) {
+      guildSettings.helpmenu = dispOption;
+      message.channel.send(guildSettings.helpmenu === "1" ? "Set calendar help menu on" : "Set calendar help menu off");
+    } else {
+      message.channel.send("Please only use 0 or 1 for the calendar help menu setting, (off or on)");
+    }
   } else if (dispCmd === "format") {
     if (dispOption) {
       guildSettings.format = dispOption;
@@ -690,7 +715,7 @@ function displayOptions(message, args) {
       message.channel.send("Please only use code or embed for the style choice. (see nilesbot.com/customisation)");
     }
   } else if (embedStyleOptions.includes(dispCmd)) {
-    guildSettings = embedStyleHelper(guildSettings, dispCmd, dispOption, message);
+    guildSettings = embedStyleHelper(guildSettings, args, message);
   } else {
     message.channel.send(strings.DISPLAYOPTIONS_USAGE);
   }

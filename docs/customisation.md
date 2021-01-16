@@ -26,6 +26,7 @@ Use display options (!displayoptions) to customise the way the calendar appears 
 | [style](#change-the-calendar-style)                  | `!displayoptions style code|embed`  | Use code (old) or embed (new) display styles             |
 | [inline](#make-embed-style-calendar-inline)          | `!displayoptions inline 0|1`        | Makes embed display style use inline fields              |
 | [description](#hideshow-event-description)           | `!displayoptions description 0|1`   | Hide/show event descriptions (embed calendar style only) |
+| [url](#inline-url-title)                             | `!displayoptions url 0|1`           | Hide/show "location" as embedded link (embed only)       |
 
 
 ---
@@ -141,3 +142,19 @@ Example embed style calendar with inline fields (`!displayoptions inline 1`):
 If you are using embed style calendar, you can enable/disable displaying of event descriptions.
 
 Use `!displayoptions description 0|1` to toggle this off/on.  The descriptions will be as per the description field in Google Calendar.
+
+## Inline URL Title
+
+If you are using embed style calendar, you can enable/disable embedded links
+
+Use `!displayoptions url 0|1` to toggle this off/on. The destination of the link will be any link that is in the "Location" field of Google Calendar
+
+Adding URL to calendar event: 
+
+![adding-url](../../assets/images/adding-url.png)
+{: .text-center }
+
+The title will be transformed into a link:
+
+![title-as-link](../../assets/images/title-as-link.png)
+{: .text-center }
