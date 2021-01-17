@@ -1,23 +1,25 @@
 {
   "name": "niles",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "Sean Coffey",
   "license": "MIT",
   "dependencies": {
+    "@mchangrh/node-google-calendar": "^2.0.3",
     "columnify": "^1.5.4",
     "discord.js": "^12.5.1",
+    "googleapis": "^67.0.0",
     "luxon": "^1.25.0",
-    "@mchangrh/node-google-calendar": "^2.0.3",
     "promise-defer": "^1.0.0",
     "string-strip-html": "^7.0.3"
   },
   "devDependencies": {
-    "eslint": "^7.17.0"
+    "eslint": "^7.18.0"
   },
   "repository": {
     "type": "git",

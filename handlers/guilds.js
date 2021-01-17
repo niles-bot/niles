@@ -48,7 +48,7 @@ function deleteGuild(guild) {
   let guildPath = path.join(__dirname, "..", "stores", guild.id);
   helpers.deleteFolderRecursive(guildPath);
   helpers.removeGuildFromDatabase(guild.id);
-  commands.deleteUpdater(guild.id);
+  commands.killUpdateTimer(guild.id);
   helpers.log(`Guild ${guild.id} has been deleted`);
 }
 
