@@ -1,6 +1,6 @@
 {
   "name": "niles",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,6 @@
   "author": "Sean Coffey",
   "license": "MIT",
   "dependencies": {
-    "@mchangrh/node-google-calendar": "^2.0.3",
     "columnify": "^1.5.4",
     "discord.js": "^12.5.1",
     "googleapis": "^67.0.0",

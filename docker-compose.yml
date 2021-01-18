@@ -13,6 +13,9 @@ services:
             - type: bind
               source: ./niles-sa.json
               target: /usr/src/niles/config/niles-sa.json
+            - type: bind
+              source: ./niles-oauth.json
+              target: /usr/src/niles/config/niles-oauth.json
 
 volumes:
     niles-stores:
