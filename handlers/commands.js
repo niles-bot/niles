@@ -45,10 +45,8 @@ function getAccessToken(force, message) {
       helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings"); // set auth to oauth
     });
   });
-  collector.on("end", (reason) => {
-    if (reason === "time") {
-      message.channel.send("Command response timeout");
-    }
+  collector.on("end", (collected, reason) => {
+    if (reason === "time") message.channel.send("Command response timeout");
   });
 }
 
@@ -85,6 +83,16 @@ function getAuth(guildid) {
   } else { // default to SA if oauth2 failed too
     return sa;
   }
+}
+
+/**
+ * Safely deletes update timer
+ * @param {Snowflake} guildid - guild to remove from timers
+ */
+function killUpdateTimer(guildid) {
+  clearInterval(autoUpdater[guildid]);
+  try { delete timerCount[guildid]; }
+  catch (err) { helpers.log(err); }
 }
 
 /**
@@ -174,19 +182,6 @@ function deleteMessages(args, message) {
 }
 
 /**
- * Safely deletes update timer
- * @param {Snowflake} guildid - guild to remove from timers
- */
-function killUpdateTimer(guildid) {
-  clearInterval(autoUpdater[guildid]);
-  try {
-    delete timerCount[guildid];
-  } catch (err) {
-    helpers.log(err);
-  }
-}
-
-/**
  * Creates daymap or use in other functions.
  * Standardized way of represending an array of days
  * Indexed by day[x] - x being integer starting from 0
@@ -195,14 +190,12 @@ function killUpdateTimer(guildid) {
  */
 function createDayMap(guildid) {
   let dayMap = [];
-  let tz = helpers.getValidTz(guildid);
-  let guildSettings = helpers.getGuildSettings(guildid, "settings");
+  const tz = helpers.getValidTz(guildid);
+  const guildSettings = helpers.getGuildSettings(guildid, "settings");
   // allowing all days to be correctly TZ adjusted
   let d = DateTime.fromJSDate(new Date()).setZone(tz);
   // if Option to show past events is set, start at startOf Day instead of NOW()
-  if(guildSettings.showpast === "1") {
-    d = d.startOf("day");
-  }
+  if (guildSettings.showpast === "1") d = d.startOf("day");
   dayMap[0] =  d;
   for (let i = 1; i < guildSettings.days; i++) {
     dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
@@ -297,9 +290,8 @@ function isEmptyCalendar(guildid, dayMap) {
   const calendar = helpers.getGuildSettings(guildid, "calendar");
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
-    if (calendar[key] && calendar[key].length) { // if key exists & has length in days
-      isEmpty = false;
-    }
+    // if key exists & has length in days
+    if (calendar[key] && calendar[key].length) isEmpty = false;
   }
   return isEmpty;
 }
@@ -312,11 +304,8 @@ function isEmptyCalendar(guildid, dayMap) {
 function eventNameCreator(event, guildSettings) {
   const titleName = helpers.trimEventName(event.summary, guildSettings.trim);
   const urlPattern = new RegExp("(http|https)://(\\w+:{0,1}\\w*)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%!-/]))?");
-  if (urlPattern.test(event.location) && guildSettings.url === "1") { // if location is url & setting is on
-    return `[${titleName}](${event.location})`;
-  } else {
-    return titleName;
-  }
+  // if location is url & setting is on
+  return ((urlPattern.test(event.location) && guildSettings.url === "1") ? `[${titleName}](${event.location})` : titleName);
 }
 
 /**
@@ -332,9 +321,7 @@ function generateCalendarCodeblock(guildid) {
     let key = "day" + String(i);
     let sendString = "";
     sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long"}) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
-    if(guildSettings.emptydays === "0" && calendar[key].length === 0) {
-      continue;
-    }
+    if (guildSettings.emptydays === "0" && calendar[key].length === 0) continue;
     if (calendar[key].length === 0) {
       sendString += "```\n ```";
     } else {
@@ -406,19 +393,15 @@ function generateCalendarEmbed(guildid) {
       name: "**" + dayMap[i].toLocaleString({ weekday: "long" }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit"}),
       inline: (guildSettings.inline === "1")
     };
-    if (guildSettings.emptydays === "0" && calendar[key].length === 0) {
-      continue;
-    }
-    if (calendar[key].length === 0) {
-      tempValue = "\u200b";
-    } else {
+    if (guildSettings.emptydays === "0" && calendar[key].length === 0) continue;
+    if (calendar[key].length === 0) tempValue = "\u200b";
+    else {
       // Map events for each day
       calendar[key].map((event) => {
         let duration = "";
-        if (Object.keys(event.start).includes("date")) {
-          // no need for temp start/fin dates
-          duration = "All Day";
-        } else if (Object.keys(event.start).includes("dateTime")) {
+        // no need for temp start/fin dates
+        if (Object.keys(event.start).includes("date")) duration = "All Day";
+        else if (Object.keys(event.start).includes("dateTime")) {
           let tempStartDate;
           let tempFinDate;
           if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
@@ -427,11 +410,8 @@ function generateCalendarEmbed(guildid) {
           if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
             tempFinDate = helpers.getStringTime(event.end.dateTime, guildid);
           }
-          if (event.type === eventType.MULTIMID) {
-            duration = "All Day";
-          } else {
-            duration = tempStartDate + " - " + tempFinDate;
-          }
+          if (event.type === eventType.MULTIMID) duration = "All Day";
+          else duration = tempStartDate + " - " + tempFinDate;
         }
         // construct field object with summary + description
         // add link if there is a location
@@ -472,7 +452,6 @@ function generateCalendar(message) {
     embed.setDescription("```No Upcoming Events```");
   } else if (guildSettings.style === "code") {
     embed.setDescription(generateCalendarCodeblock(guildid));
-    // character check
     //Handle Calendars Greater Than 2048 Characters Long
     if (embed.length>2048) {
       message.channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
@@ -491,6 +470,26 @@ function generateCalendar(message) {
   }
   p.resolve(embed);
   return p.promise;
+}
+
+/**
+ * Fetches new events and then updates calendar for specified guild
+ * @param {String} guildid - Guild to start agianst 
+ * @param {Snowflake} message 
+ * @param {bool} human - if initiated by human
+ */
+function calendarUpdater(guildid, message, human) {
+  try {
+    setTimeout(function func() {
+      getEvents(guildid, message);
+    }, 2000);
+    setTimeout(function func() {
+      updateCalendar(message, guildid, human);
+    }, 4000);
+  } catch (err) {
+    helpers.log(`error in autoupdater in guild: ${guildid} : ${err}`);
+    killUpdateTimer(guildid);
+  }
 }
 
 /**
@@ -771,8 +770,8 @@ function displayOptions(args, message) {
 function deleteEventById(eventId, calendarId, message) {
   const guildid = message.guild.id;
   const params = {
-    calendarId: calendarId,
-    eventId: eventId,
+    calendarId,
+    eventId,
     sendNotifications: true
   };
   const auth = getAuth(guildid);
@@ -897,26 +896,6 @@ function deleteEvent(args, message) {
       res.delete({ timeout: 5000 });
     });
   });
-}
-
-/**
- * Fetches new events and then updates calendar for specified guild
- * @param {String} guildid - Guild to start agianst 
- * @param {Snowflake} message 
- * @param {bool} human - if initiated by human
- */
-function calendarUpdater(guildid, message, human) {
-  try {
-    setTimeout(function func() {
-      getEvents(guildid, message);
-    }, 2000);
-    setTimeout(function func() {
-      updateCalendar(message, guildid, human);
-    }, 4000);
-  } catch (err) {
-    helpers.log(`error in autoupdater in guild: ${guildid} : ${err}`);
-    killUpdateTimer(guildid);
-  }
 }
 
 /**

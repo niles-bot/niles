@@ -243,10 +243,8 @@ function yesThenCollector(message) {
     }
     collector.stop();
   });
-  collector.on("end", (reason) => {
-    if (reason === "time") {
-      return message.channel.send("Command response timeout");
-    }
+  collector.on("end", (collected, reason) => {
+    if (reason === "time") return message.channel.send("Command response timeout");
   });
   return p.promise;
 }

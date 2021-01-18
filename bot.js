@@ -81,20 +81,13 @@ client.on("guildDelete", (guild) => {
 
 client.on("message", (message) => {
   try {
-    if (message.channel.type === "dm") { // do not handle DMs
-      return;
-    } else if (message.author.bot) {
-      return;
-    }
+    // ignore if dm or sent by bot
+    if (message.channel.type === "dm" || message.author.bot) return;
     var guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
     //Ignore messages that dont use guild prefix or mentions.
-    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
-      return;
-    }
+    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) return;
     // ignore messages that do not have one of the whitelisted commands
-    if (!isValidCmd(message)) { 
-      return;
-    }
+    if (!isValidCmd(message)) return;
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
     if (!helpers.checkRole(message)) { // if no permissions, warn
       return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);

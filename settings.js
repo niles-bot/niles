@@ -3,24 +3,24 @@ const fs = require("fs");
 const {google} = require("googleapis");
 
 const SA_KEYPATH = secrets.service_acct_keypath;
-const SA_JSON = JSON.parse(fs.readFileSync(SA_KEYPATH, "uft8"));
+const SA_JSON = JSON.parse(fs.readFileSync(SA_KEYPATH, "utf8"));
 const keyFileAuth = new google.auth.GoogleAuth({
   keyFile: SA_KEYPATH,
   scope: ["https://www.googleapis.com/auth/calendar.events"]
 });
 
 const OAUTH_KEYPATH = secrets.oauth_acct_keypath;
-let oauth_json = fs.readFileSync(OAUTH_KEYPATH, "utf8");
-let oauth_key = JSON.parse(oauth_json).installed;
+let oauthJson = fs.readFileSync(OAUTH_KEYPATH, "utf8");
+let oauthKey = JSON.parse(oauthJson).installed;
 
-const {client_secret, client_id, redirect_uris} = oauth_key;
+const {client_secret, client_id, redirect_uris} = oauthKey;
 const oAuth2Client = new google.auth.OAuth2(
   client_id, client_secret, redirect_uris[0]
 );
 
 module.exports = {
-  secrets: secrets,
-  sa_id: SA_JSON.client_email || "", 
+  secrets,
+  saId: SA_JSON.client_email || "", 
   oauth2: (fs.existsSync(OAUTH_KEYPATH) ? oAuth2Client : false),
   sa: (fs.existsSync(SA_KEYPATH) ? keyFileAuth : false)
 };
