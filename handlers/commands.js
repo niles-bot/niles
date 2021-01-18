@@ -4,35 +4,45 @@ const os = require("os");
 const { DateTime, Duration }  = require("luxon");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
-let settings = require("../settings.js");
-let init = require("./init.js");
-let helpers = require("./helpers.js");
-let guilds = require("./guilds.js");
+const settings = require("../settings.js");
+const init = require("./init.js");
+const helpers = require("./helpers.js");
+const guilds = require("./guilds.js");
 let autoUpdater = [];
 let timerCount = [];
-let eventType = helpers.eventType;
+const eventType = helpers.eventType;
 const {google} = require("googleapis");
-let { oauth2, sa } = require("../settings.js");
+const { oauth2, sa } = require("../settings.js");
 
 //functions
 /**
  * Get and store access token after promptiong for user authorization
+ * @param {bool} force - force reauthentication
  * @param {Snowflake} message - initiating message
- * @param {*} scope - Scope for API Access
  */
-function getAccessToken(message) {
+function getAccessToken(force, message) {
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   const authUrl = oauth2.generateAuthUrl({
     access_type: "offline",
-    scopes: ["https://www.googleapis.com/auth/calendar.events"],
+    scope: ["https://www.googleapis.com/auth/calendar.events"],
   });
-  message.channel.send(`Authorize Niles by visiting this url: ${authUrl}`);
+  if (guildSettings.auth === "oauth" && !force) return message.channel.send("Already using OAuth, use `!auth oauth force` to force reauthentication");
+  const authEmbed = {
+    color: 0x0099e1,
+    description: `Authorize Niles by visiting this [url](${authUrl})
+    Send the code from the page:`
+  };
+  message.channel.send({ embed: authEmbed });
   const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
     time: 30000
   });
+  guildSettings.auth = "oauth";
   collector.on("collect", (m) => {
     oauth2.getToken(m.content, (err, token) => {
-      if (err) return message.channel.send(`Error retrieving access token ${err}`);
+      if (err) return message.channel.send(`Error retrieving access token \`${err}\``);
+      message.channel.send("Successfuly Authenticated");
       helpers.writeGuildSpecific(message.guild.id, token, "token"); // store token for later
+      helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings"); // set auth to oauth
     });
   });
   collector.on("end", (reason) => {
@@ -42,20 +52,40 @@ function getAccessToken(message) {
   });
 }
 
-// setup auth
+/**
+ * Guide user through authentication setup
+ * @param {[String]} args - Arguments passed in
+ * @param {Snowflake} message - callback message
+ */
+function setupAuth(args, message) {
+  let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+  if (args[0] === "oauth") {
+    if (!oauth2) return message.channel.send("OAuth2 credentials not installed");
+    getAccessToken((args[1] === "force"), message);
+  } else if (args[0] === "sa") {
+    if (!sa) return message.channel.send("SA credentials not installed");
+    guildSettings.auth = "sa"; // set SA to true
+    helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
+    message.channel.send(`Invite \`${settings.sa_id}\` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles`);
+  } else {
+    message.channel.send("Set up authentication with `auth sa` or `auth oauth`. For details see https://nilesbot.com/start/#google-calendar-authentication");
+  }
+}
+
+/**
+ * Get Authentication from guild
+ * @param {String} guildid - ID of guild to fetch auth for 
+ */
 function getAuth(guildid) {
-  // override
-  return sa;
-  // end override
   const guildSettings = helpers.getGuildSettings(guildid, "settings");
   if (guildSettings.auth === "oauth") {
     const token = helpers.getGuildSettings(guildid, "token");
-    return oauth2.setCredentials(token);
+    oauth2.setCredentials(token);
+    return oauth2;
   } else { // default to SA if oauth2 failed too
     return sa;
   }
 }
-
 
 /**
  * Cleans messages from the channel
@@ -102,11 +132,11 @@ function clean(channel, numberMessages, recurse) {
 }
 
 /**
- * INterface to warn users before deleting messages
- * @param {Snowflake} message - Message sent by user
+ * Interface to warn users before deleting messages
  * @param {[String]} args - arguments passed in 
+ * @param {Snowflake} message - Message sent by user
  */
-function deleteMessages(message, args) {
+function deleteMessages(args, message) {
   let numberMessages = 0;
   const argMessages = parseInt(args[0], 10);
   const recurse = false;
@@ -161,7 +191,7 @@ function killUpdateTimer(guildid) {
  * Standardized way of represending an array of days
  * Indexed by day[x] - x being integer starting from 0
  * Can be populated with events from GCal to create calendar.json file
- * @param {Snowflake} guildid - guild ID to pull from
+ * @param {String} guildid - guild ID to pull from
  */
 function createDayMap(guildid) {
   let dayMap = [];
@@ -182,18 +212,17 @@ function createDayMap(guildid) {
 
 /**
  * Get Events from Google Calendar
+ * @param {String} guildid - guild ID to pull from
  * @param {Snowflake} message - message from user 
- * @param {String} calendarID - calendar ID to fetch from
- * @param {daymap} dayMap - dayMap to create events from
  */
 function getEvents(guildid, message) {
   const dayMap = createDayMap(guildid);
   const auth = getAuth(guildid);
-  let oldCalendar = helpers.getGuildSettings(guildid, "calendar");
+  const oldCalendar = helpers.getGuildSettings(guildid, "calendar");
   const calendarID = helpers.getGuildSettings(guildid, "settings").calendarID;
   // construct calendar with old calendar file
   let calendar = (({ lastUpdate, calendarMessageId }) => ({ lastUpdate, calendarMessageId }))(oldCalendar);
-  let tz = helpers.getValidTz(guildid);
+  const tz = helpers.getValidTz(guildid);
   let params = {
     calendarId: calendarID,
     timeMin: dayMap[0].toISO(),
@@ -260,7 +289,7 @@ function getEvents(guildid, message) {
 
 /**
  * Determines if a calendar is empty
- * @param {Snowflake} guildid - guild to pull calendar from
+ * @param {String} guildid - guild to pull calendar from
  * @param {dayMap} dayMap - daymap to reference agianst
  */
 function isEmptyCalendar(guildid, dayMap) {
@@ -282,7 +311,7 @@ function isEmptyCalendar(guildid, dayMap) {
  */
 function eventNameCreator(event, guildSettings) {
   const titleName = helpers.trimEventName(event.summary, guildSettings.trim);
-  let urlPattern = new RegExp("(http|https)://(\\w+:{0,1}\\w*)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%!-/]))?");
+  const urlPattern = new RegExp("(http|https)://(\\w+:{0,1}\\w*)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%!-/]))?");
   if (urlPattern.test(event.location) && guildSettings.url === "1") { // if location is url & setting is on
     return `[${titleName}](${event.location})`;
   } else {
@@ -293,11 +322,10 @@ function eventNameCreator(event, guildSettings) {
 /**
  * Generate codeblock messsage for calendar display
  * @param {Snowflake} guildid - guild to create for
- * @param {daymap} dayMap - dayMap to conform to
  */
 function generateCalendarCodeblock(guildid) {
-  let calendar = helpers.getGuildSettings(guildid, "calendar");
-  let guildSettings = helpers.getGuildSettings(guildid, "settings");
+  const calendar = helpers.getGuildSettings(guildid, "calendar");
+  const guildSettings = helpers.getGuildSettings(guildid, "settings");
   const dayMap = createDayMap(guildid);
   let finalString = "";
   for (let i = 0; i < dayMap.length; i++) {
@@ -365,7 +393,6 @@ function generateCalendarCodeblock(guildid) {
 /**
  * Generate embed for calendar display
  * @param {Snowflake} guildid - guild to create for
- * @param {daymap} dayMap - dayMap to conform to
  */
 function generateCalendarEmbed(guildid) {
   let calendar = helpers.getGuildSettings(guildid, "calendar");
@@ -430,8 +457,8 @@ function generateCalendarEmbed(guildid) {
  */
 function generateCalendar(message) {
   const guildid = message.guild.id;
-  let dayMap = createDayMap(guildid);
-  let guildSettings = helpers.getGuildSettings(guildid, "settings");
+  const dayMap = createDayMap(guildid);
+  const guildSettings = helpers.getGuildSettings(guildid, "settings");
   let p = defer();
   // create embed
   let embed = new bot.discord.MessageEmbed();
@@ -468,6 +495,7 @@ function generateCalendar(message) {
 
 /**
  * Start update timer for guild mentioned
+ * @param {String} guildid - ID of guild to update
  * @param {Snowflake} message - Initiating Message
  */
 function startUpdateTimer(guildid, message) {
@@ -500,8 +528,8 @@ function startUpdateTimer(guildid, message) {
 
 /**
  * Post calendar in message channel
+ * @param {String} guildid - Guild ID to post calendar in
  * @param {Snowflake} message - Initiating message
- * @param {daymap} dayMap - daymap of events to post 
  */
 function postCalendar(guildid, message) {
   let calendar = helpers.getGuildSettings(guildid, "calendar");
@@ -551,7 +579,7 @@ function postCalendar(guildid, message) {
 /**
  * Updates calendar
  * @param {Snowflake} message - Message
- * @param {dayMap} dayMap - daymap for guild
+ * @param {String} guildid - Guild ID
  * @param {bool} human - if command was initiated by a human
  */
 function updateCalendar(message, guildid, human) {
@@ -561,7 +589,7 @@ function updateCalendar(message, guildid, human) {
     helpers.log(`calendar undefined in ${guildid}. Killing update timer.`);
     killUpdateTimer(guildid);
   }
-  let messageId = calendar.calendarMessageId;
+  const messageId = calendar.calendarMessageId;
   message.channel.messages.fetch(messageId).then((m) => {
     generateCalendar(message).then((embed) => {
       if (embed === 2048) {
@@ -588,9 +616,9 @@ function updateCalendar(message, guildid, human) {
 
 /**
  * Adds an event to google calendar via quickAddEvent
- * @param {Snowflake} message - message initiated
  * @param {[String]} args - Arguments passed in 
- * @param {String} calendarId - Google Calendar ID
+ * @param {String} guildid - Guild ID to work agianst
+ * @param {Snowflake} message - message initiated
  */
 function quickAddEvent(args, guildid, message) {
   if (!args[0]) { 
@@ -600,14 +628,13 @@ function quickAddEvent(args, guildid, message) {
   const guildSettings = helpers.getGuildSettings(guildid, "settings");
   const params = {
     calendarId: guildSettings.calendarID,
-    text
+    text: text
   };
   const auth = getAuth(guildid);
-  const cal = google.calendar({ version: "v3", auth });
-  cal.events.quickAdd(params).then((res) => {
-    console.log("then");
-    let promptDate = (res.start.dateTime ? res.start.dateTime : res.start.date);
-    return message.channel.send(`Event \`${res.summary}\` on \`${promptDate}\` has been created`);
+  const cal = google.calendar({version: "v3", auth});
+  cal.events.quickAdd(params).then(res => {
+    const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
+    return message.channel.send(`Event \`${res.data.summary}\` on \`${promptDate}\` has been created`);
   }).catch((err) => {
     helpers.log(`function quickAddEvent error in guild: ${guildid} : ${err}`);
   });
@@ -666,10 +693,10 @@ function embedStyleHelper(guildSettings, args, message) {
 
 /**
  * Change Display Options
- * @param {Snowflake} message
  * @param {[String]} args - args passed in
+ * @param {Snowflake} message
  */
-function displayOptions(message, args) {
+function displayOptions(args, message) {
   const guildid = message.guild.id;
   const dispCmd = args[0];
   const dispOption = args[1];
@@ -739,12 +766,11 @@ function displayOptions(message, args) {
  * Delete specific event by ID
  * @param {String} eventId - ID of event to delete
  * @param {String} calendarId - ID of calendar to delete event form
- * @param {daymap} dayMap - daymap to fetch events from 
  * @param {Snowflake} message - message to update calendar according to 
  */
 function deleteEventById(eventId, calendarId, message) {
   const guildid = message.guild.id;
-  let params = {
+  const params = {
     calendarId: calendarId,
     eventId: eventId,
     sendNotifications: true
@@ -763,9 +789,7 @@ function deleteEventById(eventId, calendarId, message) {
 
 /**
  * List events within date range
- * @param {Snowflake} message - Initiating message
- * @param {*} calendarId - ID of calendar to fetch from
- * @param {*} dayMap - daymap and number of days to fetch from
+ * @param {String} guildid - List events in guild
  */
 function listSingleEventsWithinDateRange(guildid) {
   const dayMap = createDayMap(guildid);
@@ -773,15 +797,12 @@ function listSingleEventsWithinDateRange(guildid) {
   const auth = getAuth(guildid);
   const cal = google.calendar({version: "v3", auth});
   let eventsArray = [];
-  let tz = helpers.getValidTz(guildid);
-  let startDate = dayMap[0].toISO();
-  let endDate = dayMap[6].toISO();
-  let params = {
-    calendarID: calendarID,
-    timeMin: startDate,
-    timeMax: endDate,
+  const params = {
+    calendarId: calendarID,
+    timeMin: dayMap[0].toISO(),
+    timeMax: dayMap[6].toISO(),
     singleEvents: true,
-    timeZone: tz
+    timeZone: helpers.getValidTz(guildid)
   };
   return cal.events.list(params)
     .then((res) => {
@@ -806,8 +827,6 @@ function listSingleEventsWithinDateRange(guildid) {
 /**
  * Displays the next upcoming event in the calendar file
  * @param {Snowflake} message - Initiating messages
- * @param {String} calendarId - ID of calendar to fetch from
- * @param {daymap} dayMap - daymap and number of days to fetch from
  */
 function nextEvent(message) {
   const tz = helpers.getValidTz(message.guild.id);
@@ -836,12 +855,10 @@ function nextEvent(message) {
 
 /**
  * Delete event on daymap with specific name
- * @param {Snowflake} message - Initiating Message
  * @param {[String]} args - command arguments
- * @param {String} calendarId - ID of calendar to pull events from
- * @param {daymap} dayMap - daymap and number of days to fetch from
+ * @param {Snowflake} message - Initiating Message
  */
-function deleteEvent(message, args, calendarId, dayMap) {
+function deleteEvent(args, message) {
   if (!args[0]) {
     return message.channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
       .then((m) => {
@@ -849,7 +866,9 @@ function deleteEvent(message, args, calendarId, dayMap) {
       });
   }
   const text = args.join(" "); // join
-  listSingleEventsWithinDateRange(message.guild.id).then((resp) => {
+  const guildid = message.guild.id;
+  const calendarID = helpers.getGuildSettings(guildid, "settings").calendarID;
+  listSingleEventsWithinDateRange(guildid).then((resp) => {
     for (let i = 0; i < resp.length; i++) {
       const curEvent = resp[i];
       if (curEvent.summary) {
@@ -857,7 +876,7 @@ function deleteEvent(message, args, calendarId, dayMap) {
           let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
           message.channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`);
           helpers.yesThenCollector(message).then(() => { // collect yes
-            deleteEventById(curEvent.id, calendarId, dayMap, message).then(() => {
+            deleteEventById(curEvent.id, calendarID, message).then(() => {
               message.channel.send(`Event **${curEvent.summary}** deleted`).then((res) => {
                 res.delete({ timeout: 10000 });
               });
@@ -882,8 +901,8 @@ function deleteEvent(message, args, calendarId, dayMap) {
 
 /**
  * Fetches new events and then updates calendar for specified guild
+ * @param {String} guildid - Guild to start agianst 
  * @param {Snowflake} message 
- * @param {*} dayMap
  * @param {bool} human - if initiated by human
  */
 function calendarUpdater(guildid, message, human) {
@@ -929,17 +948,16 @@ function permissionCheck(message) {
 /**
  * Checks for any issues with guild configuration
  * @param {Snowflake} message - message for guild to check agianst
- * @param {Calendar} cal - Calendar API to check event agaianst
+ * @returns {bool} - if calendar fetches successfully
  */
 function validate(message) {
   const guildid = message.guild.id;
-  let guildSettings = helpers.getGuildSettings(guildid, "settings");
+  const guildSettings = helpers.getGuildSettings(guildid, "settings");
   const auth = getAuth(guildid);
   const cal = google.calendar({version: "v3", auth});
-  const nowTime = DateTime.local();
-  let params = {
-    calendarID: guildSettings.calendarID,
-    timeMin: nowTime.toISO(),
+  const params = {
+    calendarId: guildSettings.calendarID,
+    timeMin: DateTime.local().toISO(),
     singleEvents: true,
     orderBy: "startTime",
     maxResults: 1
@@ -995,10 +1013,10 @@ function displayStats(message) {
 
 /**
  * Rename Calendar Name
- * @param {Snowflake} message - message that initiated it
  * @param {[String]} args - arguments passed in
+ * @param {Snowflake} message - message that initiated it
  */
-function calName(message, args) {
+function calName(args, message) {
   let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
   let newCalName = args[0];
   if (!newCalName) { // no name passed inno
@@ -1023,8 +1041,6 @@ function calName(message, args) {
 function run(message) {
   const guildid = message.guild.id;
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
-  let calendarID = guildSettings.calendarID;
-  let dayMap = createDayMap(guildid);
   const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
@@ -1054,7 +1070,7 @@ function run(message) {
     message.channel.send("Resetting Niles to default");
     guilds.recreateGuild(message.guild);
   } else if (["clean", "purge"].includes(cmd)) {
-    deleteMessages(message, args);
+    deleteMessages(args, message);
   } else if (["display"].includes(cmd)) {
     setTimeout(function func() {
       getEvents(guildid, message);
@@ -1065,13 +1081,10 @@ function run(message) {
   } else if (["update", "sync"].includes(cmd)) {
     calendarUpdater(guildid, message, true);
   } else if (["create", "scrim"].includes(cmd)) {
-    quickAddEvent(args, guildid, message).then(() => {
-      calendarUpdater(guildid, message, true);
-    }).catch((err) => {
-      helpers.log(`error creating event in guild: ${guildid} : ${err}`);
-    });
+    quickAddEvent(args, guildid, message);
+    calendarUpdater(guildid, message, true);
   } else if (["displayoptions"].includes(cmd)) {
-    displayOptions(message, args);
+    displayOptions(args, message);
   } else if (["stats", "info"].includes(cmd)) {
     displayStats(message);
   } else if (["get"].includes(cmd)) {
@@ -1079,9 +1092,9 @@ function run(message) {
   } else if (["stop"].includes(cmd)) {
     killUpdateTimer(guildid);
   } else if (["delete"].includes(cmd)) {
-    deleteEvent(message, args, calendarID, dayMap);
+    deleteEvent(args, message);
   } else if (["next"].includes(cmd)) {
-    nextEvent(message, calendarID, dayMap);
+    nextEvent(message);
   } else if (["count"].includes(cmd)) {
     const theCount = (!timerCount[guildid] ? 0 : timerCount[guildid]);
     message.channel.send(`There are ${theCount} timer threads running in this guild`);
@@ -1105,7 +1118,9 @@ function run(message) {
   } else if (["validate"].includes(cmd)) {
     validate(message);
   } else if (["calname"].includes(cmd)) {
-    calName(message, args);
+    calName(args, message);
+  } else if (["auth"].includes(cmd)) {
+    setupAuth(args, message);
   }
   message.delete({ timeout: 5000 });
 }

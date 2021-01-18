@@ -2,11 +2,11 @@ let discord = require("discord.js");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-let settings = require("./settings.js");
-let commands = require("./handlers/commands.js");
-let guilds = require("./handlers/guilds.js");
-let init = require("./handlers/init.js");
-let helpers = require("./handlers/helpers.js");
+const settings = require("./settings.js");
+const commands = require("./handlers/commands.js");
+const guilds = require("./handlers/guilds.js");
+const init = require("./handlers/init.js");
+const helpers = require("./handlers/helpers.js");
 
 /**
  * Add any missing guilds to guilds database
@@ -32,7 +32,7 @@ function isValidCmd(message) {
     "stats", "info", "id", "tz", "invite",
     "prefix", "admin", "setup", "count",
     "ping", "displayoptions", "timers", "reset", "next",
-    "validate", "calname"
+    "validate", "calname", "auth"
   ];
   try {
     // repeated command parser

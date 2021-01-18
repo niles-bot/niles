@@ -31,7 +31,8 @@ const defaultSettings = {
   "style": "code",
   "inline": "0",
   "description": "0",
-  "url": "0"
+  "url": "0",
+  "auth": "sa"
 };
 
 /**

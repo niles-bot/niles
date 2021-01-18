@@ -39,6 +39,30 @@ Scroll down and under 'Share with specific people', add `niles-291@niles-169605.
 Since Oct 15, 2020, there has been an issue adding Niles to Google Calendar - the only workaround seems to be getting a friend to invite Niles - ***switching accounts locally does not work***
 
 ---
+## Google Calendar Authentication
+### Summary
+OAuth2
+- Acts on your behalf, with access to **all of your calendars**
+
+Service Accounts
+- Acts as itself, with access to specified calendars
+- Barely Works (As of Jan 17, 2021)
+
+### Service Accounts
+- Allows per-calendar permissions
+- Allow read-only or read-write permissions
+- Extremely prone to errors or limited by Google (As of Jan 17, 2021)
+- Events created by Service Account (Niles)
+
+### OAuth2
+- Only allows permissions for ALL calendars for authorized accounts [Reference](https://developers.google.com/identity/protocols/oauth2/scopes#calendar)
+- Expires and invalidated if not used for 6 months
+- Does not require ownership or share permissions on calendars
+- Events created by (Person)
+
+[More Information on OAuth2](https://developers.google.com/identity/protocols/oauth2)
+
+---
 
 ## Add Google Calendar to your Niles Configuration
 

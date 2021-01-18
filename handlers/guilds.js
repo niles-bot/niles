@@ -20,7 +20,7 @@ const emptyCal = {
  * @param {Snowflake} guild - Guild to create files for
  */
 function createGuild(guild) {
-  let guildPath = path.join(__dirname, "..", "stores", guild.id);
+  const guildPath = path.join(__dirname, "..", "stores", guild.id);
   const guildData = {
     "guildid": guild.id,
     "name": guild.name,
@@ -45,7 +45,7 @@ function createGuild(guild) {
  * @param {Snowflake} guild - guild to delete configuration for
  */
 function deleteGuild(guild) {
-  let guildPath = path.join(__dirname, "..", "stores", guild.id);
+  const guildPath = path.join(__dirname, "..", "stores", guild.id);
   helpers.deleteFolderRecursive(guildPath);
   helpers.removeGuildFromDatabase(guild.id);
   commands.killUpdateTimer(guild.id);

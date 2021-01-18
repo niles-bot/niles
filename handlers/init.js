@@ -2,7 +2,7 @@ const path = require("path");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
 const strings = require("./strings.js");
-let bot = require("../bot.js");
+const bot = require("../bot.js");
 
 /**
  * Write Settings
@@ -11,7 +11,7 @@ let bot = require("../bot.js");
  * @param {String} setting - Setting name to write to
  */
 function writeSetting(message, value, setting) {
-  let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+  const guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
   guildSettings[setting] = value;
   message.channel.send(`Okay, the value for this server's \`${setting}\` setting has been changed to \`${value}\``);
@@ -36,8 +36,7 @@ function logId(message, args, guildSettings) {
     return;
   }
   else if (!helpers.matchCalType(calendarId, message)) {
-    message.channel.send("I don't think that's a valid calendar ID... try again");
-    return;
+    return message.channel.send("I don't think that's a valid calendar ID... try again");
   } else if (guildCalendarId !== "") {
     message.channel.send(`I've already been setup to use \`${guildCalendarId}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${calendarId}\`? **(y/n)**"`);
     helpers.yesThenCollector(message).then(() => {
@@ -90,7 +89,7 @@ function logTz(message, args, guildSettings) {
  * @param {Object} guildSettings 
  */
 function setPrefix(message, args, guildSettings) {
-  let newPrefix = args[0];
+  const newPrefix = args[0];
   if (!newPrefix) {
     return message.channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
   } else if (newPrefix) {
@@ -110,9 +109,9 @@ function setPrefix(message, args, guildSettings) {
  * @param {Object} guildSettings 
  */
 function setRoles(message, args, guildSettings) {
-  let adminRole = args[0];
+  const adminRole = args[0];
   const allowedRoles = guildSettings.allowedRoles;
-  let userRoles = message.member.roles.cache.map((role) => role.name);
+  const userRoles = message.member.roles.cache.map((role) => role.name);
   if (!adminRole && allowedRoles.length === 0) {
     return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
   } else if (!adminRole) {
