@@ -22,6 +22,10 @@ nav_order: 2
 ---
 
 ## Configure Google Calendar
+### NOT CURRENTLY FUNCTIONAL 
+Google has blocked service accounts from being invited to calendars without an explicit "accept".
+See: https://issuetracker.google.com/issues/148804709
+There is work towards getting this working
 
 Select or create a [Google Calendar](https://calendar.google.com), and select 'Settings and sharing'
 {: .pb-4 }
@@ -34,9 +38,6 @@ Scroll down and under 'Share with specific people', add `niles-291@niles-169605.
 
 ![gcalexample](../../assets/images/gcal-example-1.gif)
 {: .text-center}
-
-### Warning
-Since Oct 15, 2020, there has been an issue adding Niles to Google Calendar - the only workaround seems to be getting a friend to invite Niles - ***switching accounts locally does not work***
 
 ---
 
