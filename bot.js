@@ -2,11 +2,11 @@ let discord = require("discord.js");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-let settings = require("./settings.js");
-let commands = require("./handlers/commands.js");
-let guilds = require("./handlers/guilds.js");
-let init = require("./handlers/init.js");
-let helpers = require("./handlers/helpers.js");
+const settings = require("./settings.js");
+const commands = require("./handlers/commands.js");
+const guilds = require("./handlers/guilds.js");
+const init = require("./handlers/init.js");
+const helpers = require("./handlers/helpers.js");
 
 /**
  * Add any missing guilds to guilds database
@@ -32,7 +32,7 @@ function isValidCmd(message) {
     "stats", "info", "id", "tz", "invite",
     "prefix", "admin", "setup", "count",
     "ping", "displayoptions", "timers", "reset", "next",
-    "validate", "calname"
+    "validate", "calname", "auth"
   ];
   try {
     // repeated command parser
@@ -81,20 +81,13 @@ client.on("guildDelete", (guild) => {
 
 client.on("message", (message) => {
   try {
-    if (message.channel.type === "dm") { // do not handle DMs
-      return;
-    } else if (message.author.bot) {
-      return;
-    }
+    // ignore if dm or sent by bot
+    if (message.channel.type === "dm" || message.author.bot) return;
     var guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
     //Ignore messages that dont use guild prefix or mentions.
-    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) {
-      return;
-    }
+    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) return;
     // ignore messages that do not have one of the whitelisted commands
-    if (!isValidCmd(message)) { 
-      return;
-    }
+    if (!isValidCmd(message)) return;
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
     if (!helpers.checkRole(message)) { // if no permissions, warn
       return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);

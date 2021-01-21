@@ -39,6 +39,34 @@ Scroll down and under 'Share with specific people', add `niles-291@niles-169605.
 ![gcalexample](../../assets/images/gcal-example-1.gif)
 {: .text-center}
 
+### Warning
+The only way to add Niles to your Google Calendar is through acl.insert. You can try it at [Google API Explorer](https://developers.google.com/calendar/v3/reference/acl/insert)
+This method is tested, but unsupported and may break at any time without notice. 
+
+---
+## Google Calendar Authentication
+### Summary
+OAuth2
+- Acts on your behalf, with access to **all of your calendars**
+
+Service Accounts
+- Acts as itself, with access to specified calendars
+- Barely Works (As of Jan 17, 2021)
+
+### Service Accounts
+- Allows per-calendar permissions
+- Allow read-only or read-write permissions
+- Extremely prone to errors or limited by Google (As of Jan 17, 2021)
+- Events created by Service Account (Niles)
+
+### OAuth2
+- Only allows permissions for ALL calendars for authorized accounts [Reference](https://developers.google.com/identity/protocols/oauth2/scopes#calendar)
+- Expires and invalidated if not used for 6 months
+- Does not require ownership or share permissions on calendars
+- Events created by (Person)
+
+[More Information on OAuth2](https://developers.google.com/identity/protocols/oauth2)
+
 ---
 
 ## Add Google Calendar to your Niles Configuration

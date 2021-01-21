@@ -30,7 +30,9 @@ const defaultSettings = {
   "days": 7,
   "style": "code",
   "inline": "0",
-  "description": "0"
+  "description": "0",
+  "url": "0",
+  "auth": "sa"
 };
 
 /**
@@ -48,6 +50,9 @@ function getGuildSettings(id, file) {
     let storedData = readFile(filePath);
     //merge defaults and stored settings to guarantee valid data
     return {...defaultSettings, ...storedData };
+  } else if (file === "token") {
+    filePath = path.join(__dirname, "..", "stores", id, "token.json");
+    return readFile(filePath);
   }
 }
 
@@ -73,7 +78,7 @@ function log(...logItems) {
   const tripleGrave = "```";
   const logString = formatLogMessage(logMessage);
   const logChannelId = getSettings().secrets.log_discord_channel;
-  const superAdmin = getSettings().secrets.super_admin;
+  const superAdmin = getSettings().secrets.admins[0];
   // send to all shards
   bot.client.shard.broadcastEval(`
     if (!'${logChannelId}') {
@@ -238,10 +243,8 @@ function yesThenCollector(message) {
     }
     collector.stop();
   });
-  collector.on("end", (reason) => {
-    if (reason === "time") {
-      return message.channel.send("Command response timeout");
-    }
+  collector.on("end", (collected, reason) => {
+    if (reason === "time") return message.channel.send("Command response timeout");
   });
   return p.promise;
 }
@@ -349,68 +352,6 @@ function matchCalType(calendarId, message) {
   return true; // if did not reach false
 }
 
-/**
- * Returns pass or fail instead of boolean
- * @param {boolean} bool
- * @returns {String}
- */
-function passFail(bool) {
-  return (bool ? "Passed 🟢" : "Failed 🔴");
-}
-
-/**
- * Checks if the bot has all the nesseary permissions
- * @param {Snowflake} message - message to check permissions agianst
- * @returns {String} - returns missing permissions (if any)
- */
-function permissionCheck(message) {
-  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
-  const botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.map((permission) => {
-    if (!botPermissions[permission]) {
-      missingPermissions += `\`${String(permission)} \``;
-    }
-  });
-  return (missingPermissions ? missingPermissions : "None 🟢");
-}
-
-/**
- * Checks for any issues with guild configuration
- * @param {Snowflake} message - message for guild to check agianst
- * @param {Calendar} cal - Calendar API to check event agaianst
- */
-function validate(message, cal) {
-  let guildSettings = getGuildSettings(message.guild.id, "settings");
-  const nowTime = DateTime.local();
-  let params = {
-    timeMin: nowTime.toISO(),
-    singleEvents: true,
-    orderBy: "startTime",
-    maxResults: 1
-  };
-  let calTest = cal.Events.list(guildSettings.calendarID, params).then((events) => {
-    const event = events[0];
-    message.channel.send(`**Next Event:**
-      **Summary:** \`${event.summary}\`
-      **Start:** \`${event.start.dateTime || event.start.date }\`
-      **Calendar ID:** \`${event.organizer.email}\`
-    `);
-    return true;
-  }).catch((err) => {
-    message.channel.send(`Error Fetching Calendar: ${err}`);
-  });
-  // basic check
-  message.channel.send(`**Checks**:
-    **Timezone:** ${passFail(validateTz(guildSettings.timezone))}
-    **Calendar ID:** ${passFail(matchCalType(guildSettings.calendarID, message))}
-    **Calendar Test:** ${passFail(calTest)}
-    **Missing Permissions:** ${permissionCheck(message)}
-    **Guild ID:** \`${message.guild.id}\`
-    **Shard:** ${bot.client.shard.ids}
-  `);
-}
-
 module.exports = {
   deleteFolderRecursive,
   getGuildDatabase,
@@ -431,6 +372,5 @@ module.exports = {
   defaultSettings,
   trimEventName,
   descriptionParser,
-  matchCalType,
-  validate
+  matchCalType
 };
