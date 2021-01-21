@@ -649,16 +649,28 @@ function displayOptionHelper(guildSettings, args, message) {
   const setting = args[0];
   const value = args[1];
   const optionName = {
-    pin: "calendar pinning",
-    tzDisplay: "calendar timezone display",
-    emptydays: "calendar empty days",
-    showpast: "display of today's past events"
+    pin: {
+      name: "pin",
+      help: "calendar pinning",
+    }, tzdisplay: {
+      name: "tzDisplay",
+      help: "calendar timezone display",
+    }, emptydays: {
+      name: "emptydays",
+      help: "calendar empty days"
+    },showpast: {
+      name: "showpast",
+      help: "display of today's past events"
+    }, help: {
+      name: "helpmenu",
+      help: "calendar help menu"
+    }
   };
   if (value) {
-    message.channel.send(value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
-    guildSettings[setting] = value; // set value
+    message.channel.send(value === "1" ? `Set ${optionName[setting].name} on` : `Set ${optionName[setting].name} off`);
+    guildSettings[setting].name = value; // set value
   } else {
-    message.channel.send(`Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on)`);
+    message.channel.send(`Please only use 0 or 1 for the **${optionName[setting].help}** setting, (off or on)`);
   }
   return guildSettings;
 }
@@ -701,20 +713,15 @@ function displayOptions(args, message) {
   const dispOption = args[1];
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   const binaryDisplayOptions = [
-    "pin", "tzdisplay", "emptydays", "showpast"
+    "pin", "tzdisplay", "emptydays", "showpast", "help"
   ];
   const embedStyleOptions = [
     "inline", "description", "url"
   ];
   if (binaryDisplayOptions.includes(dispCmd)) {
     guildSettings = displayOptionHelper(guildSettings, args, message);
-  } else if (dispCmd === "help") {
-    if (dispOption) {
-      guildSettings.helpmenu = dispOption;
-      message.channel.send(guildSettings.helpmenu === "1" ? "Set calendar help menu on" : "Set calendar help menu off");
-    } else {
-      message.channel.send("Please only use 0 or 1 for the calendar help menu setting, (off or on)");
-    }
+  } else if (embedStyleOptions.includes(dispCmd)) {
+    guildSettings = embedStyleHelper(guildSettings, args, message);
   } else if (dispCmd === "format") {
     if (dispOption) {
       guildSettings.format = dispOption;
@@ -753,8 +760,6 @@ function displayOptions(args, message) {
     } else {
       message.channel.send("Please only use code or embed for the style choice. (see nilesbot.com/customisation)");
     }
-  } else if (embedStyleOptions.includes(dispCmd)) {
-    guildSettings = embedStyleHelper(guildSettings, args, message);
   } else {
     message.channel.send(strings.DISPLAYOPTIONS_USAGE);
   }
