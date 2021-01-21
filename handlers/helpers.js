@@ -78,7 +78,7 @@ function log(...logItems) {
   const tripleGrave = "```";
   const logString = formatLogMessage(logMessage);
   const logChannelId = getSettings().secrets.log_discord_channel;
-  const superAdmin = getSettings().secrets.super_admin;
+  const superAdmin = getSettings().secrets.admins[0];
   // send to all shards
   bot.client.shard.broadcastEval(`
     if (!'${logChannelId}') {

@@ -1030,7 +1030,7 @@ function run(message) {
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
   // check if author is admin
-  const sentByAdmin = (message.author.id === settings.secrets.super_admin || settings.secrets.other_admin.includes(message.author.id));
+  const sentByAdmin = (settings.secrets.admins.includes(message.author.id));
   // start commands
   if (["ping"].includes(cmd)) {
     message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
