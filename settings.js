@@ -6,7 +6,7 @@ const SA_KEYPATH = secrets.service_acct_keypath;
 const SA_JSON = JSON.parse(fs.readFileSync(SA_KEYPATH, "utf8"));
 const keyFileAuth = new google.auth.GoogleAuth({
   keyFile: SA_KEYPATH,
-  scope: ["https://www.googleapis.com/auth/calendar.events"]
+  scopes: ["https://www.googleapis.com/auth/calendar.events"]
 });
 
 const OAUTH_KEYPATH = secrets.oauth_acct_keypath;

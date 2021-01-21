@@ -64,7 +64,7 @@ function setupAuth(args, message) {
     if (!sa) return message.channel.send("SA credentials not installed");
     guildSettings.auth = "sa"; // set SA to true
     helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
-    message.channel.send(`Invite \`${settings.sa_id}\` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles`);
+    message.channel.send(`Invite \`${settings.saId}\` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles`);
   } else {
     message.channel.send("Set up authentication with `auth sa` or `auth oauth`. For details see https://nilesbot.com/start/#google-calendar-authentication");
   }

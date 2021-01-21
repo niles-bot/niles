@@ -25,7 +25,6 @@ function createGuild(guild) {
     "guildid": guild.id,
     "name": guild.name,
     "region": guild.region,
-    "ownerName": "",
     "ownerId": guild.ownerID,
     "timeAdded": new Date()
   };
