@@ -22,6 +22,10 @@ nav_order: 2
 ---
 
 ## Configure Google Calendar
+### NOT CURRENTLY FUNCTIONAL 
+Google has blocked service accounts from being invited to calendars without an explicit "accept".
+See: https://issuetracker.google.com/issues/148804709
+There is work towards getting this working
 
 Select or create a [Google Calendar](https://calendar.google.com), and select 'Settings and sharing'
 {: .pb-4 }
