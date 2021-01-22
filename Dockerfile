@@ -1,4 +1,4 @@
-FROM node:12-alpine3.12
+FROM node:lts-alpine
 LABEL maintainer="michael@mchang.name"
 WORKDIR /usr/src/niles
 COPY . .

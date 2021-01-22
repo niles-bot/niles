@@ -22,7 +22,7 @@ If you wanted to host your own version or similar, these instructions will get y
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/en/) - v12 or higher
+* [Node.js](https://nodejs.org/) - v12 or higher
 
 ### Installing
 
@@ -33,6 +33,8 @@ Note: To add a development bot to your Discord server, visit https://discord.com
 Set up a [Google Service Account](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
 For more information on setting up a Google Service Account, [see here](https://github.com/yuhong90/node-google-calendar/wiki#setup-service-accounts).
 
+Alternative, set up [OAuth2 Credentials](https://support.google.com/cloud/answer/6158849).
+
 Create your own `secrets.json` file in `/config`, using the appropriate values, making sure you also place a copy of your Google Service Account JSON security file somewhere and referencing in `secrets`.
 
 Next you will need to copy the `stores.json.example` in the `/stores` file 3 times.
@@ -42,9 +44,6 @@ store.json
 ```
 ```
 guilddatabase.json
-```
-```
-users.json
 ```
 
 To run and connect your bot
@@ -60,7 +59,7 @@ node index.js
 ## Built With
 
 * [Discord.js](https://github.com/discordjs/discord.js) - NodeJS library for interfacing with the Discord API
-* [node-google-calendar](https://github.com/mchangrh/node-google-calendar) - Simple Node module that supports Google Calendar API
+* [googleapis](https://www.npmjs.com/package/googleapis) - Google APIs Node.js Client
 
 ## License
 

@@ -20,12 +20,32 @@ nav_order: 2
 [Invite Niles](https://discord.com/oauth2/authorize?client_id=320434122344366082&scope=bot&permissions=523344){: .btn}
 
 ---
+## Google Calendar Authentication
+### Differences between Service Account and OAuth2
+Summary:
 
-## Configure Google Calendar
-### NOT CURRENTLY FUNCTIONAL 
-Google has blocked service accounts from being invited to calendars without an explicit "accept".
-See: https://issuetracker.google.com/issues/148804709
-There is work towards getting this working
+OAuth2
+- Acts on your behalf, with access to **all of your calendars**
+
+Service Accounts
+- Acts as itself, with access to specified calendars
+- Can no longer receive shared calendars
+
+Service Accounts
+- Allows per-calendar permissions
+- Allow read-only or read-write permissions
+- Extremely prone to errors or limited by Google (As of Jan 17, 2021)
+- Events created by Service Account (Niles)
+
+OAuth2
+- Only allows permissions for ALL calendars for authorized accounts [Reference](https://developers.google.com/identity/protocols/oauth2/scopes#calendar)
+- Expires and invalidated if not used for 6 months
+- Does not require ownership or share permissions on calendars
+- Events created by (Person)
+
+[More Information on OAuth2](https://developers.google.com/identity/protocols/oauth2)
+
+### Adding via Service Account
 
 Select or create a [Google Calendar](https://calendar.google.com), and select 'Settings and sharing'
 {: .pb-4 }
@@ -43,29 +63,9 @@ Scroll down and under 'Share with specific people', add `niles-291@niles-169605.
 The only way to add Niles to your Google Calendar is through acl.insert. You can try it at [Google API Explorer](https://developers.google.com/calendar/v3/reference/acl/insert)
 This method is tested, but unsupported and may break at any time without notice. 
 
----
-## Google Calendar Authentication
-### Summary
-OAuth2
-- Acts on your behalf, with access to **all of your calendars**
+### Adding via Oauth2
 
-Service Accounts
-- Acts as itself, with access to specified calendars
-- Barely Works (As of Jan 17, 2021)
-
-### Service Accounts
-- Allows per-calendar permissions
-- Allow read-only or read-write permissions
-- Extremely prone to errors or limited by Google (As of Jan 17, 2021)
-- Events created by Service Account (Niles)
-
-### OAuth2
-- Only allows permissions for ALL calendars for authorized accounts [Reference](https://developers.google.com/identity/protocols/oauth2/scopes#calendar)
-- Expires and invalidated if not used for 6 months
-- Does not require ownership or share permissions on calendars
-- Events created by (Person)
-
-[More Information on OAuth2](https://developers.google.com/identity/protocols/oauth2)
+If you have OAuth2 credentials installed, run `!auth oauth2` and follow the link to authorize Niles to access your calendars.
 
 ---
 
