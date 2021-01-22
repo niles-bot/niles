@@ -32,7 +32,7 @@ function isValidCmd(message) {
     "stats", "info", "id", "tz", "invite",
     "prefix", "admin", "setup", "count",
     "ping", "displayoptions", "timers", "reset", "next",
-    "validate", "calname", "auth"
+    "validate", "calname", "auth", "channel"
   ];
   try {
     // repeated command parser
