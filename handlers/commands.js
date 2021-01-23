@@ -675,7 +675,7 @@ function displayOptionHelper(guildSettings, args, channel) {
   };
   if (value) {
     channel.send(value === "1" ? `Set ${optionName[setting].name} on` : `Set ${optionName[setting].name} off`);
-    guildSettings[setting].name = value; // set value
+    guildSettings[optionName[setting].name] = value; // set value
   } else {
     channel.send(`Please only use 0 or 1 for the **${optionName[setting].help}** setting, (off or on)`);
   }
