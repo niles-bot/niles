@@ -696,14 +696,14 @@ function displayOptions(args, guildid, channelid) {
     guildSettings = embedStyleHelper(args, guildSettings, channel);
   } else if (dispCmd === "format") {
     if (dispOption) {
-      guildSettings.format = dispOption;
+      guildSettings.format = Number(dispOption);
       channel.send(guildSettings.format === "12" ? "Set to 12-Hour clock format" : "Set to 24-Hour clock format");
     } else {
       channel.send("Please only use 12 or 24 for the clock display options");
     }
   } else if (dispCmd === "trim") {
     if (dispOption) {
-      let size = parseInt(dispOption);
+      let size = Number(dispOption);
       guildSettings.trim = (isNaN(size) ? 0 : size); // set to 0 if invalid, otherwise take number
       channel.send(`Set trimming of event titles to ${size} (0 = off)`);
     } else  {
@@ -711,7 +711,7 @@ function displayOptions(args, guildid, channelid) {
     }
   } else if (dispCmd === "days") {
     if (dispOption) {
-      let size = parseInt(dispOption);
+      let size = Number(dispOption);
       guildSettings.days = 
         isNaN(size) ? 7 // if not a number - default to 7
           : size > 25 ? 25 // discord field limit is 25
@@ -1084,7 +1084,7 @@ function run(message) {
   } else if (["reset"].includes(cmd)) {
     if (sentByAdmin) {
       let response = "";
-      const shardNo = parseInt(args[0]); // check for valid shard
+      const shardNo = Number(args[0]); // check for valid shard
       if (isNaN(shardNo)) {
         response = "Invalid shard number"; // check for valid number
       } else {

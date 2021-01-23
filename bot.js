@@ -17,7 +17,6 @@ function addMissingGuilds(availableGuilds) {
   const knownGuilds = Object.keys(helpers.getGuildDatabase());
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildId) => {
-    helpers.log("unknown guild found; creating");
     guilds.createGuild(client.guilds.cache.get(guildId));
   });
 }

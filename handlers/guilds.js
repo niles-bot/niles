@@ -28,9 +28,7 @@ function createGuild(guild) {
     "ownerId": guild.ownerID,
     "timeAdded": new Date()
   };
-  if (fs.existsSync(guildPath)) { // directory already exists
-    helpers.log(`Guild ${guild.id} has come back online`);
-  } else if (!fs.existsSync(guildPath)) { // create directory and new files
+  if (!fs.existsSync(guildPath)) { // create directory and new files
     fs.mkdirSync(guildPath); 
     helpers.writeGuildSpecific(guild.id, emptyCal, "calendar");
     helpers.writeGuildSpecific(guild.id, helpers.defaultSettings, "settings");
