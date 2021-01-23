@@ -92,9 +92,30 @@ function getAuth(guildid) {
  * @param {Snowflake} guildid - guild to remove from timers
  */
 function killUpdateTimer(guildid) {
+  guildid = String(guildid);
   clearInterval(autoUpdater[guildid]);
   try { delete timerCount[guildid]; }
   catch (err) { helpers.log(err); }
+}
+
+/**
+ * Interface to warn users before deleting messages
+ * @param {[String]} args - arguments passed in 
+ * @param {Snowflake} message - Message sent by user
+ */
+function deleteMessages(args, channelid) {
+  const channel = bot.client.channels.cache.get(channelid);
+  const argMessages = parseInt(args[0], 10);
+  if (!args[0] || isNaN(argMessages)) {
+    return channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
+  } else {
+    channel.send(`You are about to delete ${argMessages} messages. Are you sure? (y/n)`);
+    helpers.yesThenCollector(channelid).then(() => { // collect yes
+      clean(channel, argMessages, args[1]);
+    }).catch((err) => {
+      helpers.log(err);
+    });
+  }
 }
 
 /**
@@ -103,84 +124,25 @@ function killUpdateTimer(guildid) {
  * @param {Integer} numberMessages - number of messages to delete
  * @param {bool} recurse - recursively delete messages
  */
-function clean(channel, numberMessages, recurse) {
+function clean(channel, numberMessages, deleteCal) {
+  numberMessages += 3; // add 3 messages from collector
   const guildid = channel.guild.id;
   let calendar = helpers.getGuildSettings(guildid, "calendar");
-  channel.messages.fetch({
-    limit: numberMessages
-  }).then((messages) => { //If the current calendar is deleted
-    messages.forEach(function(message) {
-      if (message.id === calendar.calendarMessageId) {
-        calendar.calendarMessageId = "";
-        helpers.writeGuildSpecific(guildid, calendar, "calendar");
-        killUpdateTimer(guildid);
-      }
+  if (deleteCal) {
+    // delete calendar id
+    calendar.calendarMessageId = "";
+    helpers.writeGuildSpecific(guildid, calendar, "calendar");
+    killUpdateTimer(guildid);
+    channel.bulkDelete(numberMessages, true); // delete messages
+  } else {
+    channel.messages.fetch({ limit: numberMessages
+    }).then((messages) => { //If the current calendar is deleted
+      messages.forEach(function(message) {
+        if (message.id === calendar.calendarMessageId) messages.delete(message.id); // skip calendar message
+      });
+      channel.bulkDelete(messages, true);
     });
-    if (messages.size < 2) {
-      channel.send("cleaning"); //Send extra message to allow deletion of 1 message.
-      clean(channel, 2, false);
-    }
-    if (messages.size === 100 && recurse) {
-      channel.bulkDelete(messages).catch((err) => {
-        if(err.code===50034) {
-          channel.send("Sorry - Due to Discord limitations, Niles cannot clean messages older than 14 days!");
-        }
-        helpers.log(`clean error in guild ${channel.guild.id} ${err}`);
-      });
-      clean(channel, 100, true);
-    } else {
-      channel.bulkDelete(messages).catch((err) => {
-        if(err.code===50034) {
-          channel.send("Sorry - Due to Discord limitations, Niles cannot clean messages older than 14 days!");
-        }
-        helpers.log(`clean error in guild ${channel.guild.id} ${err}`);
-      });
-    }
-  }).catch((err) => {
-    helpers.log(`clean error in guild: ${channel.guild.id} : ${err}`);
-  });
-}
-
-/**
- * Interface to warn users before deleting messages
- * @param {[String]} args - arguments passed in 
- * @param {Snowflake} message - Message sent by user
- */
-function deleteMessages(args, message) {
-  let numberMessages = 0;
-  const argMessages = parseInt(args[0], 10);
-  const recurse = false;
-  if (!args[0] || isNaN(argMessages)) {
-    //Disable recursion for a while - causing bulk delete errors.
-    //message.channel.send("**WARNING** - This will delete all messages in this channel! Are you sure? **(y/n)**");
-    //numberMessages = 97;
-    //recurse = true;
-    return message.channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
-  } else if (argMessages < 100) {
-    message.channel.send(`**WARNING** - This will delete ${argMessages} messages in this channel! Are you sure? **(y/n)**`);
-    numberMessages = argMessages;
-  } else if (argMessages === 100) {
-    message.channel.send("**WARNING** - This will delete 100 messages in this channel! Are you sure? **(y/n)**");
-    numberMessages = 97;
   }
-  const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
-    time: 30000
-  });
-  collector.on("collect", (m) => {
-    if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-      clean(message.channel, numberMessages + 3, recurse);
-    } else {
-      message.channel.send("Okay, I won't do that.");
-      clean(message.channel, 4, false);
-    }
-    return collector.stop();
-  });
-  collector.on("end", (collected, reason) => {
-    if (reason === "time") {
-      message.channel.send("Command response timeout");
-      clean(message.channel, 3, 0);
-    }
-  });
 }
 
 /**
@@ -1087,7 +1049,7 @@ function run(message) {
     message.channel.send("Resetting Niles to default");
     guilds.recreateGuild(message.guild);
   } else if (["clean", "purge"].includes(cmd)) {
-    deleteMessages(args, message);
+    deleteMessages(args, channelid);
   } else if (["display"].includes(cmd)) {
     setTimeout(function func() {
       getEvents(guildChannelid);

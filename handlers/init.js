@@ -118,28 +118,25 @@ function setRoles(message, args, guildSettings) {
   const channelid = message.channel.id;
   const allowedRoles = guildSettings.allowedRoles;
   const userRoles = message.member.roles.cache.map((role) => role.name);
-  if (!adminRole && allowedRoles.length === 0) {
-    return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
-  } else if (!adminRole) {
+  let roleArray;
+  if (!adminRole) {
+    if (allowedRoles.length === 0) return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
     return message.channel.send(`The admin role for this discord is \`${allowedRoles}\`. You can change this setting using \`${guildSettings.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n You can allow everyone to use Niles again by entering \`${guildSettings.prefix}admin everyone\``);
   } else if (adminRole) {
     if (adminRole.toLowerCase() === "everyone") {
       message.channel.send("Do you want to allow everyone in this channel/server to use Niles? **(y/n)**");
-      helpers.yesThenCollector(channelid).then(() => {
-        writeSetting(channelid, [], "allowedRoles");
-      }).catch((err) => {
-        helpers.log(err);
-      });
+      roleArray = [];
     } else if (!userRoles.includes(adminRole)) {
       return message.channel.send("You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive");
     } else {
       message.channel.send(`Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`);
-      helpers.yesThenCollector(channelid).then(() => {
-        writeSetting(channelid, [adminRole], "allowedRoles");
-      }).catch((err) => {
-        helpers.log(err);
-      });
+      roleArray = [adminRole];
     }
+    helpers.yesThenCollector(channelid).then(() => {
+      writeSetting(channelid, roleArray, "allowedRoles");
+    }).catch((err) => {
+      helpers.log(err);
+    });
   }
 }
 
