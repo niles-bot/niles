@@ -648,11 +648,12 @@ function quickAddEvent(args, guildid, channelid) {
 
 /**
  * handle binary display options
- * @param {Object} guildSettings - guild settings 
  * @param {[String]} args - Arguments passed in
+ * @param {Object} guildSettings - guild settings 
  * @param {Snowflake} channel - callback channel
+ * @returns {Object} guild settings without or without changes
  */
-function displayOptionHelper(guildSettings, args, channel) {
+function displayOptionHelper(args, guildSettings, channel) {
   const setting = args[0];
   const value = args[1];
   const optionName = {
@@ -684,11 +685,12 @@ function displayOptionHelper(guildSettings, args, channel) {
 
 /**
  * Handle embed display options
- * @param {Object} guildSettings - guild settings 
  * @param {[String]} args - Arguments passed in
+ * @param {Object} guildSettings - guild settings 
  * @param {Snowflake} channel - callback channel
+ * @returns {Object} modified or same guild settings
  */
-function embedStyleHelper(guildSettings, args, channel) {
+function embedStyleHelper(args, guildSettings, channel) {
   const setting = args[0];
   const value = args[1];
   // current option
@@ -699,7 +701,7 @@ function embedStyleHelper(guildSettings, args, channel) {
     url: "embedded link"
   };
   if (curStyle === "code") { // if set to code, do not allow
-    return channel.send("This displayoption is only compatible with the `embed` display style");
+    channel.send("This displayoption is only compatible with the `embed` display style");
   } else if (value) { // if set to embed, set
     channel.send(value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`);
     guildSettings[setting] = value; // set value
@@ -727,9 +729,9 @@ function displayOptions(args, guildid, channelid) {
     "inline", "description", "url"
   ];
   if (binaryDisplayOptions.includes(dispCmd)) {
-    guildSettings = displayOptionHelper(guildSettings, args, channel);
+    guildSettings = displayOptionHelper(args, guildSettings, channel);
   } else if (embedStyleOptions.includes(dispCmd)) {
-    guildSettings = embedStyleHelper(guildSettings, args, channel);
+    guildSettings = embedStyleHelper(args, guildSettings, channel);
   } else if (dispCmd === "format") {
     if (dispOption) {
       guildSettings.format = dispOption;
@@ -807,61 +809,43 @@ function deleteEventById(eventId, calendarId, channelid) {
 function listSingleEventsWithinDateRange(guildid) {
   const dayMap = createDayMap(guildid);
   const calendarID = helpers.getGuildSettings(guildid, "settings").calendarID;
-  const auth = getAuth(guildid);
-  const cal = google.calendar({version: "v3", auth});
-  let eventsArray = [];
+  const cal = google.calendar({version: "v3", auth: getAuth(guildid)});
   const params = {
     calendarId: calendarID,
     timeMin: dayMap[0].toISO(),
     timeMax: dayMap[6].toISO(),
     singleEvents: true,
-    timeZone: helpers.getValidTz(guildid)
+    timeZone: helpers.getValidTz(guildid),
+    orderBy: "startTime"
   };
-  return cal.events.list(params)
-    .then((res) => {
-      res.data.items.map((calEvent) => {
-        let event = {
-          id: calEvent.id,
-          summary: calEvent.summary,
-          location: calEvent.location,
-          start: calEvent.start,
-          end: calEvent.end,
-          status: calEvent.status,
-          description: calEvent.description
-        };
-        eventsArray.push(event);
-      });
-      return eventsArray;
-    }).catch((err) => {
-      helpers.log("Error: listSingleEventsWithinDateRange", err.message);
-    });
+  return cal.events.list(params);
 }
 
 /**
  * Displays the next upcoming event in the calendar file
  * @param {String} channelid - ID of channel to respond to
+ * @returns {Snowflake} response with confirmation or failiure
  */
-function nextEvent(channelid) {
+function nextEvent(guildid, channelid) {
   const channel = bot.client.channels.cache.get(channelid);
-  const tz = helpers.getValidTz(channel.guild.id);
-  const now = DateTime.local().setZone(tz);
-  listSingleEventsWithinDateRange(channel.guild.id).then((resp) => {
-    for (let i = 0; i < resp.length; i++) {
-      var isoDate = resp[i].start.dateTime;
-      var luxonDate = DateTime.fromISO(isoDate);
+  const now = DateTime.local().setZone(helpers.getValidTz(guildid));
+  listSingleEventsWithinDateRange(guildid).then((resp) => {
+    for (const eventObj of resp.data.items) {
+      let isoDate = eventObj.start.dateTime || eventObj.start.date;
+      let luxonDate = DateTime.fromISO(isoDate);
       if (luxonDate > now) { // make sure event happens in the future
         // description is passed in - option to be added
         // construct string
         const timeTo = luxonDate.diff(now).shiftTo("days", "hours", "minutes", "seconds").toObject();
-        var timeToString = "";
+        let timeToString = "";
         if (timeTo.days) timeToString += `${timeTo.days} days `;
         if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
         if (timeTo.minutes) timeToString += `${timeTo.minutes} minutes`;
-        return channel.send(`The next event is \`${resp[i].summary}\` in ${timeToString}`);
+        return channel.send(`The next event is \`${eventObj.summary}\` in ${timeToString}`);
       }
     }
     // run if message not sent
-    channel.send("No upcoming events within date range");
+    return channel.send("No upcoming events within date range");
   }).catch((err) => {
     helpers.log(err);
   });
@@ -871,6 +855,7 @@ function nextEvent(channelid) {
  * Delete event on daymap with specific name
  * @param {[String]} args - command arguments
  * @param {String} chennelid - callback channel
+ * @returns {Snowflake} command response
  */
 function deleteEvent(args, channelid) {
   const channel = bot.client.channels.cache.get(channelid);
@@ -884,30 +869,27 @@ function deleteEvent(args, channelid) {
   const guildid = channel.guild.id;
   const calendarID = helpers.getGuildSettings(guildid, "settings").calendarID;
   listSingleEventsWithinDateRange(guildid).then((resp) => {
-    for (let i = 0; i < resp.length; i++) {
-      const curEvent = resp[i];
-      if (curEvent.summary) {
-        if (text.toUpperCase().trim() == curEvent.summary.toUpperCase().trim()) {
-          let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
-          channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`);
-          helpers.yesThenCollector(channelid).then(() => { // collect yes
-            deleteEventById(curEvent.id, calendarID, channelid).then(() => {
-              channel.send(`Event **${curEvent.summary}** deleted`).then((res) => {
-                res.delete({ timeout: 10000 });
-              });
-            }).catch((err) => {
-              helpers.log(err);
+    for (const curEvent of resp.data.items) {
+      if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
+        let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
+        channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`);
+        helpers.yesThenCollector(channelid).then(() => { // collect yes
+          deleteEventById(curEvent.id, calendarID, channelid).then(() => {
+            channel.send(`Event **${curEvent.summary}** deleted`).then((res) => {
+              res.delete({ timeout: 10000 });
             });
+          }).catch((err) => {
+            helpers.log(err);
           });
-          return;
-        }
+        });
+        return;
       }
     }
     return channel.send("Couldn't find event with that name - make sure you use exactly what the event is named!").then((res) => {
       res.delete({ timeout: 5000 });
     });
   }).catch((err) => {
-    helpers.log(err); //FIX THIS
+    helpers.log(err);
     return channel.send("There was an error finding this event").then((res) => {
       res.delete({ timeout: 5000 });
     });
@@ -1119,7 +1101,7 @@ function run(message) {
     quickAddEvent(args, guildid, channelid);
     calendarUpdater(guildid, guildChannelid, true);
   } else if (["displayoptions"].includes(cmd)) {
-    displayOptions(args, channelid);
+    displayOptions(args, guildid, channelid);
   } else if (["stats", "info"].includes(cmd)) {
     displayStats(channelid);
   } else if (["get"].includes(cmd)) {
@@ -1129,7 +1111,7 @@ function run(message) {
   } else if (["delete"].includes(cmd)) {
     deleteEvent(args, channelid);
   } else if (["next"].includes(cmd)) {
-    nextEvent(channelid);
+    nextEvent(guildid, channelid);
   } else if (["count"].includes(cmd)) {
     const theCount = (!timerCount[guildid] ? 0 : timerCount[guildid]);
     message.channel.send(`There are ${theCount} timer threads running in this guild`);
@@ -1151,7 +1133,7 @@ function run(message) {
       message.client.send(response);
     }
   } else if (["validate"].includes(cmd)) {
-    validate(message);
+    validate(guildid, channelid);
   } else if (["calname"].includes(cmd)) {
     calName(args, guildid, channelid);
   } else if (["auth"].includes(cmd)) {
