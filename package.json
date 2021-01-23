@@ -1,6 +1,6 @@
 {
   "name": "niles",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
