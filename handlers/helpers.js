@@ -32,7 +32,8 @@ const defaultSettings = {
   "inline": "0",
   "description": "0",
   "url": "0",
-  "auth": "sa"
+  "auth": "sa",
+  "channelid": ""
 };
 
 /**
@@ -226,25 +227,24 @@ function checkRole(message) {
 }
 
 /**
- * Collects rsponse for a message
- * @param {Snowflake} message - Initiating Message
+ * Collects response for a message
+ * @param {String} channelid - ID of channel to create collector in
  */
-function yesThenCollector(message) {
+function yesThenCollector(channelid) {
   let p = defer();
-  const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, {
-    time: 30000
-  });
+  const channel = bot.client.channels.cache.get(channelid);
+  const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
     if (["y", "yes"].includes(m.content.toLowerCase())) {
       p.resolve();
     } else {
-      message.channel.send("Okay, I won't do that");
+      channel.send("Okay, I won't do that");
       p.reject();
     }
     collector.stop();
   });
   collector.on("end", (collected, reason) => {
-    if (reason === "time") return message.channel.send("Command response timeout");
+    if (reason === "time") return channel.send("Command response timeout");
   });
   return p.promise;
 }
@@ -320,11 +320,12 @@ function descriptionParser(inputString) {
 
 /**
  * This function makes sure that the calendar matches a specified type
- * @param {Snowflake} [message] - message to send warnings
  * @param {String} calendarId - calendar ID to classify
+ *  @param {String} channelid - Channel to send callback to
  * @returns {bool} - if calendar ID is valid
  */
-function matchCalType(calendarId, message) {
+function matchCalType(calendarId, channelid) {
+  const channel = bot.client.channels.cache.get(channelid);
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
   const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
@@ -339,13 +340,13 @@ function matchCalType(calendarId, message) {
   } else if (groupCalId.test(calendarId)) {
     if (cGroupCalId.test(calendarId)) { // matches cGroup
     } else if (domainCalId.test(calendarId)) {
-      if (message) message.channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+      channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
     } else if (underscoreCalId.test(calendarId)) {
-      if (message) message.channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
+      channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
     }
     return true; // normal group id or any variation
   } else if (domainAddress.test(calendarId)) {
-    if (message) message.channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+    channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
   } else {
     return false; // break and return false
   }

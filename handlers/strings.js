@@ -17,6 +17,9 @@ const HELP_MESSAGE = "```\
 !help                -  Display this message\n\
 !next                -  Displays the next upcoming event\n\
 !validate            -  Checks for any errors with the timezone, calendar ID, calendar fetching or permissions\n\
+!calname             -  Changes the calendar link name\n\
+!auth                -  Sets up and switches to OAuth2 or switch back to Service Accounts\n\
+!channel             -  Sets a channel to be the designated channel for calendar postings and updates\n\
 ```\
 Visit https://nilesbot.com for more info.";
 

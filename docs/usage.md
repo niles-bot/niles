@@ -130,6 +130,24 @@ Use `!validate` or `@niles validate` to check for any errors with the timezone, 
 
 ---
 
+### calname
+
+Use `!calname` or `@niles calname` to rename the CALENDAR link name to something else
+
+---
+
+### auth
+
+Use `!auth` or `@niles auth` to set up authorization with OAuth2 or to switch back to service account
+
+---
+
+### channel
+
+Use `!channel` or `@niles channel` to set a channel to be the default channel for all calendar updates and postings with subcommands `set` and `delete`
+
+---
+
 ### setup
 
 Use `!setup` or `@niles setup` to display a summary of the setup steps for getting started with Niles.
