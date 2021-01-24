@@ -19,11 +19,10 @@ const { oauth2, sa } = require("../settings.js");
  * Get and store access token after promptiong for user authorization
  * @param {bool} force - force reauthentication
  * @param {String} guildid - ID of guild to pull settings from
- * @param {String} channelid - ID of channel to respond and listen from
+ * @param {Snowflake} channel - channel to respond and listen to
  */
-function getAccessToken(force, guildid, channelid) {
+function getAccessToken(force, guildid, channel) {
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
-  const channel = bot.client.channels.cache.get(channelid);
   const authUrl = oauth2.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/calendar.events"],
@@ -54,14 +53,13 @@ function getAccessToken(force, guildid, channelid) {
  * Guide user through authentication setup
  * @param {[String]} args - Arguments passed in
  * @param {String} guildid - ID of guild to pull settings form
- * @param {String} channelid - ID of channel to respond to
+ * @param {Snowflake} channel - Channel to respond to
  */
-function setupAuth(args, guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function setupAuth(args, guildid, channel) {
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   if (args[0] === "oauth") {
     if (!oauth2) return channel.send("OAuth2 credentials not installed");
-    getAccessToken((args[1] === "force"), guildid, channelid);
+    getAccessToken((args[1] === "force"), guildid, channel);
   } else if (args[0] === "sa") {
     if (!sa) return channel.send("SA credentials not installed");
     guildSettings.auth = "sa"; // set SA to true
@@ -99,26 +97,6 @@ function killUpdateTimer(guildid) {
 }
 
 /**
- * Interface to warn users before deleting messages
- * @param {[String]} args - arguments passed in 
- * @param {Snowflake} message - Message sent by user
- */
-function deleteMessages(args, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
-  const argMessages = parseInt(args[0], 10);
-  if (!args[0] || isNaN(argMessages)) {
-    return channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
-  } else {
-    channel.send(`You are about to delete ${argMessages} messages. Are you sure? (y/n)`);
-    helpers.yesThenCollector(channelid).then(() => { // collect yes
-      clean(channel, argMessages, args[1]);
-    }).catch((err) => {
-      helpers.log(err);
-    });
-  }
-}
-
-/**
  * Cleans messages from the channel
  * @param {Snowflake} channel - channel to delete the messages in
  * @param {Integer} numberMessages - number of messages to delete
@@ -141,6 +119,26 @@ function clean(channel, numberMessages, deleteCal) {
         if (message.id === calendar.calendarMessageId) messages.delete(message.id); // skip calendar message
       });
       channel.bulkDelete(messages, true);
+    });
+  }
+}
+
+
+/**
+ * Interface to warn users before deleting messages
+ * @param {[String]} args - arguments passed in 
+ * @param {Snowflake} message - Message sent by user
+ */
+function deleteMessages(args, channel) {
+  const argMessages = parseInt(args[0], 10);
+  if (!args[0] || isNaN(argMessages)) {
+    return channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
+  } else {
+    channel.send(`You are about to delete ${argMessages} messages. Are you sure? (y/n)`);
+    helpers.yesThenCollector(channel).then(() => { // collect yes
+      clean(channel, argMessages, args[1]);
+    }).catch((err) => {
+      helpers.log(err);
     });
   }
 }
@@ -169,10 +167,9 @@ function createDayMap(guildid) {
 
 /**
  * Get Events from Google Calendar
- * @param {String} channelid - channel ID to respond to
+ * @param {Snowflake} channel - channel to respond to
  */
-function getEvents(channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function getEvents(channel) {
   const guildid = channel.guild.id;
   const dayMap = createDayMap(guildid);
   const auth = getAuth(guildid);
@@ -268,7 +265,7 @@ function isEmptyCalendar(guildid, dayMap) {
  */
 function eventNameCreator(event, guildSettings) {
   const titleName = helpers.trimEventName(event.summary, guildSettings.trim);
-  const urlPattern = new RegExp("(http|https)://(\\w+:{0,1}\\w*)?(\\S+)(:[0-9]+)?(/|/([\\w#!:.?+=&%!-/]))?");
+  const urlPattern = new RegExp("^https?://");
   // if location is url & setting is on
   return ((urlPattern.test(event.location) && guildSettings.url === "1") ? `[${titleName}](${event.location})` : titleName);
 }
@@ -399,10 +396,9 @@ function generateCalendarEmbed(guildid) {
 /**
  * Generate calendar message
  * @param {String} guildid - Guild ID to fetch settings from
- * @param {String} channelid - Channel ID to generate in
+ * @param {String} channel - Channel to generate in
  */
-function generateCalendar(guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function generateCalendar(guildid, channel) {
   const dayMap = createDayMap(guildid);
   const guildSettings = helpers.getGuildSettings(guildid, "settings");
   let p = defer();
@@ -438,19 +434,58 @@ function generateCalendar(guildid, channelid) {
   return p.promise;
 }
 
+
+/**
+ * Updates calendar
+ * @param {String} guildid - Guild ID
+ * @param {Snowflake} channel - Channel to respond to
+ * @param {bool} human - if command was initiated by a human
+ */
+function updateCalendar(guildid, channel, human) {
+  let calendar = helpers.getGuildSettings(guildid, "calendar");
+  if (typeof calendar === "undefined" || calendar.calendarMessageId === "") {
+    channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
+    helpers.log(`calendar undefined in ${guildid}. Killing update timer.`);
+    killUpdateTimer(guildid);
+  }
+  const messageId = calendar.calendarMessageId;
+  channel.messages.fetch(messageId).then((m) => {
+    generateCalendar(guildid, channel).then((embed) => {
+      if (embed === 2048) {
+        return;
+      }
+      m.edit({
+        embed
+      });
+      if ((timerCount[guildid] === 0 || !timerCount[guildid]) && human) {
+        startUpdateTimer(guildid, channel);
+      }
+    });
+  }).catch((err) => {
+    helpers.log(`error fetching previous calendar message in guild: ${guildid} : ${err}`);
+    //If theres an updater running try and kill it.
+    channel.send("update timer has been killed.");
+    channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.");
+    killUpdateTimer(guildid);
+    calendar.calendarMessageId = "";
+    helpers.writeGuildSpecific(guildid, calendar, "calendar");
+    return;
+  });
+}
+
 /**
  * Fetches new events and then updates calendar for specified guild
  * @param {String} guildid - Guild to start agianst 
- * @param {String} channelid - channel to respond to
+ * @param {Snowflake} channel - channel to respond to
  * @param {bool} human - if initiated by human
  */
-function calendarUpdater(guildid, channelid, human) {
+function calendarUpdater(guildid, channel, human) {
   try {
     setTimeout(function func() {
-      getEvents(channelid);
+      getEvents(channel);
     }, 2000);
     setTimeout(function func() {
-      updateCalendar(guildid, channelid, human);
+      updateCalendar(guildid, channel, human);
     }, 4000);
   } catch (err) {
     helpers.log(`error in autoupdater in guild: ${guildid} : ${err}`);
@@ -461,9 +496,9 @@ function calendarUpdater(guildid, channelid, human) {
 /**
  * Start update timer for guild mentioned
  * @param {String} guildid - ID of guild to update
- * @param {String} channelid - ID of channel to callback to
+ * @param {Snowflake} channel - Channel to callback to
  */
-function startUpdateTimer(guildid, channelid) {
+function startUpdateTimer(guildid, channel) {
   if (!timerCount[guildid]) {
     timerCount[guildid] = 0;
   }
@@ -472,7 +507,7 @@ function startUpdateTimer(guildid, channelid) {
     timerCount[guildid] += 1;
     helpers.log(`Starting update timer in guild: ${guildid}`);
     return autoUpdater[guildid] = setInterval(function func() {
-      calendarUpdater(guildid, channelid, false);
+      calendarUpdater(guildid, channel, false);
     }, settings.secrets.calendar_update_interval);
   }
   if (autoUpdater[guildid]._idleTimeout !== settings.secrets.calendar_update_interval) {
@@ -480,7 +515,7 @@ function startUpdateTimer(guildid, channelid) {
       timerCount[guildid] += 1;
       helpers.log(`Starting update timer in guild: ${guildid}`);
       return autoUpdater[guildid] = setInterval(function func() {
-        calendarUpdater(guildid, channelid, false);
+        calendarUpdater(guildid, channel, false);
       }, settings.secrets.calendar_update_interval);
     } catch (err) {
       helpers.log(`error starting the autoupdater ${err}`);
@@ -494,12 +529,11 @@ function startUpdateTimer(guildid, channelid) {
 /**
  * Post calendar in message channel
  * @param {String} guildid - Guild ID to post calendar in
- * @param {Snowflake} message - Initiating message
+ * @param {Snowflake} channel - Initiating channel
  */
-function postCalendar(guildid, channelid) {
+function postCalendar(guildid, channel) {
   let calendar = helpers.getGuildSettings(guildid, "calendar");
   const pin = helpers.getGuildSettings(guildid, "settings").pin;
-  const channel = bot.client.channels.cache.get(channelid);
   try {
     if (calendar.calendarMessageId) {
       channel.messages.fetch(calendar.calendarMessageId).then((message) => {
@@ -512,7 +546,7 @@ function postCalendar(guildid, channelid) {
         return helpers.log(`error fetching previous calendar in guild: ${guildid} : ${err}`);
       });
     }
-    generateCalendar(guildid, channelid).then((embed) => {
+    generateCalendar(guildid, channel).then((embed) => {
       if (embed === 2048) {
         return;
       }
@@ -526,7 +560,7 @@ function postCalendar(guildid, channelid) {
       setTimeout(function func() {
         helpers.writeGuildSpecific(guildid, calendar, "calendar");
         setTimeout(function func() {
-          startUpdateTimer(guildid, channelid);
+          startUpdateTimer(guildid, channel);
         }, 2000);
       }, 2000);
     }).catch((err) => {
@@ -543,52 +577,12 @@ function postCalendar(guildid, channelid) {
 }
 
 /**
- * Updates calendar
- * @param {String} guildid - Guild ID
- * @param {String} channelid - Channel to respond to
- * @param {bool} human - if command was initiated by a human
- */
-function updateCalendar(guildid, channelid, human) {
-  const channel = bot.client.channels.cache.get(channelid);
-  let calendar = helpers.getGuildSettings(guildid, "calendar");
-  if (typeof calendar === "undefined" || calendar.calendarMessageId === "") {
-    channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
-    helpers.log(`calendar undefined in ${guildid}. Killing update timer.`);
-    killUpdateTimer(guildid);
-  }
-  const messageId = calendar.calendarMessageId;
-  channel.messages.fetch(messageId).then((m) => {
-    generateCalendar(guildid, channelid).then((embed) => {
-      if (embed === 2048) {
-        return;
-      }
-      m.edit({
-        embed
-      });
-      if ((timerCount[guildid] === 0 || !timerCount[guildid]) && human) {
-        startUpdateTimer(guildid, channelid);
-      }
-    });
-  }).catch((err) => {
-    helpers.log(`error fetching previous calendar message in guild: ${guildid} : ${err}`);
-    //If theres an updater running try and kill it.
-    channel.send("update timer has been killed.");
-    killUpdateTimer(guildid);
-    channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.");
-    calendar.calendarMessageId = "";
-    helpers.writeGuildSpecific(guildid, calendar, "calendar");
-    return;
-  });
-}
-
-/**
  * Adds an event to google calendar via quickAddEvent
  * @param {[String]} args - Arguments passed in 
  * @param {String} guildid - Guild ID to work agianst
- * @param {String} channelid - ID of channel to callback to
+ * @param {Snowflake} channel - Channel to callback to
  */
-function quickAddEvent(args, guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function quickAddEvent(args, guildid, channel) {
   if (!args[0]) { 
     return channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`");
   }
@@ -677,10 +671,9 @@ function embedStyleHelper(args, guildSettings, channel) {
  * Change Display Options
  * @param {[String]} args - args passed in
  * @param {String} guildid - ID of guild to fetch settings for 
- * @param {String} channelid - ID of channel to respond to
+ * @param {Snowflake} channel - Channel to respond to
  */
-function displayOptions(args, guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function displayOptions(args, guildid, channel) {
   const dispCmd = args[0];
   const dispOption = args[1];
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
@@ -744,8 +737,7 @@ function displayOptions(args, guildid, channelid) {
  * @param {String} calendarId - ID of calendar to delete event form
  * @param {Snowflake} channel - callback channel
  */
-function deleteEventById(eventId, calendarId, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function deleteEventById(eventId, calendarId, channel) {
   const guildid = channel.guild.id;
   const params = {
     calendarId,
@@ -755,9 +747,9 @@ function deleteEventById(eventId, calendarId, channelid) {
   const auth = getAuth(guildid);
   const cal = google.calendar({version: "v3", auth});
   return cal.events.delete(params).then(() => {
-    getEvents(channelid);
+    getEvents(channel);
     setTimeout(function func() {
-      updateCalendar(guildid, channelid, true);
+      updateCalendar(guildid, channel, true);
     }, 2000);
   }).catch((err) => {
     helpers.log(`function deleteEventById error in guild: ${guildid} : ${err}`);
@@ -785,11 +777,10 @@ function listSingleEventsWithinDateRange(guildid) {
 
 /**
  * Displays the next upcoming event in the calendar file
- * @param {String} channelid - ID of channel to respond to
+ * @param {Snowflake} channel - Channel to respond to
  * @returns {Snowflake} response with confirmation or failiure
  */
-function nextEvent(guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function nextEvent(guildid, channel) {
   const now = DateTime.local().setZone(helpers.getValidTz(guildid));
   listSingleEventsWithinDateRange(guildid).then((resp) => {
     for (const eventObj of resp.data.items) {
@@ -816,11 +807,10 @@ function nextEvent(guildid, channelid) {
 /**
  * Delete event on daymap with specific name
  * @param {[String]} args - command arguments
- * @param {String} chennelid - callback channel
+ * @param {Snowflake} channel - callback channel
  * @returns {Snowflake} command response
  */
-function deleteEvent(args, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function deleteEvent(args, channel) {
   if (!args[0]) {
     return channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
       .then((m) => {
@@ -835,8 +825,8 @@ function deleteEvent(args, channelid) {
       if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
         let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
         channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`);
-        helpers.yesThenCollector(channelid).then(() => { // collect yes
-          deleteEventById(curEvent.id, calendarID, channelid).then(() => {
+        helpers.yesThenCollector(channel).then(() => { // collect yes
+          deleteEventById(curEvent.id, calendarID, channel).then(() => {
             channel.send(`Event **${curEvent.summary}** deleted`).then((res) => {
               res.delete({ timeout: 10000 });
             });
@@ -869,11 +859,10 @@ function passFail(bool) {
 
 /**
  * Checks if the bot has all the nesseary permissions
- * @param {String} channelid - ID of channel to check
+ * @param {Snowlfake} channel - Channel to check
  * @returns {String} - returns missing permissions (if any)
  */
-function permissionCheck(channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function permissionCheck(channel) {
   const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
   const botPermissions = channel.permissionsFor(bot.client.user).serialize(true);
   let missingPermissions = "";
@@ -888,11 +877,10 @@ function permissionCheck(channelid) {
 /**
  * Checks for any issues with guild configuration
  * @param {String} guilid - ID of guild to check agianst
- * @param {String} channelid - ID of channel to respond to
+ * @param {Snowflake} channel - Channel to respond to
  * @returns {bool} - if calendar fetches successfully
  */
-function validate(guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function validate(guildid, channel) {
   const guildSettings = helpers.getGuildSettings(guildid, "settings");
   const auth = getAuth(guildid);
   const cal = google.calendar({version: "v3", auth});
@@ -917,9 +905,9 @@ function validate(guildid, channelid) {
   // basic check
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
-    **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channelid))}
+    **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel))}
     **Calendar Test:** ${passFail(calTest)}
-    **Missing Permissions:** ${permissionCheck(channelid)}
+    **Missing Permissions:** ${permissionCheck(channel)}
     **Guild ID:** \`${guildid}\`
     **Shard:** ${bot.client.shard.ids}
   `);
@@ -927,9 +915,9 @@ function validate(guildid, channelid) {
 
 /**
  * Display current bot stats
- * @param {String} channelid - ID of channel to reply to 
+ * @param {Snowflake} channel - Channel to reply to 
  */
-function displayStats(channelid) {
+function displayStats(channel) {
   bot.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
     const { version } = require("../package.json");
     const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
@@ -946,7 +934,7 @@ function displayStats(channelid) {
       .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
       .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
       .setFooter("Created by the Niles Bot Team");
-    bot.client.channels.cache.get(channelid).send({ embed });
+    channel.send({ embed });
   }).catch((err) => {
     helpers.log(err);
   });
@@ -956,10 +944,9 @@ function displayStats(channelid) {
  * Rename Calendar Name
  * @param {[String]} args - arguments passed in
  * @param {String} guildid - ID of guild to pull settings from
- * @param {String} channelid - ID of channel to respond to
+ * @param {Snowflake} channel - Channel to respond to
  */
-function calName(args, guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function calName(args, guildid, channel) {
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   let newCalName = args[0];
   if (!newCalName) { // no name passed inno
@@ -968,7 +955,7 @@ function calName(args, guildid, channelid) {
     newCalName = args.join(" "); // join
   }
   channel.send(`Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`);
-  helpers.yesThenCollector(channelid).then(() => {
+  helpers.yesThenCollector(channel).then(() => {
     guildSettings.calendarName = newCalName;
     helpers.writeGuildSpecific(guildid, guildSettings, "settings");
     channel.send(`Changed calendar name to \`${newCalName}\``);
@@ -981,10 +968,9 @@ function calName(args, guildid, channelid) {
  * Sets current channel to be Calendar channel
  * @param {[String]} args - arguments passed in 
  * @param {String} guildid - ID of guild to pull settings from
- * @param {String} channelid - ID of channel to respond to
+ * @param {Snowflake} channel - Channel to respond to
  */
-function setChannel(args, guildid, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function setChannel(args, guildid, channel) {
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
   if (!args[0]) {
     const guildChannelId = guildSettings.channelid;
@@ -1001,8 +987,8 @@ function setChannel(args, guildid, channelid) {
     channel.send("Removed existing calendar channel");
   } else if (args[0] === "set") {
     channel.send(`This will make the channel with name \`${channel.name}\` the primary channel for the calendar. All new calendars and updates will target this channel until \`!channel delete\` is run. Are you sure? (y/n)`);
-    helpers.yesThenCollector(channelid).then(() => {
-      guildSettings.channelid = channelid;
+    helpers.yesThenCollector(channel).then(() => {
+      guildSettings.channelid = channel.id;
       helpers.writeGuildSpecific(guildid, guildSettings, "settings");
     }).catch((err) => {
       helpers.log(err);
@@ -1017,8 +1003,8 @@ function setChannel(args, guildid, channelid) {
 function run(message) {
   const guildid = message.guild.id;
   let guildSettings = helpers.getGuildSettings(guildid, "settings");
-  const channelid = message.channel.id;
-  const guildChannelid = (guildSettings.channelid ? guildSettings.channelid : channelid);
+  const channel = message.channel;
+  const guildChannel = (guildSettings.channelid ? bot.client.channels.cache.get(guildSettings.channelid) : channel);
   let args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
@@ -1028,17 +1014,17 @@ function run(message) {
   const sentByAdmin = (settings.secrets.admins.includes(message.author.id));
   // start commands
   if (["ping"].includes(cmd)) {
-    message.channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
+    channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`).catch((err) => {
       helpers.log(err);
     });
   } else if (["help"].includes(cmd)) {
-    message.channel.send(strings.HELP_MESSAGE);
+    channel.send(strings.HELP_MESSAGE);
   } else if (["invite"].includes(cmd)) {
     const inviteEmbed = {
       color: 0xFFFFF,
       description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`
     };
-    message.channel.send({ embed: inviteEmbed });
+    channel.send({ embed: inviteEmbed });
   } else if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd)) {
     try {
       init.run(message);
@@ -1046,40 +1032,40 @@ function run(message) {
       helpers.log(`error trying to run init message catcher in guild: ${guildid} : ${err}`);
     }
   } else if (["init"].includes(cmd)) {
-    message.channel.send("Resetting Niles to default");
-    guilds.recreateGuild(message.guild);
+    channel.send("Resetting Niles to default");
+    guilds.recreateGuild(channel.guild);
   } else if (["clean", "purge"].includes(cmd)) {
-    deleteMessages(args, channelid);
+    deleteMessages(args, channel);
   } else if (["display"].includes(cmd)) {
     setTimeout(function func() {
-      getEvents(guildChannelid);
+      getEvents(guildChannel);
     }, 1000);
     setTimeout(function func() {
-      postCalendar(guildid, guildChannelid);
+      postCalendar(guildid, guildChannel);
     }, 2000);
   } else if (["update", "sync"].includes(cmd)) {
-    calendarUpdater(guildid, guildChannelid, true);
+    calendarUpdater(guildid, guildChannel, true);
   } else if (["create", "scrim"].includes(cmd)) {
-    quickAddEvent(args, guildid, channelid);
-    calendarUpdater(guildid, guildChannelid, true);
+    quickAddEvent(args, guildid, channel);
+    calendarUpdater(guildid, guildChannel, true);
   } else if (["displayoptions"].includes(cmd)) {
-    displayOptions(args, guildid, channelid);
+    displayOptions(args, guildid, channel);
   } else if (["stats", "info"].includes(cmd)) {
-    displayStats(channelid);
+    displayStats(channel);
   } else if (["get"].includes(cmd)) {
-    getEvents(channelid);
+    getEvents(channel);
   } else if (["stop"].includes(cmd)) {
     killUpdateTimer(guildid);
   } else if (["delete"].includes(cmd)) {
-    deleteEvent(args, channelid);
+    deleteEvent(args, channel);
   } else if (["next"].includes(cmd)) {
-    nextEvent(guildid, channelid);
+    nextEvent(guildid, channel);
   } else if (["count"].includes(cmd)) {
     const theCount = (!timerCount[guildid] ? 0 : timerCount[guildid]);
-    message.channel.send(`There are ${theCount} timer threads running in this guild`);
+    channel.send(`There are ${theCount} timer threads running in this guild`);
   } else if (["timers"].includes(cmd)) {
     if (sentByAdmin) {
-      return message.channel.send(`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);
+      return channel.send(`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);
     }
   } else if (["reset"].includes(cmd)) {
     if (sentByAdmin) {
@@ -1092,16 +1078,16 @@ function run(message) {
         helpers.log(response);
         bot.client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
       }
-      message.client.send(response);
+      channel.send(response);
     }
   } else if (["validate"].includes(cmd)) {
-    validate(guildid, channelid);
+    validate(guildid, channel);
   } else if (["calname"].includes(cmd)) {
-    calName(args, guildid, channelid);
+    calName(args, guildid, channel);
   } else if (["auth"].includes(cmd)) {
-    setupAuth(args, guildid, channelid);
+    setupAuth(args, guildid, channel);
   } else if (["channel"].includes(cmd)) {
-    setChannel(args, guildid, channelid);
+    setChannel(args, guildid, channel);
   }
   message.delete({ timeout: 5000 });
 }

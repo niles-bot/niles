@@ -92,8 +92,7 @@ client.on("message", (message) => {
       return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
     }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
-      try {
-        init.run(message);
+      try { init.run(message);
       } catch (err) {
         helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
         return message.channel.send("I'm having issues with this server - please try kicking me and re-inviting me!");

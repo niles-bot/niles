@@ -6,12 +6,11 @@ const bot = require("../bot.js");
 
 /**
  * Write Settings
- * @param {String} channelid - callback channel
+ * @param {Snowflake} channel - callback channel
  * @param {String} value - Value to write
  * @param {String} setting - Setting name to write to
  */
-function writeSetting(channelid, value, setting) {
-  const channel = bot.client.channels.cache.get(channelid);
+function writeSetting(channel, value, setting) {
   const guildid = channel.guild.id;
   const guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
   let guildSettings = helpers.readFile(guildSettingsPath);
@@ -22,12 +21,11 @@ function writeSetting(channelid, value, setting) {
 
 /**
  * set guild calendar id
- * @param {String} channelid - ID of callback channel 
+ * @param {Snowflake} channel - Callback channel 
  * @param {[String]} args - command arguments
  * @param {Object} guildSettings - settings for guild
  */
-function logId(channelid, args, guildSettings) {
-  const channel = bot.client.channels.cache.get(channelid);
+function logId(channel, args, guildSettings) {
   const calendarId = args[0];
   const guildCalendarId = guildSettings.calendarID;
   if (!calendarId) {
@@ -38,28 +36,27 @@ function logId(channelid, args, guildSettings) {
     }
     return;
   }
-  else if (!helpers.matchCalType(calendarId, channelid)) {
+  else if (!helpers.matchCalType(calendarId, channel)) {
     return channel.send("I don't think that's a valid calendar ID... try again");
   } else if (guildCalendarId !== "") {
     channel.send(`I've already been setup to use \`${guildCalendarId}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${calendarId}\`? **(y/n)**"`);
-    helpers.yesThenCollector(channelid).then(() => {
-      writeSetting(channelid, calendarId, "calendarID");
+    helpers.yesThenCollector(channel).then(() => {
+      writeSetting(channel, calendarId, "calendarID");
     }).catch((err) => {
       helpers.log(err);
     });
   } else {
-    writeSetting(channelid, calendarId, "calendarID");
+    writeSetting(channel, calendarId, "calendarID");
   }
 }
 
 /**
  * set guild tz
- * @param {String} channelid - ID of callback channel 
+ * @param {Snowflake} channel - Callback channel 
  * @param {[String]} args - arguments passed in 
  * @param {Object} guildSettings - guild settings to modify
  */
-function logTz(channelid, args, guildSettings) {
-  const channel = bot.client.channels.cache.get(channelid);
+function logTz(channel, args, guildSettings) {
   const currentTz = guildSettings.timezone;
   let tz = args[0];
   if (!tz) { // no input
@@ -70,16 +67,16 @@ function logTz(channelid, args, guildSettings) {
     }
   }
   // valid input
-  if (helpers.validateTz(tz)) { // passes validation
+  else if (helpers.validateTz(tz)) { // passes validation
     if (currentTz) { // timezone set
       channel.send(`I've already been setup to use \`${currentTz}\`, do you want to overwrite this and use \`${tz}\`? **(y/n)**`);
       helpers.yesThenCollector(channel.id).then(() => { // collect yes
-        writeSetting(channelid, tz, "timezone");
+        writeSetting(channel, tz, "timezone");
       }).catch((err) => {
         helpers.log(err);
       });
     } else { // timezone is not set
-      writeSetting(channelid, tz, "timezone");
+      writeSetting(channel, tz, "timezone");
     }
   } else { // fails validation
     return channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.");
@@ -88,19 +85,18 @@ function logTz(channelid, args, guildSettings) {
 
 /**
  * Sets guild prefix
- * @param {String} channelid - ID of callback channel 
+ * @param {Snowflake} channel - Callback channel 
  * @param {[String]} args - arguments passed in
  * @param {Object} guildSettings - current guild settings
  */
-function setPrefix(channelid, args, guildSettings) {
-  const channel = bot.client.channels.cache.get(channelid);
+function setPrefix(channel, args, guildSettings) {
   const newPrefix = args[0];
   if (!newPrefix) {
     return channel.send(`You are currently using \`${guildSettings.prefix}\` as the prefix. To change the prefix use \`!prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
     helpers.yesThenCollector(channel.id).then(() => {
-      writeSetting(channelid, newPrefix, "prefix");
+      writeSetting(channel, newPrefix, "prefix");
     }).catch((err) => {
       helpers.log(err);
     });
@@ -115,7 +111,6 @@ function setPrefix(channelid, args, guildSettings) {
  */
 function setRoles(message, args, guildSettings) {
   const adminRole = args[0];
-  const channelid = message.channel.id;
   const allowedRoles = guildSettings.allowedRoles;
   const userRoles = message.member.roles.cache.map((role) => role.name);
   let roleArray;
@@ -132,8 +127,8 @@ function setRoles(message, args, guildSettings) {
       message.channel.send(`Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`);
       roleArray = [adminRole];
     }
-    helpers.yesThenCollector(channelid).then(() => {
-      writeSetting(channelid, roleArray, "allowedRoles");
+    helpers.yesThenCollector(message.channel).then(() => {
+      writeSetting(message.channel, roleArray, "allowedRoles");
     }).catch((err) => {
       helpers.log(err);
     });
@@ -150,18 +145,18 @@ exports.run = function(message) {
   // if mentioned return second object as command, if not - return first object as command
   let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
   cmd = cmd.toLowerCase();
-  const channelid = message.channel.id;
+  const channel = message.channel;
   // command parsers
   if (["setup"].includes(cmd)) {
     message.channel.send(strings.SETUP_MESSAGE);
   } else if (["id"].includes(cmd)) {
-    logId(channelid, args, guildSettings);
+    logId(channel, args, guildSettings);
   } else if (["tz"].includes(cmd)) {
-    logTz(channelid, args, guildSettings);
+    logTz(channel, args, guildSettings);
   } else if (["init"].includes(cmd)) {
     guilds.recreateGuild(message.guild);
   } else if (["prefix"].includes(cmd)) {
-    setPrefix(channelid, args, guildSettings);
+    setPrefix(channel, args, guildSettings);
   } else if (["admin"].includes(cmd)) {
     setRoles(message, args, guildSettings);
   } else if (["help"].includes(cmd)) {

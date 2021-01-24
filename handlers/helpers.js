@@ -37,6 +37,19 @@ const defaultSettings = {
 };
 
 /**
+ * Try and read file
+ * @param {String} path - path of file to read
+ */
+function readFile(path) {
+  try {
+    return JSON.parse(fs.readFileSync(path, "utf8"));
+  } catch (err) {
+    log("error reading file " + err);
+    return {}; // return valid JSON to trigger update
+  }
+}
+
+/**
  * Get Guild Settings
  * @param {String} id - ID of guild to fetch settings for
  * @param {String} file - file to fetch - calendar / settings
@@ -100,19 +113,6 @@ function log(...logItems) {
     });
 }
 
-/**
- * Try and read file
- * @param {String} path - path of file to read
- */
-function readFile(path) {
-  try {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
-  } catch (err) {
-    log("error reading file " + err);
-    return {}; // return valid JSON to trigger update
-  }
-}
-
 const guildDatabasePath = path.join(__dirname, "..", "stores", "guilddatabase.json");
 let guildDatabase;
 
@@ -160,15 +160,7 @@ function removeGuildFromDatabase(guildId) {
  */
 function deleteFolderRecursive(path) {
   if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach(function(file) {
-      var curPath = path + "/" + file;
-      if (fs.lstatSync(curPath).isDirectory()) {
-        deleteFolderRecursive(curPath);
-      } else {
-        fs.unlinkSync(curPath);
-      }
-    });
-    fs.rmdirSync(path);
+    fs.rmdirSync(path, {recursive: true});
   }
 }
 
@@ -228,11 +220,10 @@ function checkRole(message) {
 
 /**
  * Collects response for a message
- * @param {String} channelid - ID of channel to create collector in
+ * @param {Snowflake} channel - Channel to create collector in
  */
-function yesThenCollector(channelid) {
+function yesThenCollector(channel) {
   let p = defer();
-  const channel = bot.client.channels.cache.get(channelid);
   const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
     if (["y", "yes"].includes(m.content.toLowerCase())) {
@@ -260,31 +251,23 @@ function yesThenCollector(channelid) {
 function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
   let eventMatchType = eventType.NOMATCH;
   // simple single day event
-  if(checkDate.hasSame(eventStartDate, "day") && eventStartDate.hasSame(eventEndDate, "day")){
+  if (checkDate.hasSame(eventStartDate, "day") && eventStartDate.hasSame(eventEndDate, "day")){
     eventMatchType = eventType.SINGLE;
-  }
-  // multi-day event
-  else if(!eventStartDate.hasSame(eventEndDate, "day"))
-  {
+  } else if (!eventStartDate.hasSame(eventEndDate, "day")) { // multi-day event
     // special case, Event ends as 12 AM spot on
-    if(checkDate.hasSame(eventStartDate, "day") && eventEndDate.diff(eventStartDate.endOf("day"),"minutes") <= 1){
+    if (checkDate.hasSame(eventStartDate, "day") && eventEndDate.diff(eventStartDate.endOf("day"),"minutes") <= 1){
       eventMatchType = eventType.SINGLE;
-    }
-    // this removes the entry for the next day of a 12AM ending event
-    else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
+    } else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
+      // this removes the entry for the next day of a 12AM ending event
       eventMatchType = eventType.NOMATCH;
-    }
-    else if(checkDate.hasSame(eventStartDate, "day")){
+    } else if (checkDate.hasSame(eventStartDate, "day")) {
       eventMatchType = eventType.MULTISTART;
-    }
-    else if(checkDate.hasSame(eventEndDate, "day")){
+    } else if (checkDate.hasSame(eventEndDate, "day")){
       eventMatchType = eventType.MULTYEND;
-    } 
-    // this makes the 12AM ending multi-day events show as ""..... - 12:00 AM"
-    else if(checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day") && eventEndDate.diff(checkDate.endOf("day"),"minutes") <= 1){
+    } else if (checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day") && eventEndDate.diff(checkDate.endOf("day"),"minutes") <= 1){
+      // this makes the 12AM ending multi-day events show as ""..... - 12:00 AM"
       eventMatchType = eventType.MULTYEND;
-    } 
-    else if(checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day")){
+    } else if (checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day")){
       eventMatchType = eventType.MULTIMID;
     } 
   }
@@ -321,11 +304,10 @@ function descriptionParser(inputString) {
 /**
  * This function makes sure that the calendar matches a specified type
  * @param {String} calendarId - calendar ID to classify
- *  @param {String} channelid - Channel to send callback to
+ *  @param {Snowflake} channel - Channel to send callback to
  * @returns {bool} - if calendar ID is valid
  */
-function matchCalType(calendarId, channelid) {
-  const channel = bot.client.channels.cache.get(channelid);
+function matchCalType(calendarId, channel) {
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
   const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
