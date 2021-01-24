@@ -4,6 +4,7 @@ const defer = require("promise-defer");
 const stripHtml = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
+const { oauth2, sa } = require("../settings.js");
 
 // event types
 const eventType = {
@@ -46,27 +47,6 @@ function readFile(path) {
   } catch (err) {
     log("error reading file " + err);
     return {}; // return valid JSON to trigger update
-  }
-}
-
-/**
- * Get Guild Settings
- * @param {String} id - ID of guild to fetch settings for
- * @param {String} file - file to fetch - calendar / settings
- */
-function getGuildSettings(id, file) {
-  let filePath; // select file
-  if (file === "calendar") {
-    filePath = path.join(__dirname, "..", "stores", id, "calendar.json");
-    return readFile(filePath);
-  } else if (file === "settings") {
-    filePath = path.join(__dirname, "..", "stores", id, "settings.json");
-    let storedData = readFile(filePath);
-    //merge defaults and stored settings to guarantee valid data
-    return {...defaultSettings, ...storedData };
-  } else if (file === "token") {
-    filePath = path.join(__dirname, "..", "stores", id, "token.json");
-    return readFile(filePath);
   }
 }
 
@@ -179,31 +159,126 @@ function writeGuildSpecific(guildid, json, file) {
   });
 }
 
+function Guild(guildid) {
+  // settings
+  let settings = () => {
+    let filePath = path.join(__dirname, "..", "stores", this.id, "settings.json");
+    let storedData = readFile(filePath);
+    // merge defaults and stored settings to guarantee valid data
+    return {...defaultSettings, ...storedData };
+  };
+  /**
+   * Get settings
+   * @param {String} [key] - Optional key to fetch 
+   */
+  this.getSetting = (key) => {
+    return (key ? settings[key] : settings);
+  };
+  /**
+   * Sets specific setting to value
+   * @param {String} key - key of setting to change
+   * @param {String} value - value to set key to
+   */
+  this.setSetting = (key, value) => { // set settings value
+    settings[key] = value;
+    writeGuildSpecific(guildid, settings, "settings");
+  };
+  /**
+   * Set all settings
+   * @param {Object} newSettings - new settings object
+   */
+  this.setSettings = (newSettings) => { writeGuildSpecific(guildid, newSettings, "settings"); };
+  // common settings
+  this.prefix = settings.prefix;
+  this.id = guildid;
+  // calendar
+  let calendar = () => {
+    let filePath = path.join(__dirname, "..", "stores", this.id, "calendar.json");
+    return readFile(filePath);
+  };
+  /**
+   * Get calendar file
+   * @param {String} [key] - Optionally get specific key 
+   */
+  this.getCalendar = (key) => {
+    return (key ? calendar[key] : calendar);
+  };
+  /**
+   * Set Calendar to value
+   * @param {Object} [argCalendar] - If provided, set to given calendar, else write current calendar
+   */
+  this.setCalendar = (argCalendar) => {
+    let newCalendar = argCalendar || calendar;
+    writeGuildSpecific(guildid, newCalendar, "calendar");
+    calendar = newCalendar;
+  };
+  // calendarID
+  /**
+   * Set Calendar Message ID
+   * @param {String} calendarID - ID of calendar message 
+   */
+  this.setCalendarID = (calendarID) => {
+    calendar.calendarMessageId = calendarID;
+    this.setCalendar();
+  };
+  this.calendarID = calendar.calendarMessageId;
+  // daymap
+  this.getDayMap = () => {
+    let dayMap = [];
+    // allowing all days to be correctly TZ adjusted
+    let d = DateTime.fromJSDate(new Date()).setZone(this.tz);
+    // if Option to show past events is set, start at startOf Day instead of NOW()
+    if (settings.showpast === "1") d = d.startOf("day");
+    dayMap[0] =  d;
+    for (let i = 1; i < settings.days; i++) {
+      dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
+    }
+    return dayMap;
+  };
+  /**
+   * Get OAuth2 token
+   */
+  this.getToken = () => {
+    let filePath = path.join(__dirname, "..", "stores", this.id, "token.json");
+    return readFile(filePath);
+  };
+  /**
+   * Set OAuth2 token
+   * @param {Object} token - token object to write
+   */
+  this.setToken = (token) => writeGuildSpecific(guildid, token, "token");
+  /**
+   * Gets guild authentication
+   * @returns return googleAuth object
+   */
+  this.getAuth = () => {
+    if (settings.auth === "oauth") {
+      oauth2.setCredentials(this.getToken());
+      return oauth2;
+    } else { // default to SA if oauth2 failed too
+      return sa;
+    }
+  };
+  /**
+   * Get valid tz
+   */
+  this.getTz = () => { return (validateTz(settings.timezone) ? settings.timezone : "UTC"); };
+}
+
 // timezone validation
 function validateTz(tz) {
   return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 }
 
 /**
- * get a valid Timezone (fallback to UTC if config option is inval)
- * @param {number} guildid - Guild ID to get settings from
- * @return {string} - valid IANAZone formatted timezone
- */
-function getValidTz(guildid) {
-  let guildSettings = getGuildSettings(guildid, "settings");
-  return validateTz(guildSettings.timezone) ? guildSettings.timezone : "UTC";
-}
-
-/**
  * Make a guild setting formatted time string from timezone adjusted date object
  * @param {string} date - ISO datetimestring
- * @param {Snowflake} guildid - Guild ID to get settings from
+ * @param {Guild} guild - Guild to get settings from
  * @return {string} - nicely formatted string for date event
  */
-function getStringTime(date, guildid) {
-  let guildSettings = getGuildSettings(guildid, "settings");
-  let format = guildSettings.format;
-  let zDate = DateTime.fromISO(date, {setZone: true});
+function getStringTime(date, guild) {
+  const format = guild.getSetting("format");
+  const zDate = DateTime.fromISO(date, {setZone: true});
   return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
 }
 
@@ -213,10 +288,12 @@ function getStringTime(date, guildid) {
  * @returns {bool} - return if no allowed roles or user has role
  */
 function checkRole(message) {
-  let allowedRoles = getGuildSettings(message.guild.id, "settings").allowedRoles;
-  let userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
+  const guild = new Guild(message.guild.id);
+  const allowedRoles = guild.getSetting("allowedRoles");
+  const userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
+
 
 /**
  * Collects response for a message
@@ -338,16 +415,12 @@ function matchCalType(calendarId, channel) {
 module.exports = {
   deleteFolderRecursive,
   getGuildDatabase,
-  getGuildSettings,
   removeGuildFromDatabase,
-  writeGuildDatabase,
   amendGuildDatabase,
   writeGuildSpecific,
   validateTz,
   log,
-  readFile,
   getStringTime,
-  getValidTz,
   checkRole,
   yesThenCollector,
   classifyEventMatch,
@@ -355,5 +428,6 @@ module.exports = {
   defaultSettings,
   trimEventName,
   descriptionParser,
-  matchCalType
+  matchCalType,
+  Guild
 };
