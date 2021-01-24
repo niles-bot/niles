@@ -96,8 +96,7 @@ function clean(channel, numMsg, deleteCal) {
         messages.forEach(function(message) {
           if (guild.calendarID && message.id === guild.calendarID) messages.delete(message.id); // skip calendar message
         });
-        channel.bulkDelete(messages, true);
-        return null;
+        return channel.bulkDelete(messages, true);
       });
   }
 }
@@ -115,8 +114,7 @@ function deleteMessages(args, channel) {
   } else {
     channel.send(`You are about to delete ${argMessages} messages. Are you sure? (y/n)`);
     helpers.yesThenCollector(channel).then(() => { // collect yes
-      clean(channel, argMessages, deleteCalendar);
-      return null;
+      return clean(channel, argMessages, deleteCalendar);
     }).catch((err) => {
       helpers.log(err);
     });
@@ -438,9 +436,7 @@ function updateCalendar(guild, channel, human) {
   }
   channel.messages.fetch(guild.calendarID).then((m) => {
     generateCalendar(guild, channel).then((embed) => {
-      if (embed === 2048) {
-        return null;
-      }
+      if (embed === 2048) return null;
       m.edit({
         embed
       });
@@ -498,7 +494,6 @@ function postCalendar(guild, channel) {
     }).then((sent) => {
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
-      return null;
     });
   }).then(() => {
     setTimeout(function func() {
@@ -744,9 +739,7 @@ function nextEvent(guild, channel) {
 function deleteEvent(args, guild, channel) {
   if (!args[0]) {
     return channel.send("You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`")
-      .then((m) => {
-        m.delete({ timeout: 5000 });
-      });
+      .then((m) => { m.delete({ timeout: 5000 }); });
   }
   const text = args.join(" "); // join
   const calendarID = guild.getSetting("calendarID");
@@ -757,28 +750,21 @@ function deleteEvent(args, guild, channel) {
         channel.send(`Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`);
         helpers.yesThenCollector(channel).then(() => { // collect yes
           deleteEventById(curEvent.id, calendarID, channel)
-            .then(() => { 
-              channel.send(`Event **${curEvent.summary}** deleted`);
-              return null;
-            }).then((res) => { 
-              res.delete({ timeout: 10000 });
-              return null;
-            }).catch((err) => { 
-              helpers.log(err);
+            .then(() => { return channel.send(`Event **${curEvent.summary}** deleted`);
+            }).then((res) => { return res.delete({ timeout: 10000 });
+            }).catch((err) => { helpers.log(err);
             });
         });
         return;
       }
     }
     return channel.send("Couldn't find event with that name - make sure you use exactly what the event is named!").then((res) => {
-      res.delete({ timeout: 5000 });
-      return null;
+      return res.delete({ timeout: 5000 });
     });
   }).catch((err) => {
     helpers.log(err);
     return channel.send("There was an error finding this event").then((res) => {
-      res.delete({ timeout: 5000 });
-      return null;
+      return res.delete({ timeout: 5000 });
     });
   });
 }
@@ -868,8 +854,7 @@ function displayStats(channel) {
       .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
       .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
       .setFooter("Created by the Niles Bot Team");
-    channel.send({ embed });
-    return null;
+    return channel.send({ embed });
   }).catch((err) => {
     helpers.log(err);
   });
@@ -891,8 +876,7 @@ function calName(args, guild, channel) {
   channel.send(`Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`);
   helpers.yesThenCollector(channel).then(() => {
     guild.setSetting("calendarName", newCalName);
-    channel.send(`Changed calendar name to \`${newCalName}\``);
-    return null;
+    return channel.send(`Changed calendar name to \`${newCalName}\``);
   }).catch((err) => {
     helpers.log(err);
   });
@@ -920,8 +904,7 @@ function setChannel(args, guild, channel) {
   } else if (args[0] === "set") {
     channel.send(`This will make the channel with name \`${channel.name}\` the primary channel for the calendar. All new calendars and updates will target this channel until \`!channel delete\` is run. Are you sure? (y/n)`);
     helpers.yesThenCollector(channel).then(() => {
-      guild.setSetting("channelid", channel.id);
-      return null;
+      return guild.setSetting("channelid", channel.id);
     }).catch((err) => {
       helpers.log(err);
     });

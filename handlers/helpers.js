@@ -37,19 +37,6 @@ const defaultSettings = {
   "channelid": ""
 };
 
-/**
- * Try and read file
- * @param {String} path - path of file to read
- */
-function readFile(path) {
-  try {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
-  } catch (err) {
-    log("error reading file " + err);
-    return {}; // return valid JSON to trigger update
-  }
-}
-
 function getSettings() {
   return require("../settings.js");
 }
@@ -91,6 +78,20 @@ function log(...logItems) {
     .catch((err) => {
       console.log(err);
     });
+}
+
+
+/**
+ * Try and read file
+ * @param {String} path - path of file to read
+ */
+function readFile(path) {
+  try {
+    return JSON.parse(fs.readFileSync(path, "utf8"));
+  } catch (err) {
+    log("error reading file " + err);
+    return {}; // return valid JSON to trigger update
+  }
 }
 
 const guildDatabasePath = path.join(__dirname, "..", "stores", "guilddatabase.json");
@@ -142,6 +143,11 @@ function deleteFolderRecursive(path) {
   if (fs.existsSync(path)) {
     fs.rmdirSync(path, {recursive: true});
   }
+}
+
+// timezone validation
+function validateTz(tz) {
+  return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 }
 
 /**
@@ -207,10 +213,9 @@ function Guild(guildid) {
    * Set Calendar to value
    * @param {Object} [argCalendar] - If provided, set to given calendar, else write current calendar
    */
-  this.setCalendar = (argCalendar) => {
-    let newCalendar = argCalendar || calendar;
-    writeGuildSpecific(guildid, newCalendar, "calendar");
-    calendar = newCalendar;
+  this.setCalendar = (argCalendar = calendar) => {
+    writeGuildSpecific(guildid, argCalendar, "calendar");
+    calendar = argCalendar;
   };
   // calendarID
   /**
@@ -263,11 +268,6 @@ function Guild(guildid) {
    * Get valid tz
    */
   this.getTz = () => { return (validateTz(settings.timezone) ? settings.timezone : "UTC"); };
-}
-
-// timezone validation
-function validateTz(tz) {
-  return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 }
 
 /**

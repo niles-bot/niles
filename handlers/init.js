@@ -21,8 +21,7 @@ function logId(channel, args, guild) {
   } else if (oldID !== "") {
     channel.send(`I've already been setup to use \`${oldID}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${calendarId}\`? **(y/n)**"`);
     helpers.yesThenCollector(channel).then(() => {
-      guild.setSetting("calendarID", calendarId);
-      return null;
+      return guild.setSetting("calendarID", calendarId);
     }).catch((err) => {
       helpers.log(err);
     });
@@ -52,8 +51,7 @@ function logTz(channel, args, guild) {
     if (currentTz) { // timezone set
       channel.send(`I've already been setup to use \`${currentTz}\`, do you want to overwrite this and use \`${tz}\`? **(y/n)**`);
       helpers.yesThenCollector(channel).then(() => { // collect yes
-        guild.setSetting("timezone", tz);
-        return null;
+        return guild.setSetting("timezone", tz);
       }).catch((err) => {
         helpers.log(err);
       });
@@ -78,8 +76,7 @@ function setPrefix(channel, args, guild) {
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
     helpers.yesThenCollector(channel).then(() => {
-      guild.setSetting("prefix", newPrefix);
-      return null;
+      return guild.setSetting("prefix", newPrefix);
     }).catch((err) => {
       helpers.log(err);
     });
@@ -111,8 +108,7 @@ function setRoles(message, args, guild) {
       roleArray = [adminRole];
     }
     helpers.yesThenCollector(message.channel).then(() => {
-      guild.setSetting("allowedRoles", roleArray);
-      return null;
+      return guild.setSetting("allowedRoles", roleArray);
     }).catch((err) => {
       helpers.log(err);
     });
