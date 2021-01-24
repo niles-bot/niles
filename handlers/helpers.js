@@ -86,8 +86,7 @@ function log(...logItems) {
  * @param {String} path - path of file to read
  */
 function readFile(path) {
-  try {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
+  try { return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
     log("error reading file " + err);
     return {}; // return valid JSON to trigger update
@@ -101,8 +100,7 @@ let guildDatabase;
  * Fetch current guilds database if already loaded or read from file
  */
 function getGuildDatabase() {
-  guildDatabase = guildDatabase || readFile(guildDatabasePath);
-  return guildDatabase;
+  return guildDatabase || readFile(guildDatabasePath);
 }
 
 /**
@@ -111,9 +109,7 @@ function getGuildDatabase() {
 function writeGuildDatabase() {
   const formattedJson = JSON.stringify(guildDatabase, "", "\t");
   fs.writeFile(guildDatabasePath, formattedJson, (err) => {
-    if (err) {
-      return log("writing the guild database", err);
-    }
+    if (err) return log("writing the guild database", err);
   });
 }
 
@@ -159,20 +155,20 @@ function validateTz(tz) {
 function writeGuildSpecific(guildid, json, file) {
   let fullPath = path.join(__dirname, "..", "stores", guildid, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-    if (err) {
-      return log("error writing guild specific database: " + err);
-    }
+    if (err) return log("error writing guild specific database: " + err);
   });
+}
+
+function getGuildSpecific(guildid, file) {
+  let filePath = path.join(__dirname, "..", "stores", guildid, file);
+  let storedData = readFile(filePath);
+  // merge defaults and stored settings to guarantee valid data - only for settings
+  return (file === "settings.json" ? {...defaultSettings, ...storedData} : storedData);
 }
 
 function Guild(guildid) {
   // settings
-  let settings = () => {
-    let filePath = path.join(__dirname, "..", "stores", this.id, "settings.json");
-    let storedData = readFile(filePath);
-    // merge defaults and stored settings to guarantee valid data
-    return {...defaultSettings, ...storedData };
-  };
+  let settings = getGuildSpecific(guildid, "settings.json");
   /**
    * Get settings
    * @param {String} [key] - Optional key to fetch 
@@ -198,17 +194,12 @@ function Guild(guildid) {
   this.prefix = settings.prefix;
   this.id = guildid;
   // calendar
-  let calendar = () => {
-    let filePath = path.join(__dirname, "..", "stores", this.id, "calendar.json");
-    return readFile(filePath);
-  };
+  let calendar = getGuildSpecific(guildid, "calendar.json");
   /**
    * Get calendar file
    * @param {String} [key] - Optionally get specific key 
    */
-  this.getCalendar = (key) => {
-    return (key ? calendar[key] : calendar);
-  };
+  this.getCalendar = (key) => { return (key ? calendar[key] : calendar); };
   /**
    * Set Calendar to value
    * @param {Object} [argCalendar] - If provided, set to given calendar, else write current calendar
@@ -243,10 +234,7 @@ function Guild(guildid) {
   /**
    * Get OAuth2 token
    */
-  this.getToken = () => {
-    let filePath = path.join(__dirname, "..", "stores", this.id, "token.json");
-    return readFile(filePath);
-  };
+  this.getToken = () => getGuildSpecific(guildid, "token.json");
   /**
    * Set OAuth2 token
    * @param {Object} token - token object to write
@@ -260,8 +248,8 @@ function Guild(guildid) {
     if (settings.auth === "oauth") {
       oauth2.setCredentials(this.getToken());
       return oauth2;
-    } else { // default to SA if oauth2 failed too
-      return sa;
+    // default to SA if oauth2 failed too
+    } else { return sa;
     }
   };
   /**
@@ -303,8 +291,7 @@ function yesThenCollector(channel) {
   let p = defer();
   const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
-    if (["y", "yes"].includes(m.content.toLowerCase())) {
-      p.resolve();
+    if (["y", "yes"].includes(m.content.toLowerCase())) { p.resolve();
     } else {
       channel.send("Okay, I won't do that");
       p.reject();
@@ -358,12 +345,10 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
  * @return {string} eventName - A string wit max 23 chars length
  */
 function trimEventName(eventName, trimLength){
-  if(trimLength === null || trimLength === 0){
-    return eventName;
-  }
-  if(eventName.length > trimLength){
-    eventName = eventName.trim().substring(0, trimLength-3) + "...";
-  }
+  // if no trim length, just return
+  if (trimLength === null || trimLength === 0) return eventName;
+  // trim down to length
+  if (eventName.length > trimLength) eventName = eventName.trim().substring(0, trimLength-3) + "...";
   return eventName;
 }
 
@@ -398,16 +383,12 @@ function matchCalType(calendarId, channel) {
   } else if (importCalId.test(calendarId)) { // matches import ID
   } else if (groupCalId.test(calendarId)) {
     if (cGroupCalId.test(calendarId)) { // matches cGroup
-    } else if (domainCalId.test(calendarId)) {
-      channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
-    } else if (underscoreCalId.test(calendarId)) {
-      channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
+    } else if (domainCalId.test(calendarId)) {channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+    } else if (underscoreCalId.test(calendarId)) { channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
     }
     return true; // normal group id or any variation
-  } else if (domainAddress.test(calendarId)) {
-    channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
-  } else {
-    return false; // break and return false
+  } else if (domainAddress.test(calendarId)) { channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+  } else { return false; // break and return false
   }
   return true; // if did not reach false
 }

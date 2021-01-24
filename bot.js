@@ -29,10 +29,11 @@ function addMissingGuilds(availableGuilds) {
 function isValidCmd(message, prefix) {
   const validCmds = [
     // init
-    "id", "tz", "setup", "help", "init", "prefix", "admin", "auth", 
+    "id", "tz", "setup", "help",
+    "init", "prefix", "admin", "auth", 
     // calendar
-    "display", "create", "scrim", "delete", "update",
-    "sync", "next", "get", "stop",
+    "display", "create", "scrim", "delete",
+    "update", "sync", "next", "get", "stop",
     // display options
     "displayoptions", "channel", "calname", 
     // channel maintenance
@@ -93,7 +94,7 @@ client.on("message", (message) => {
     const guild = new helpers.Guild(message.guild.id);
     const guildSettings = guild.getSetting();
     //Ignore messages that dont use guild prefix or mentions.
-    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) return;
+    if (!message.content.toLowerCase().startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
     // ignore messages that do not have one of the whitelisted commands
     if (!isValidCmd(message, guild.prefix)) return;
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);

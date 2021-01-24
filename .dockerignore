@@ -7,7 +7,8 @@ config/secrets.json.examples
 # ignore . files
 .gitignore
 .gitattributes
-.codeclimate.yml
+.codebeatignore
+.eslintrc.json
 # ignore docs
 docs
 readme.md
