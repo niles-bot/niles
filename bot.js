@@ -23,20 +23,29 @@ function addMissingGuilds(availableGuilds) {
 
 /**
  * Check if command is on whitelist
- * @param {*} message 
+ * @param {Snowflake} message - message to check agianst
+ * @param {String} prefix - prefix of guild
  */
-function isValidCmd(message) {
-  const validCmds = ["help", "clean", "purge", "init", "update",
-    "sync", "display", "create", "scrim", "delete",
-    "stats", "info", "id", "tz", "invite",
-    "prefix", "admin", "setup", "count",
-    "ping", "displayoptions", "timers", "reset", "next",
-    "validate", "calname", "auth", "channel"
+function isValidCmd(message, prefix) {
+  const validCmds = [
+    // init
+    "id", "tz", "setup", "help",
+    "init", "prefix", "admin", "auth", 
+    // calendar
+    "display", "create", "scrim", "delete",
+    "update", "sync", "next", "get", "stop",
+    // display options
+    "displayoptions", "channel", "calname", 
+    // channel maintenance
+    "clean", "purge", "validate", "count",
+    // bot help
+    "stats", "info", "invite", "ping", 
+    // admin cmd
+    "timers", "reset", 
   ];
   try {
     // repeated command parser
-    let guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
-    const args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
+    const args = message.content.slice(prefix.length).trim().split(" ");
     // if mentioned return second object as command, if not - return first object as command
     let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
     cmd = cmd.toLowerCase();
@@ -61,7 +70,7 @@ client.on("ready", () => {
         });
       });
       addMissingGuilds(shardGuilds); // start adding missing guilds
-      helpers.log("all shards spawned"); // all shards spawned
+      return helpers.log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
       if (err.name === "Error [SHARDING_IN_PROCESS]") {
@@ -82,17 +91,18 @@ client.on("message", (message) => {
   try {
     // ignore if dm or sent by bot
     if (message.channel.type === "dm" || message.author.bot) return;
-    var guildSettings = helpers.getGuildSettings(message.guild.id, "settings");
+    const guild = new helpers.Guild(message.guild.id);
+    const guildSettings = guild.getSetting();
     //Ignore messages that dont use guild prefix or mentions.
-    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.mentions.has(client.user.id)) return;
+    if (!message.content.toLowerCase().startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
     // ignore messages that do not have one of the whitelisted commands
-    if (!isValidCmd(message)) return;
+    if (!isValidCmd(message, guild.prefix)) return;
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
     if (!helpers.checkRole(message)) { // if no permissions, warn
       return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
     }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
-      try {
+      try { 
         init.run(message);
       } catch (err) {
         helpers.log(`error running init messages in guild: ${message.guild.id} : ${err}`);
