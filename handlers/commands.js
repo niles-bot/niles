@@ -314,13 +314,13 @@ function generateCalendarEmbed(guild) {
     if (calendar[key].length === 0) tempValue = "\u200b";
     else {
       // Map events for each day
-      calendar[key].map((event) => {
+      calendar[key].forEach((event) => {
         let duration = "";
         // no need for temp start/fin dates
         if (Object.keys(event.start).includes("date")) duration = "All Day";
         else if (Object.keys(event.start).includes("dateTime")) {
-          let tempStartDate;
-          let tempFinDate;
+          let tempStartDate = "";
+          let tempFinDate = "";
           if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
             tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
           }
@@ -336,7 +336,7 @@ function generateCalendarEmbed(guild) {
         let description = helpers.descriptionParser(event.description);
         tempValue += `**${duration}** | ${eventTitle}\n`;
         // if we should add description
-        if ((description) && (guildSettings.description === "1")) {
+        if ((description !== "undefined") && (guildSettings.description === "1")) {
           tempValue += `\`${description}\`\n`;
         }
       });
