@@ -319,8 +319,8 @@ function generateCalendarEmbed(guild) {
         // no need for temp start/fin dates
         if (Object.keys(event.start).includes("date")) duration = "All Day";
         else if (Object.keys(event.start).includes("dateTime")) {
-          let tempStartDate = "";
-          let tempFinDate = "";
+          let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
+          let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
           if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
             tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
           }
