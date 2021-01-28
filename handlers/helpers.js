@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-const stripHtml = require("string-strip-html");
+const { stripHtml } = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const { oauth2, sa } = require("../settings.js");
@@ -360,7 +360,8 @@ function trimEventName(eventName, trimLength){
 function descriptionParser(inputString) {
   const decoded = decodeURI(inputString); // decode URI
   const replaced = decoded.replace(/(<br>)+/g, "\n"); // replace <br> with \n
-  return stripHtml(replaced).result; // strip html
+  const { result } = stripHtml(replaced);
+  return result;
 }
 
 /**
