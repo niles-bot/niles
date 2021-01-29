@@ -86,6 +86,7 @@ function killUpdateTimer(guildid) {
 function clean(channel, numMsg, deleteCal) {
   numMsg = ((numMsg <= 97) ? numMsg+= 3 : 100); // add 3 messages from collector
   const guild = new helpers.Guild(channel.guild.id);
+  const calMsgID = guild.getCalendar("calendarMessageId");
   if (deleteCal) {
     guild.setCalendarID(""); // delete calendar id
     killUpdateTimer(guild.id);
@@ -94,7 +95,7 @@ function clean(channel, numMsg, deleteCal) {
     channel.messages.fetch({ limit: numMsg })
       .then((messages) => { //If the current calendar is deleted
         messages.forEach(function(message) {
-          if (guild.calendarID && message.id === guild.calendarID) messages.delete(message.id); // skip calendar message
+          if (calMsgID && message.id === calMsgID) messages.delete(message.id); // skip calendar message
         });
         return channel.bulkDelete(messages, true);
       });
@@ -429,12 +430,13 @@ function startUpdateTimer(guildid, channel, guild) {
  * @param {bool} human - if command was initiated by a human
  */
 function updateCalendar(guild, channel, human) {
-  if (guild.calendarID === "") {
+  const calMsgID = guild.getCalendar("calendarMessageId");
+  if (calMsgID === "") {
     channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
     helpers.log(`calendar undefined in ${guild.id}. Killing update timer.`);
     killUpdateTimer(guild.id);
   }
-  channel.messages.fetch(guild.calendarID).then((m) => {
+  channel.messages.fetch(calMsgID).then((m) => {
     generateCalendar(guild, channel).then((embed) => {
       if (embed === 2048) return null;
       m.edit({ embed });
@@ -475,8 +477,9 @@ function calendarUpdater(guild, channel, human) {
  * @param {Snowflake} channel - Initiating channel
  */
 function postCalendar(guild, channel) {
-  if (guild.calendarID) {
-    channel.messages.fetch(guild.calendarID).then((message) => { message.delete();
+  const guildCalMsgID = guild.getCalendar("calendarMessageId");
+  if (guildCalMsgID) {
+    channel.messages.fetch(guildCalMsgID).then((message) => { message.delete();
     }).catch((err) => {
       if (err.code === 10008) guild.setCalendarID("");
       return helpers.log(`error fetching previous calendar in guild: ${guild.id} : ${err}`);

@@ -217,7 +217,6 @@ function Guild(guildid) {
     calendar.calendarMessageId = calendarID;
     this.setCalendar();
   };
-  this.calendarID = calendar.calendarMessageId;
   // daymap
   this.getDayMap = () => {
     let dayMap = [];
