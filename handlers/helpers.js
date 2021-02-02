@@ -221,7 +221,7 @@ function Guild(guildid) {
   this.getDayMap = () => {
     let dayMap = [];
     // allowing all days to be correctly TZ adjusted
-    let d = DateTime.fromJSDate(new Date()).setZone(this.tz);
+    let d = DateTime.fromJSDate(new Date()).setZone(this.getTz());
     // if Option to show past events is set, start at startOf Day instead of NOW()
     if (settings.showpast === "1") d = d.startOf("day");
     dayMap[0] =  d;
