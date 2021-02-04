@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const helpers = require("./helpers.js");
-const commands = require("./commands.js");
 
 const emptyCal = {
   "day0": [],
@@ -45,7 +44,6 @@ function deleteGuild(guild) {
   const guildPath = path.join(__dirname, "..", "stores", guild.id);
   helpers.deleteFolderRecursive(guildPath);
   helpers.removeGuildFromDatabase(guild.id);
-  commands.killUpdateTimer(guild.id);
   helpers.log(`Guild ${guild.id} has been deleted`);
 }
 
