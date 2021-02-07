@@ -333,12 +333,15 @@ function generateCalendarEmbed(guild) {
         }
         // construct field object with summary + description
         // add link if there is a location
-        let eventTitle = eventNameCreator(event, guildSettings);
-        let description = helpers.descriptionParser(event.description);
+        const eventTitle = eventNameCreator(event, guildSettings);
         tempValue += `**${duration}** | ${eventTitle}\n`;
+        // limitDescriptionLength
+        const descLength = guildSettings.descLength;
+        const description = helpers.descriptionParser(event.description);
+        const trimmed = (descLength ? description.slice(0, descLength) : description);
         // if we should add description
         if ((description !== "undefined") && (guildSettings.description === "1")) {
-          tempValue += `\`${description}\`\n`;
+          tempValue += `\`${trimmed}\`\n`;
         }
       });
     }
@@ -616,6 +619,13 @@ function displayOptions(args, guild, channel) {
       guildSettings.trim = (isNaN(size) ? 0 : size); // set to 0 if invalid, otherwise take number
       channel.send(`Set trimming of event titles to ${size} (0 = off)`);
     } else { channel.send("Please provide a number to trim event titles. (0 = off)");
+    }
+  } else if (dispCmd === "desclength") {
+    if (dispOption) {
+      let size = Number(dispOption);
+      guildSettings.descLength = (isNaN(size) ? 0 : size); // set to 0 if invalid, otherwise take number
+      channel.send(`Set trimming of description length to ${size} (0 = off)`);
+    } else { channel.send("Please provide a number to trim description length. (0 = off)");
     }
   } else if (dispCmd === "days") {
     if (dispOption) {

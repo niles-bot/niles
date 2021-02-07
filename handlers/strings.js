@@ -68,6 +68,7 @@ const DISPLAYOPTIONS_USAGE =
     !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
     !displayoptions description  (0|1)         hide/show event description (only compatible with embed)
     !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
+    !displayoptions desclength   (n)           trim description to n characters (0 =  off)
     \`\`\`
     `;
 
