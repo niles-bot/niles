@@ -35,7 +35,8 @@ const defaultSettings = {
   "url": "0",
   "auth": "sa",
   "channelid": "",
-  "descLength": 0
+  "descLength": 0,
+  "startonly": "0",
 };
 
 function getSettings() {

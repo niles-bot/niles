@@ -329,7 +329,7 @@ function generateCalendarEmbed(guild) {
             tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
           }
           if (event.type === eventType.MULTIMID) duration = "All Day";
-          else duration = tempStartDate + " - " + tempFinDate;
+          else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
         }
         // construct field object with summary + description
         // add link if there is a location
@@ -549,6 +549,9 @@ function displayOptionHelper(args, guildSettings, channel) {
     }, help: {
       name: "helpmenu",
       help: "calendar help menu"
+    }, startonly: {
+      name: "startonly",
+      help: "start time only"
     }
   };
   if (value) {
@@ -598,7 +601,7 @@ function displayOptions(args, guild, channel) {
   const dispOption = args[1];
   let guildSettings = guild.getSetting();
   const binaryDisplayOptions = [
-    "pin", "tzdisplay", "emptydays", "showpast", "help"
+    "pin", "tzdisplay", "emptydays", "showpast", "help", "startonly"
   ];
   const embedStyleOptions = [
     "inline", "description", "url"
