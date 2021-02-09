@@ -99,7 +99,8 @@ client.on("message", (message) => {
     if (!isValidCmd(message, guild.prefix)) return;
     helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`);
     if (!helpers.checkRole(message)) { // if no permissions, warn
-      return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`);
+      return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
+        .then(message => { message.delete({ timeout: 5000 }); });
     }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
       try { 

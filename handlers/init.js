@@ -12,22 +12,31 @@ const bot = require("../bot.js");
 function logId(channel, args, guild) {
   const calendarId = args[0];
   const oldID = guild.getSetting("calendarID");
-  if (!calendarId) {
-    // no input, display current id
-    if (oldID) channel.send(`You didn't enter a calendar ID, you are currently using \`${oldID}\``);
-    // no input
-    else channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
+  if (!calendarId) { // no input, display current id
+    if (oldID) {
+      channel.send(`You didn't enter a calendar ID, you are currently using \`${oldID}\``)
+        .then(message => { message.delete({ timeout: 5000 }); });
+    } else { // no input
+      channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`")
+        .then(message => { message.delete({ timeout: 5000 }); });
+    }
   }
   // did not pass validation
-  else if (!helpers.matchCalType(calendarId, channel)) { channel.send("I don't think that's a valid calendar ID... try again");
+  else if (!helpers.matchCalType(calendarId, channel)) {
+    channel.send("I don't think that's a valid calendar ID... try again")
+      .then(message => { message.delete({ timeout: 5000 }); });
   // overwrite calendarid, passed validation
   } else if (oldID) {
-    channel.send(`I've already been setup to use \`${oldID}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${calendarId}\`? **(y/n)**"`);
+    channel.send(`I've already been setup to use \`${oldID}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${calendarId}\`? **(y/n)**"`)
+      .then(message => { message.delete({ timeout: 30000 }); });
     helpers.yesThenCollector(channel).then(() => { return guild.setSetting("calendarID", calendarId);
     }).catch((err) => { helpers.log(err);
     });
   // no set calendarid, passed validation
-  } else { guild.setSetting("calendarID", calendarId);
+  } else { 
+    guild.setSetting("calendarID", calendarId);
+    channel.send(`Calendar ID set to ${calendarId}`)
+      .then(message => { message.delete({ timeout: 5000 }); });
   }
 }
 
@@ -42,21 +51,31 @@ function logTz(channel, args, guild) {
   const tz = args[0];
   if (!tz) { // no input
     // no current tz
-    if (!currentTz) channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.");
+    if (!currentTz) { 
+      channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.")
+        .then(message => { message.delete({ timeout: 5000 }); });
+    }
     // timezone define
-    else channel.send(`You didn't enter a timezone, you are currently using \`${currentTz}\``);
+    else {
+      channel.send(`You didn't enter a timezone, you are currently using \`${currentTz}\``)
+        .then(message => { message.delete({ timeout: 5000 }); });
+    }
   }
   // valid input
   else if (helpers.validateTz(tz)) { // passes validation
     if (currentTz) { // timezone set
-      channel.send(`I've already been setup to use \`${currentTz}\`, do you want to overwrite this and use \`${tz}\`? **(y/n)**`);
+      channel.send(`I've already been setup to use \`${currentTz}\`, do you want to overwrite this and use \`${tz}\`? **(y/n)**`)
+        .then(message => { message.delete({ timeout: 30000 }); });
       helpers.yesThenCollector(channel).then(() => { return guild.setSetting("timezone", tz);
       }).catch((err) => { helpers.log(err);
       });
     // timezone is not set
     } else { guild.setSetting("timezone", tz); }
   // fails validation
-  } else { channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting."); }
+  } else { 
+    channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.")
+      .then(message => { message.delete({ timeout: 5000 }); });
+  }
 }
 
 /**
@@ -67,9 +86,12 @@ function logTz(channel, args, guild) {
  */
 function setPrefix(channel, args, guild) {
   const newPrefix = args[0];
-  if (!newPrefix) { channel.send(`You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
+  if (!newPrefix) { 
+    channel.send(`You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``)
+      .then(message => { message.delete({ timeout: 5000 }); });
   } else if (newPrefix) {
-    channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
+    channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`)
+      .then(message => { message.delete({ timeout: 30000 }); });
     helpers.yesThenCollector(channel).then(() => { return guild.setSetting("prefix", newPrefix);
     }).catch((err) => { helpers.log(err); });
   }
@@ -90,20 +112,24 @@ function setRoles(message, args, guild) {
     // no argument defined
     if (allowedRoles.length === 0) return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
     // admin role exists
-    message.channel.send(`The admin role for this discord is \`${allowedRoles}\`. You can change this setting using \`${guild.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n You can allow everyone to use Niles again by entering \`${guild.prefix}admin everyone\``);
+    message.channel.send(`The admin role for this discord is \`${allowedRoles}\`. You can change this setting using \`${guild.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n You can allow everyone to use Niles again by entering \`${guild.prefix}admin everyone\``)
+      .then(message => { message.delete({ timeout: 5000 }); });
   } else if (adminRole) {
+    let response = "";
     // add everyone
     if (adminRole.toLowerCase() === "everyone") {
-      message.channel.send("Do you want to allow everyone in this channel/server to use Niles? **(y/n)**");
+      response = "Do you want to allow everyone in this channel/server to use Niles? **(y/n)**";
       roleArray = [];
     // no role selected
-    } else if (!userRoles.includes(adminRole)) { message.channel.send("You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive");
+    } else if (!userRoles.includes(adminRole)) { response = "You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive";
     } else {
       // restricting succeeded
-      message.channel.send(`Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`);
+      response = `Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`;
       roleArray = [adminRole];
     }
     // prompt for confirmation
+    message.channel.send(response)
+      .then(message => { message.delete({ timeout: 5000 }); });
     helpers.yesThenCollector(message.channel).then(() => { return guild.setSetting("allowedRoles", roleArray);
     }).catch((err) => { helpers.log(err); });
   }
