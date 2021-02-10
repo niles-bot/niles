@@ -1,11 +1,11 @@
 # Niles Discord Bot
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/42ad70ef7e0842da99a2176d5684e0a3)](https://www.codacy.com/gh/niles-bot/niles/dashboard)
 [![codebeat Badge](https://codebeat.co/badges/dc7cdd12-2d64-48b4-95c7-7fe3f5cf81a4)](https://codebeat.co/projects/github-com-niles-bot-niles-master)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/mchangrh/niles)](https://hub.docker.com/r/mchangrh/niles)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/nilesbot/niles)](https://hub.docker.com/r/nilesbot/niles)
 [![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m786400338-c0cc4ceea17d04b822cc83d9)](https://status.mchang.icu/786400338)
 ![node-current](https://img.shields.io/node/v/discord.js)
 
-A [Discord](https://discord.com/) bot for using [Google Calendar](calendar.google.com) to manage events.
+A [Discord](https://discord.com/) bot for using [Google Calendar](https://calendar.google.com) to manage events.
 Targeted towards eSports event scheduling (scrims, PCWs).
 
 ![example](https://i.imgur.com/3yYK4QB.png)
@@ -36,15 +36,6 @@ For more information on setting up a Google Service Account, [see here](https://
 Alternative, set up [OAuth2 Credentials](https://support.google.com/cloud/answer/6158849).
 
 Create your own `secrets.json` file in `/config`, using the appropriate values, making sure you also place a copy of your Google Service Account JSON security file somewhere and referencing in `secrets`.
-
-Next you will need to copy the `stores.json.example` in the `/stores` file 3 times.
-Rename those files to these names.
-```
-store.json
-```
-```
-guilddatabase.json
-```
 
 To run and connect your bot
 

@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Commands and Usage
+last_modified_date: true
 nav_order: 3
 ---
 

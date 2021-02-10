@@ -2,6 +2,7 @@
 layout: default
 title: Dedicated Machine/VM
 parent: Self-hosting
+last_modified_date: true
 nav_order: 1
 ---
 
@@ -17,7 +18,7 @@ Please visit the [Discord support server](https://discord.gg/jNyntBn) for furthe
 
 2. Install using `npm install`.
 
-3. Create your `secrets.json` file (discussed below) inside `/config`.  Create `guilddatabase.json` inside `/stores`, filling it with `{}` so that it is a valid JSON files.
+3. Create your `secrets.json` file (discussed below) inside `/config`.
 
 4. Run `node index.js` and you should be running!
 
@@ -47,5 +48,3 @@ The following variables are present in the secrets.json and will require an entr
 6. `log_discord_channel` is the CHANNEL ID where the bot logs commands, errors etc. to.  This is required or the bot will not function.  You should create a channel that Niles has write access to, copy the ID and use this.
 
 NOTE: Discord user, server and channel ID's can be found by enabling discord developer mode by going to settings>appearance>developer mode.  You can then right click on servers, users and channels and "Copy ID".
-
-Last update: 21 Jan 2021

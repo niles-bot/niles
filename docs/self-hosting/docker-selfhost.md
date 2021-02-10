@@ -2,6 +2,7 @@
 layout: default
 title: Docker self-hosting
 parent: Self-hosting
+last_modified_date: true
 nav_order: 2
 ---
 
@@ -30,7 +31,7 @@ docker run -d \
 ```
 
 ## System Requirements
-Recommended OS for just running docker is [Alpine Linux](https://www.alpinelinux.org/) or [Flatcar Container Linux](https://www.flatcar-linux.org/)
+Recommended OS for just running docker is [Alpine Linux](https://alpinelinux.org/) or [Flatcar Container Linux](https://flatcar-linux.org/)
 
 One CPU core should be enough for bots serving under 10 Servers
 
