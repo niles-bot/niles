@@ -277,29 +277,23 @@ function generateCalendarCodeblock(guild) {
         };
         let eventTitle = helpers.trimEventName(event.summary, guildSettings.trim);
         if (Object.keys(event.start).includes("date")) {
-          let tempString = {};
           // no need for temp start/fin dates
-          tempString["All Day"] = eventTitle;
+          const tempString = {"All Day": eventTitle};
           sendString += columnify(tempString, options) + "\n";
         } else if (Object.keys(event.start).includes("dateTime")) {
-          let tempString = {};
           // keep the - centered depending on format option
           let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
           let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
-          let tempStringKey = "";
+          let duration = "";
           if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
             tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
           }
           if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
             tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
           }
-          if (event.type === eventType.MULTIMID){
-            tempStringKey = "All Day";
-          }
-          else {
-            tempStringKey = tempStartDate + " - " + tempFinDate;
-          }
-          tempString[tempStringKey] = eventTitle;
+          if (event.type === eventType.MULTIMID) duration = "All Day";
+          else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
+          const tempString = {[duration]: eventTitle};
           sendString += columnify(tempString, options) + "\n";
         }
       });
