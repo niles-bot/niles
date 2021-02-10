@@ -6,7 +6,6 @@ node_modules
 config/secrets.json.examples
 # ignore . files
 .gitignore
-.gitattributes
 .codebeatignore
 .eslintrc.json
 # ignore docs

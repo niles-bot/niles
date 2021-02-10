@@ -1,8 +1,9 @@
 version: "3"
 services:
     niles:
-        image: mchangrh/niles:latest
+        image: niles-bot/niles:latest
         container_name: niles
+        restart: unless-stopped
         volumes:
             - type: volumes
               source: niles-stores
