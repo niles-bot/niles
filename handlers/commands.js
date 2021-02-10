@@ -5,7 +5,6 @@ const { DateTime, Duration }  = require("luxon");
 const strings = require("./strings.js");
 let bot = require("../bot.js");
 const settings = require("../settings.js");
-const init = require("./init.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
 let autoUpdater = [];
@@ -146,7 +145,7 @@ function deleteMessages(args, channel) {
 function getEvents(guild, channel) {
   const dayMap = guild.getDayMap();
   const auth = guild.getAuth();
-  const tz = guild.getTz();
+  const tz = guild.tz;
   const oldCalendar = guild.getCalendar();
   // construct calendar with old calendar file
   let calendar = (({ lastUpdate, calendarMessageId }) => ({ lastUpdate, calendarMessageId }))(oldCalendar);
@@ -707,7 +706,7 @@ function listSingleEventsWithinDateRange(guild) {
     timeMin: dayMap[0].toISO(),
     timeMax: dayMap[6].toISO(),
     singleEvents: true,
-    timeZone: guild.getTz(),
+    timeZone: guild.tz,
     orderBy: "startTime"
   };
   return cal.events.list(params);
@@ -719,7 +718,7 @@ function listSingleEventsWithinDateRange(guild) {
  * @returns {Snowflake} response with confirmation or failiure
  */
 function nextEvent(guild, channel) {
-  const now = DateTime.local().setZone(guild.getTz());
+  const now = DateTime.local().setZone(guild.tz);
   listSingleEventsWithinDateRange(guild).then((resp) => {
     for (const eventObj of resp.data.items) {
       const isoDate = eventObj.start.dateTime || eventObj.start.date;
@@ -912,6 +911,114 @@ function setChannel(args, guild, channel) {
   }
 }
 
+/**
+ * set guild calendar id
+ * @param {Snowflake} channel - Callback channel 
+ * @param {[String]} args - command arguments
+ * @param {Guild} guild - Guild to change ID for
+ */
+function logId(channel, args, guild) {
+  const newCalendarID = args[0];
+  const oldCalendarID = guild.getSetting("calendarID");
+  if (!newCalendarID) {
+    // no input, display current id
+    if (oldCalendarID) channel.send(`You didn't enter a calendar ID, you are currently using \`${oldCalendarID}\``);
+    // no input
+    else channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
+  }
+  // did not pass validation
+  else if (!helpers.matchCalType(newCalendarID, channel)) { channel.send("I don't think that's a valid calendar ID... try again");
+  // overwrite calendarid, passed validation
+  } else if (oldCalendarID) {
+    channel.send(`I've already been setup to use \`${oldCalendarID}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${newCalendarID}\`? **(y/n)**"`);
+    helpers.yesThenCollector(channel).then(() => { return guild.setSetting("calendarID", newCalendarID);
+    }).catch((err) => { helpers.log(err);
+    });
+  // no set calendarid, passed validation
+  } else { guild.setSetting("calendarID", newCalendarID);
+  }
+}
+
+/**
+ * set guild tz
+ * @param {Snowflake} channel - Callback channel 
+ * @param {[String]} args - arguments passed in 
+ * @param {Guild} guild - Guild getter to change settings for
+ */
+function logTz(channel, args, guild) {
+  const currentTz = guild.getSetting("timezone");
+  const tz = args[0];
+  if (!tz) { // no input
+    // no current tz
+    if (!currentTz) channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.");
+    // timezone define
+    else channel.send(`You didn't enter a timezone, you are currently using \`${currentTz}\``);
+  }
+  // valid input
+  else if (helpers.validateTz(tz)) { // passes validation
+    if (currentTz) { // timezone set
+      channel.send(`I've already been setup to use \`${currentTz}\`, do you want to overwrite this and use \`${tz}\`? **(y/n)**`);
+      helpers.yesThenCollector(channel).then(() => { return guild.setSetting("timezone", tz);
+      }).catch((err) => { helpers.log(err);
+      });
+    // timezone is not set
+    } else { guild.setSetting("timezone", tz); }
+  // fails validation
+  } else { channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting."); }
+}
+
+/**
+ * Sets guild prefix
+ * @param {Snowflake} channel - Callback channel 
+ * @param {[String]} args - arguments passed in
+ * @param {Guild} guild - Guild to change prefix for
+ */
+function setPrefix(channel, args, guild) {
+  const newPrefix = args[0];
+  if (!newPrefix) { channel.send(`You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
+  } else if (newPrefix) {
+    channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
+    helpers.yesThenCollector(channel).then(() => {
+      send(`prefix set to ${newPrefix}`);
+      return guild.setSetting("prefix", newPrefix);
+    }).catch((err) => { helpers.log(err); });
+  }
+}
+
+/**
+ * Set admin role
+ * @param {Snowflake} message - initating message
+ * @param {[String]} args - arguments from command
+ * @param {Guild} guild - guild to pull settings from
+ */
+function setRoles(message, args, guild) {
+  const adminRole = args[0];
+  const allowedRoles = guild.getSetting("allowedRoles");
+  const userRoles = message.member.roles.cache.map((role) => role.name);
+  let roleArray;
+  if (!adminRole) {
+    // no argument defined
+    if (allowedRoles.length === 0) return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
+    // admin role exists
+    message.channel.send(`The admin role for this discord is \`${allowedRoles}\`. You can change this setting using \`${guild.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n You can allow everyone to use Niles again by entering \`${guild.prefix}admin everyone\``);
+  } else if (adminRole) {
+    // add everyone
+    if (adminRole.toLowerCase() === "everyone") {
+      message.channel.send("Do you want to allow everyone in this channel/server to use Niles? **(y/n)**");
+      roleArray = [];
+    // no role selected
+    } else if (!userRoles.includes(adminRole)) { message.channel.send("You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive");
+    } else {
+      // restricting succeeded
+      message.channel.send(`Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`);
+      roleArray = [adminRole];
+    }
+    // prompt for confirmation
+    helpers.yesThenCollector(message.channel).then(() => { return guild.setSetting("allowedRoles", roleArray);
+    }).catch((err) => { helpers.log(err); });
+  }
+}
+
 function adminCmd (cmd, args) {
   if (cmd === "timers") {
     return (`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);
@@ -932,33 +1039,35 @@ function adminCmd (cmd, args) {
  * Run Commands
  * @param {Snowflake} message 
  */
-function run(message) {
-  const guildid = message.guild.id;
-  const guild = new helpers.Guild(guildid);
+function run(cmd, args, message) {
+  const guildID = message.guild.id;
+  const guild = new guilds.Guild(guildID);
   const guildSettings = guild.getSetting();
   const channel = message.channel;
   const guildChannel = (guildSettings.channelid ? bot.client.channels.cache.get(guildSettings.channelid) : channel);
-  let args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
-  // if mentioned return second object as command, if not - return first object as command
-  let cmd = (message.mentions.has(bot.client.user.id) ? args.splice(0, 2)[1] : args.shift());
-  args = (args ? args : []); // return empty array if no args
-  cmd = cmd.toLowerCase();
   const sentByAdmin = (settings.secrets.admins.includes(message.author.id)); // check if author is admin
   // start commands
   if (["ping"].includes(cmd)) { channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`);
-  } else if (["help"].includes(cmd)) { channel.send(strings.HELP_MESSAGE);
+  } else if (["init"].includes(cmd)) {
+    channel.send("Resetting Niles to default");
+    guilds.recreateGuild(channel.guild);
   } else if (["invite"].includes(cmd)) {
     const inviteEmbed = {
       description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`,
       color: 0xFFFFF };
     channel.send({ embed: inviteEmbed });
-  } else if (["setup", "start", "id", "tz", "prefix", "admin"].includes(cmd)) {
-    try { init.run(message);
-    } catch (err) { helpers.log(`error trying to run init message catcher in guild: ${guildid} : ${err}`);
-    }
-  } else if (["init"].includes(cmd)) {
-    channel.send("Resetting Niles to default");
-    guilds.recreateGuild(channel.guild);
+  } else if (["admin"].includes(cmd)) { setRoles(message, args, guild);
+  } else if (["prefix"].includes(cmd)) { setPrefix(channel, args, guild);
+  } else if (["id"].includes(cmd)) { logId(channel, args, guild);
+  } else if (["tz"].includes(cmd)) { logTz(channel, args, guild);
+  // end setup mode commands
+  } else if (!guildSettings.calendarID || !guildSettings.timezone) { 
+    // send setup-specific help message
+    if (["help"].includes(cmd)) { channel.send(strings.SETUP_HELP); }
+    else if (["setup", "start"].includes(cmd)) { channel.send(strings.SETUP_MESSAGE); }
+    else { channel.send("You haven't finished setting up! Try `!setup` for details on how to start."); }
+  // if in setup mode, hard stop & force exit
+  } else if (["help"].includes(cmd)) { channel.send(strings.HELP_MESSAGE);
   } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel);
   } else if (["display"].includes(cmd)) {
     setTimeout(() => { getEvents(guild, guildChannel); }, 1000);
@@ -974,7 +1083,7 @@ function run(message) {
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
   } else if (["count"].includes(cmd)) {
-    const theCount = (!timerCount[guildid] ? 0 : timerCount[guildid]);
+    const theCount = (!timerCount[guildID] ? 0 : timerCount[guildID]);
     channel.send(`There are ${theCount} timer threads running in this guild`);
   } else if (["timers", "reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
