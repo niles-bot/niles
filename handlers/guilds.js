@@ -53,12 +53,12 @@ function deleteFolderRecursive(path) {
 
 /**
  * Writes guild-specific setting
- * @param {String} guildid - ID of guild to write setting to 
+ * @param {String} guildID - ID of guild to write setting to 
  * @param {Object} json - json array of values to write
  * @param {String} file - file name to write to - calendar/settings 
  */
-function writeGuildSpecific(guildid, json, file) {
-  let fullPath = path.join(__dirname, "..", "stores", guildid, file + ".json");
+function writeGuildSpecific(guildID, json, file) {
+  let fullPath = path.join(__dirname, "..", "stores", guildID, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
     if (err) return helpers.log("error writing guild specific database: " + err);
   });
@@ -66,35 +66,35 @@ function writeGuildSpecific(guildid, json, file) {
 
 /**
  * Create new guild files
- * @param {Snowflake} guild - Guild to create files for
+ * @param {String} guildID - Guild to create files for
  */
-function createGuild(guild) {
-  const guildPath = path.join(__dirname, "..", "stores", guild.id);
+function createGuild(guildID) {
+  const guildPath = path.join(__dirname, "..", "stores", guildID);
   if (!fs.existsSync(guildPath)) { // create directory and new files
     fs.mkdirSync(guildPath); 
-    writeGuildSpecific(guild.id, emptyCal, "calendar");
-    writeGuildSpecific(guild.id, helpers.defaultSettings, "settings");
-    helpers.log(`Guild ${guild.id} has been created`);
+    writeGuildSpecific(guildID, emptyCal, "calendar");
+    writeGuildSpecific(guildID, helpers.defaultSettings, "settings");
+    helpers.log(`Guild ${guildID} has been created`);
   }
 }
 
 /**
  * Delete guild settings
- * @param {Snowflake} guild - guild to delete configuration for
+ * @param {String} guildID - guild to delete configuration for
  */
-function deleteGuild(guild) {
-  const guildPath = path.join(__dirname, "..", "stores", guild.id);
+function deleteGuild(guildID) {
+  const guildPath = path.join(__dirname, "..", "stores", guildID);
   deleteFolderRecursive(guildPath);
-  helpers.log(`Guild ${guild.id} has been deleted`);
+  helpers.log(`Guild ${guildID} has been deleted`);
 }
 
 /**
  * Delete and recreate guild settings
- * @param {Snowflake} guild 
+ * @param {StringDecoder} guildID 
  */
-function recreateGuild(guild) {
-  deleteGuild(guild);
-  createGuild(guild);
+function recreateGuild(guildID) {
+  deleteGuild(guildID);
+  createGuild(guildID);
 }
 
 /**
@@ -109,16 +109,16 @@ function readFile(path) {
   }
 }
 
-function getGuildSpecific(guildid, file) {
-  let filePath = path.join(__dirname, "..", "stores", guildid, file);
+function getGuildSpecific(guildID, file) {
+  let filePath = path.join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
   return (file === "settings.json" ? {...defaultSettings, ...storedData} : storedData);
 }
 
-function Guild(guildid) {
+function Guild(guildID) {
   // settings
-  let settings = getGuildSpecific(guildid, "settings.json");
+  let settings = getGuildSpecific(guildID, "settings.json");
   /**
    * Get settings
    * @param {String} [key] - Optional key to fetch 
@@ -133,19 +133,19 @@ function Guild(guildid) {
    */
   this.setSetting = (key, value) => { // set settings value
     settings[key] = value;
-    writeGuildSpecific(guildid, settings, "settings");
+    writeGuildSpecific(guildID, settings, "settings");
   };
   /**
    * Set all settings
    * @param {Object} newSettings - new settings object
    */
-  this.setSettings = (newSettings) => { writeGuildSpecific(guildid, newSettings, "settings"); };
+  this.setSettings = (newSettings) => { writeGuildSpecific(guildID, newSettings, "settings"); };
   // common settings
   this.prefix = settings.prefix;
-  this.id = guildid;
+  this.id = guildID;
   this.tz = settings.timezone;
   // calendar
-  let calendar = getGuildSpecific(guildid, "calendar.json");
+  let calendar = getGuildSpecific(guildID, "calendar.json");
   /**
    * Get calendar file
    * @param {String} [key] - Optionally get specific key 
@@ -156,7 +156,7 @@ function Guild(guildid) {
    * @param {Object} [argCalendar] - If provided, set to given calendar, else write current calendar
    */
   this.setCalendar = (argCalendar = calendar) => {
-    writeGuildSpecific(guildid, argCalendar, "calendar");
+    writeGuildSpecific(guildID, argCalendar, "calendar");
     calendar = argCalendar;
   };
   // calendarID
@@ -184,12 +184,12 @@ function Guild(guildid) {
   /**
    * Get OAuth2 token
    */
-  this.getToken = () => getGuildSpecific(guildid, "token.json");
+  this.getToken = () => getGuildSpecific(guildID, "token.json");
   /**
    * Set OAuth2 token
    * @param {Object} token - token object to write
    */
-  this.setToken = (token) => writeGuildSpecific(guildid, token, "token");
+  this.setToken = (token) => writeGuildSpecific(guildID, token, "token");
   /**
    * Gets guild authentication
    * @returns return googleAuth object

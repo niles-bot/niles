@@ -172,11 +172,11 @@ function descriptionParser(inputString) {
 
 /**
  * This function makes sure that the calendar matches a specified type
- * @param {String} calendarId - calendar ID to classify
+ * @param {String} calendarID - calendar ID to classify
  *  @param {Snowflake} channel - Channel to send callback to
  * @returns {bool} - if calendar ID is valid
  */
-function matchCalType(calendarId, channel) {
+function matchCalType(calendarID, channel) {
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
   const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
@@ -186,15 +186,15 @@ function matchCalType(calendarId, channel) {
   const domainCalId = RegExp("^([a-z0-9.]+_[a-z0-9]{26}@)");
   const domainAddress = RegExp("(^[a-z0-9_.+-]+@[a-z0-9-]+.[a-z0-9-.]+$)");
   // filter through regex
-  if (gmailAddress.test(calendarId)) { // matches gmail
-  } else if (importCalId.test(calendarId)) { // matches import ID
-  } else if (groupCalId.test(calendarId)) {
-    if (cGroupCalId.test(calendarId)) { // matches cGroup
-    } else if (domainCalId.test(calendarId)) {channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
-    } else if (underscoreCalId.test(calendarId)) { channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
+  if (gmailAddress.test(calendarID)) { // matches gmail
+  } else if (importCalId.test(calendarID)) { // matches import ID
+  } else if (groupCalId.test(calendarID)) {
+    if (cGroupCalId.test(calendarID)) { // matches cGroup
+    } else if (domainCalId.test(calendarID)) {channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+    } else if (underscoreCalId.test(calendarID)) { channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
     }
     return true; // normal group id or any variation
-  } else if (domainAddress.test(calendarId)) { channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+  } else if (domainAddress.test(calendarID)) { channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
   } else { return false; // break and return false
   }
   return true; // if did not reach false

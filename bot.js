@@ -22,14 +22,14 @@ function getKnownGuilds() {
 
 /**
  * Add any missing guilds to guilds database
- * @param {*} availableGuilds 
+ * @param {[String]} availableGuilds - array of available guilds
  */
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
   const knownGuilds = getKnownGuilds();
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
-  unknownGuilds.forEach((guildId) => {
-    guilds.createGuild(client.guilds.cache.get(guildId));
+  unknownGuilds.forEach((guildID) => {
+    guilds.createGuild(guildID);
   });
 }
 
@@ -92,6 +92,7 @@ client.on("ready", () => {
         });
       });
       addMissingGuilds(shardGuilds); // start adding missing guilds
+      console.log(shardGuilds);
       return helpers.log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
@@ -102,11 +103,11 @@ client.on("ready", () => {
 });
 
 client.on("guildCreate", (guild) => {
-  guilds.createGuild(guild);
+  guilds.createGuild(guild.id);
 });
 
 client.on("guildDelete", (guild) => {
-  guilds.deleteGuild(guild);
+  guilds.deleteGuild(guild.id);
 });
 
 client.on("message", (message) => {
