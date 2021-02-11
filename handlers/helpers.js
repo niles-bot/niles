@@ -1,5 +1,4 @@
 const defer = require("promise-defer");
-const { stripHtml } = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const guilds = require("./guilds.js");
@@ -168,10 +167,10 @@ function trimEventName(eventName, trimLength){
  * @return {string} strippedString - string stripped of html
  */
 function descriptionParser(inputString) {
+  const brRegex = /(<br>)+/gi; // match <br>
+  const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags
   const decoded = decodeURI(inputString); // decode URI
-  const replaced = decoded.replace(/(<br>)+/g, "\n"); // replace <br> with \n
-  const { result } = stripHtml(replaced);
-  return result;
+  return decoded.replace(brRegex, "\n").replace(htmlRegex, "").trim(); // replace <br> with \n and stripped html tags
 }
 
 /**
