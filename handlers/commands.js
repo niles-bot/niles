@@ -22,7 +22,7 @@ const { oauth2, sa } = require("../settings.js");
  */
 function send(channel, content, timeout=5000) {
   channel.send(content)
-    .then(message => {
+    .then((message) => {
       message.delete({ timeout });
     });
 }
@@ -34,9 +34,12 @@ function send(channel, content, timeout=5000) {
  * @param {Snowflake} channel - channel to respond and listen to
  */
 function getAccessToken(force, guild, channel) {
+  if (!oauth2) {
+    return send(channel, "OAuth2 credentials not installed");
+  }
   const authUrl = oauth2.generateAuthUrl({
     access_type: "offline",
-    scope: ["https://www.googleapis.com/auth/calendar.events"],
+    scope: ["https://www.googleapis.com/auth/calendar.events"]
   });
   if (guild.getSetting("auth") === "oauth" && !force) {
     return send(channel, "Already using OAuth, use `!auth oauth force` to force reauthentication");
@@ -66,13 +69,11 @@ function getAccessToken(force, guild, channel) {
  * @param {[String]} args - Arguments passed in
  * @param {Guild} guild - Guild to pull settings form
  * @param {Snowflake} channel - Channel to respond to
+ * @returns {Snowflake} - message response
  */
 function setupAuth(args, guild, channel) {
   if (args[0] === "oauth") {
-    if (!oauth2) {
-      return send(channel, "OAuth2 credentials not installed");
-    }
-    getAccessToken((args[1] === "force"), guild, channel);
+    getAccessToken(args[1] === "force", guild, channel);
   } else if (args[0] === "sa") {
     if (!sa) return send(channel, "SA credentials not installed");
     guild.getSetting("auth", "sa");
@@ -86,9 +87,10 @@ function setupAuth(args, guild, channel) {
  * @param {String} guildID - guild to remove from timers
  */
 function killUpdateTimer(guildID) {
-  clearInterval(autoUpdater[guildID]);
-  try { delete timerCount[guildID]; }
-  catch (err) { helpers.log(err); }
+  try { 
+    clearInterval(autoUpdater[guildID]);
+    delete timerCount[guildID];
+  } catch (err) { helpers.log(err, `Guild: ${guildID}`); }
 }
 
 /**
@@ -142,6 +144,7 @@ function deleteMessages(args, channel) {
  * @param {Snowflake} channel - channel to respond to
  */
 function getEvents(guild, channel) {
+  guild.update(); // update guild
   const dayMap = guild.getDayMap();
   const auth = guild.getAuth();
   const tz = guild.tz;
@@ -441,6 +444,7 @@ function startUpdateTimer(guildID, channel, guild) {
  * @param {bool} human - if command was initiated by a human
  */
 function updateCalendar(guild, channel, human) {
+  guild.update(); // update guild
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID === "") {
     channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
@@ -544,10 +548,10 @@ function displayOptionHelper(args, guildSettings, channel) {
   const optionName = {
     pin: {
       name: "pin",
-      help: "calendar pinning",
+      help: "calendar pinning"
     }, tzdisplay: {
       name: "tzDisplay",
-      help: "calendar timezone display",
+      help: "calendar timezone display"
     }, emptydays: {
       name: "emptydays",
       help: "calendar empty days"
@@ -1012,6 +1016,12 @@ function setRoles(message, args, guild) {
   }
 }
 
+/**
+ * Admin-only commands
+ * @param {String} cmd - command to run
+ * @param {[String]} args - args of command
+ * @returns {String} - response of command
+ */
 function adminCmd (cmd, args) {
   if (cmd === "timers") {
     return (`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);

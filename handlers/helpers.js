@@ -4,7 +4,6 @@ const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const guilds = require("./guilds.js");
 
-
 // event types
 const eventType = {
   NOMATCH: "nm",
@@ -14,6 +13,10 @@ const eventType = {
   MULTYEND: "me"
 };
 
+/**
+ * Gets settings file
+ * @returns {Object} - Settings object
+ */
 function getSettings() {
   return require("../settings.js");
 }
@@ -57,9 +60,11 @@ function log(...logItems) {
     });
 }
 
-
-
-// timezone validation
+/**
+ * Validates timezone
+ * @param {String} tz 
+ * @returns {Boolean}
+ */
 function validateTz(tz) {
   return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 }
@@ -87,7 +92,6 @@ function checkRole(message) {
   const userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
-
 
 /**
  * Collects response for a message
@@ -210,5 +214,5 @@ module.exports = {
   eventType,
   trimEventName,
   descriptionParser,
-  matchCalType,
+  matchCalType
 };

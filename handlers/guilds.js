@@ -38,7 +38,7 @@ const defaultSettings = {
   "auth": "sa",
   "channelid": "",
   "descLength": 0,
-  "startonly": "0",
+  "startonly": "0"
 };
 
 /**
@@ -109,6 +109,11 @@ function readFile(path) {
   }
 }
 
+/**
+ * Get guild-specific file
+ * @param {String} guildID 
+ * @param {String} file 
+ */
 function getGuildSpecific(guildID, file) {
   let filePath = path.join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
@@ -116,22 +121,41 @@ function getGuildSpecific(guildID, file) {
   return (file === "settings.json" ? {...defaultSettings, ...storedData} : storedData);
 }
 
+/**
+ * Generate daymap
+ * @param {Object} settings - guildsettings to build around
+ * @returns {dayMap} - dayMap for guild
+ */
+function generateDayMap(settings) {
+  let dayMap = [];
+  // allowing all days to be correctly TZ adjusted
+  let d = DateTime.fromJSDate(new Date()).setZone(settings.timezone);
+  // if Option to show past events is set, start at startOf Day instead of NOW()
+  if (settings.showpast === "1") d = d.startOf("day");
+  dayMap[0] =  d;
+  for (let i = 1; i < settings.days; i++) {
+    dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
+  }
+  return dayMap;
+}
+
+/**
+ * @class
+ */
 function Guild(guildID) {
-  // settings
-  let settings = getGuildSpecific(guildID, "settings.json");
+  // Load Settings
+  let settings = getGuildSpecific(guildID, "settings.json"); 
   /**
-   * Get settings
+   * Get specific or all settings
    * @param {String} [key] - Optional key to fetch 
    */
-  this.getSetting = (key) => {
-    return (key ? settings[key] : settings);
-  };
+  this.getSetting = (key) => (key ? settings[key] : settings);
   /**
    * Sets specific setting to value
    * @param {String} key - key of setting to change
    * @param {String} value - value to set key to
    */
-  this.setSetting = (key, value) => { // set settings value
+  this.setSetting = (key, value) => {
     settings[key] = value;
     writeGuildSpecific(guildID, settings, "settings");
   };
@@ -140,7 +164,7 @@ function Guild(guildID) {
    * @param {Object} newSettings - new settings object
    */
   this.setSettings = (newSettings) => { writeGuildSpecific(guildID, newSettings, "settings"); };
-  // common settings
+  // common properties
   this.prefix = settings.prefix;
   this.id = guildID;
   this.tz = settings.timezone;
@@ -150,7 +174,7 @@ function Guild(guildID) {
    * Get calendar file
    * @param {String} [key] - Optionally get specific key 
    */
-  this.getCalendar = (key) => { return (key ? calendar[key] : calendar); };
+  this.getCalendar = (key) => (key ? calendar[key] : calendar);
   /**
    * Set Calendar to value
    * @param {Object} [argCalendar] - If provided, set to given calendar, else write current calendar
@@ -168,22 +192,9 @@ function Guild(guildID) {
     calendar.calendarMessageId = calendarID;
     this.setCalendar();
   };
-  // daymap
-  this.getDayMap = () => {
-    let dayMap = [];
-    // allowing all days to be correctly TZ adjusted
-    let d = DateTime.fromJSDate(new Date()).setZone(this.tz);
-    // if Option to show past events is set, start at startOf Day instead of NOW()
-    if (settings.showpast === "1") d = d.startOf("day");
-    dayMap[0] =  d;
-    for (let i = 1; i < settings.days; i++) {
-      dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
-    }
-    return dayMap;
-  };
-  /**
-   * Get OAuth2 token
-   */
+  // generate daymap
+  this.getDayMap = generateDayMap(settings);
+  // get OAuth2 Token
   this.getToken = () => getGuildSpecific(guildID, "token.json");
   /**
    * Set OAuth2 token
@@ -201,6 +212,13 @@ function Guild(guildID) {
     // default to SA if oauth2 failed too
     } else { return sa;
     }
+  };
+  /**
+   * Update settings and calendar
+   */
+  this.update = () => {
+    settings = getGuildSpecific(guildID, "settings.json");
+    calendar = getGuildSpecific(guildID, "calendar.json");
   };
 }
 
