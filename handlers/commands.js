@@ -197,7 +197,7 @@ function getEvents(guild, channel) {
     }).catch((err) => {
       if (err.message.includes("notFound")) {
         helpers.log(`function getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
-        channel.send(strings.NO_CALENDAR_MESSAGE);
+        channel.send(strings.i18n.t("no_cal", { lng: guild.lng }));
       } else if (err.message.includes("Invalid Credentials")) { // Catching periodic google rejections;
         return helpers.log(`function getEvents error in guild: ${guild.id} : 401 invalid credentials`);
       } else {
@@ -565,7 +565,7 @@ function displayOptionHelper(args, guildSettings, channel) {
   if (value) {
     send(channel, value === "1" ? `Set ${optionName[setting].name} on` : `Set ${optionName[setting].name} off`);
     guildSettings[optionName[setting].name] = value; // set value
-  } else { send(channel, `Please only use 0 or 1 for the **${optionName[setting].help}** setting, (off or on)`);
+  } else { send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guildSettings.locale, help: optionName[setting].help }));
   }
   return guildSettings;
 }
@@ -608,6 +608,7 @@ function displayOptions(args, guild, channel) {
   const dispCmd = args[0];
   const dispOption = args[1];
   let guildSettings = guild.getSetting();
+  const lng = guild.lng;
   const binaryDisplayOptions = [
     "pin", "tzdisplay", "emptydays", "showpast", "help", "startonly"
   ];
@@ -621,22 +622,22 @@ function displayOptions(args, guild, channel) {
   } else if (dispCmd === "format") {
     if (dispOption) {
       guildSettings.format = Number(dispOption);
-      send(channel, (guildSettings.format === "12" ? "Set to 12-Hour clock format" : "Set to 24-Hour clock format"));
-    } else { send(channel, "Please only use 12 or 24 for the clock display options");
+      send(channel, strings.i18n.t("displayoptions.format.confirm", {lng, format: guildSettings.format} ));
+    } else { send(channel, strings.i18n.t("displayoptions.format.help", {lng}));
     }
   } else if (dispCmd === "trim") {
     if (dispOption) {
       let size = Number(dispOption);
       guildSettings.trim = (isNaN(size) ? 0 : size); // set to 0 if invalid, otherwise take number
-      send(channel, `Set trimming of event titles to ${size} (0 = off)`);
-    } else { send(channel, "Please provide a number to trim event titles. (0 = off)");
+      send(channel, strings.i18n.t("displayoptions.trim.confirm", {lng, size}));
+    } else { send(channel, strings.i18n.t("displayoptions.trim.help", {lng}));
     }
   } else if (dispCmd === "desclength") {
     if (dispOption) {
       let size = Number(dispOption);
       guildSettings.descLength = (isNaN(size) ? 0 : size); // set to 0 if invalid, otherwise take number
-      send(channel, `Set trimming of description length to ${size} (0 = off)`);
-    } else { send(channel, "Please provide a number to trim description length. (0 = off)");
+      send(channel, strings.i18n.t("displayoptions.desclength.confirm", {lng}));
+    } else { send(channel, strings.i18n.t("displayoptions.desclength.help", {lng}));
     }
   } else if (dispCmd === "days") {
     if (dispOption) {
@@ -645,8 +646,8 @@ function displayOptions(args, guild, channel) {
         isNaN(size) ? 7 // if not a number - default to 7
           : size > 25 ? 25 // discord field limit is 25
             : size; // otherwise defualt to size
-      send(channel, `Changed days to display to: ${guildSettings.days} (you may have to use \`!displayoptions emptydays 0\`)`);
-    } else { send(channel, "Please provide a number of days to display. (7 = default, 25 = max)");
+      send(channel, strings.i18n.t("displayoptions.days.help", {lng, days: guildSettings.days}));
+    } else { send(channel, strings.i18n.t("displayoptions.days.help", {lng}));
     }
   } else if (dispCmd === "style") {
     if (dispOption === "code") {
@@ -656,10 +657,10 @@ function displayOptions(args, guild, channel) {
     }
     if (dispOption) {
       guildSettings.style = dispOption;
-      send(channel, `Changed display style to \`${guildSettings.style}\``);
-    } else { send(channel, "Please only use code or embed for the style choice. (see nilesbot.com/customisation)");
+      send(channel, strings.i18n.t("displayoptions.style.confirm", { style: guildSettings.style, lng }));
+    } else { send(channel, strings.i18n.t("displayoptions.style.help", {lng}));
     }
-  } else { send(channel, strings.DISPLAYOPTIONS_USAGE);
+  } else { send(channel, strings.i18n.t("displayoptions.help", {lng}));
   }
   guild.setSettings(guildSettings);
 }
@@ -728,7 +729,7 @@ function nextEvent(guild, channel) {
       }
     }
     // run if message not sent
-    return send(channel, "No upcoming events within date range", 10000);
+    return send(channel, strings.i18n.t("next.no_upcoming", {lng: guild.lng}), 10000);
   }).catch((err) => { helpers.log(err);
   });
 }
@@ -740,14 +741,14 @@ function nextEvent(guild, channel) {
  * @returns {Snowflake} command response
  */
 function deleteEvent(args, guild, channel) {
-  if (!args[0]) return send(channel, "You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`");
+  if (!args[0]) return send(channel, strings.i18n.t("delete.noarg", {lng: guild.lng}));
   const text = args.join(" "); // join
   const calendarID = guild.getSetting("calendarID");
   listSingleEventsWithinDateRange(guild).then((resp) => {
     for (const curEvent of resp.data.items) {
       if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
         let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
-        send(channel, `Are you sure you want to delete the event **${curEvent.summary}** on ${promptDate}? **(y/n)**`, 30000);
+        send(channel, strings.i18n.t("delete.confirm", {lng: guild.lng, summary: curEvent.summary, promptDate}), 30000);
         helpers.yesThenCollector(channel).then(() => { // collect yes
           deleteEventById(curEvent.id, calendarID, channel)
             .then(() => { return send(channel, `Event **${curEvent.summary}** deleted`);
@@ -758,10 +759,10 @@ function deleteEvent(args, guild, channel) {
         return;
       }
     }
-    send(channel, "Couldn't find event with that name - make sure you use exactly what the event is named!");
+    send(channel, strings.i18n.t("delete.not_found", {lng: guild.lng}));
   }).catch((err) => {
     helpers.log(err);
-    return send(channel, "There was an error finding this event");
+    return send(channel, strings.i18n.t("delete.error", {lng: guild.lng}));
   });
 }
 
@@ -943,21 +944,21 @@ function logTz(channel, args, guild) {
   const tz = args[0];
   if (!tz) { // no input
     // no current tz
-    if (!currentTz) channel.send("Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.");
+    if (!currentTz) channel.send(strings.i18n.t("tz.noarg", { lng: guild.lng }));
     // timezone define
-    else channel.send(`You didn't enter a timezone, you are currently using \`${currentTz}\``);
+    else channel.send(strings.i18n.t("tz.exists", { lng: guild.lng, currentTz }));
   }
   // valid input
   else if (helpers.validateTz(tz)) { // passes validation
     if (currentTz) { // timezone set
-      channel.send(`I've already been setup to use \`${currentTz}\`, do you want to overwrite this and use \`${tz}\`? **(y/n)**`);
+      channel.send(strings.i18n.t("tz.confirm", { lng: guild.lng, currentTz, tz }));
       helpers.yesThenCollector(channel).then(() => { return guild.setSetting("timezone", tz);
       }).catch((err) => { helpers.log(err);
       });
     // timezone is not set
     } else { guild.setSetting("timezone", tz); }
   // fails validation
-  } else { channel.send("Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting."); }
+  } else { channel.send(strings.i18n.t("tz.noarg", { lng: guild.lng })); }
 }
 
 /**
@@ -988,22 +989,23 @@ function setRoles(message, args, guild) {
   const adminRole = args[0];
   const allowedRoles = guild.getSetting("allowedRoles");
   const userRoles = message.member.roles.cache.map((role) => role.name);
+  const lng = guild.lng;
   let roleArray;
   if (!adminRole) {
     // no argument defined
-    if (allowedRoles.length === 0) return message.channel.send(strings.RESTRICT_ROLE_MESSAGE);
+    if (allowedRoles.length === 0) return message.channel.send(strings.i18n.t("admin.noarg", {lng}));
     // admin role exists
-    message.channel.send(`The admin role for this discord is \`${allowedRoles}\`. You can change this setting using \`${guild.prefix}admin <ROLE>\`, making sure to spell the role as you've created it. You must have this role to set it as the admin role.\n You can allow everyone to use Niles again by entering \`${guild.prefix}admin everyone\``);
+    message.channel.send(strings.i18n.t("admin.exists", { lng, allowedrole: allowedRoles}));
   } else if (adminRole) {
     // add everyone
     if (adminRole.toLowerCase() === "everyone") {
-      message.channel.send("Do you want to allow everyone in this channel/server to use Niles? **(y/n)**");
+      message.channel.send(strings.i18n.t("admin.everyone_prompt", {lng}));
       roleArray = [];
     // no role selected
-    } else if (!userRoles.includes(adminRole)) { message.channel.send("You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive");
+    } else if (!userRoles.includes(adminRole)) { message.channel.send(strings.i18n.t("admin.no_role", {lng}));
     } else {
       // restricting succeeded
-      message.channel.send(`Do you want to restrict the use of the calendar to people with the \`${adminRole}\`? **(y/n)**`);
+      message.channel.send(strings.i18n.t("admin.confirm", {lng, adminRole}));
       roleArray = [adminRole];
     }
     // prompt for confirmation
@@ -1037,6 +1039,7 @@ function run(cmd, args, message) {
   const guild = new guilds.Guild(guildID);
   const guildSettings = guild.getSetting();
   const channel = message.channel;
+  const lng = guildSettings.lng;
   const guildChannel = (guildSettings.channelid ? bot.client.channels.cache.get(guildSettings.channelid) : channel);
   const sentByAdmin = (settings.secrets.admins.includes(message.author.id)); // check if author is admin
   // start commands
@@ -1056,11 +1059,11 @@ function run(cmd, args, message) {
   // end setup mode commands
   } else if (!guildSettings.calendarID || !guildSettings.timezone) { 
     // send setup-specific help message
-    if (["help"].includes(cmd)) { channel.send(strings.SETUP_HELP); }
-    else if (["setup", "start"].includes(cmd)) { channel.send(strings.SETUP_MESSAGE); }
-    else { channel.send("You haven't finished setting up! Try `!setup` for details on how to start."); }
+    if (["help"].includes(cmd)) { strings.i18n.t("setup.help", {lng}); }
+    else if (["setup", "start"].includes(cmd)) { channel.send(strings.i18n.t("setup.long", {lng})); }
+    else { channel.send(strings.i18n.t("setup.error", {lng})); }
   // if in setup mode, hard stop & force exit
-  } else if (["help"].includes(cmd)) { channel.send(strings.HELP_MESSAGE);
+  } else if (["help"].includes(cmd)) { channel.send(strings.i18n.t("help", { lng }));
   } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel);
   } else if (["display"].includes(cmd)) {
     setTimeout(() => { getEvents(guild, guildChannel); }, 1000);

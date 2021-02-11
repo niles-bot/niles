@@ -144,6 +144,7 @@ function Guild(guildID) {
   this.prefix = settings.prefix;
   this.id = guildID;
   this.tz = settings.timezone;
+  this.locale = settings.locale;
   // calendar
   let calendar = getGuildSpecific(guildID, "calendar.json");
   /**

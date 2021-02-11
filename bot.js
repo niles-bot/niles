@@ -9,6 +9,10 @@ const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
 const helpers = require("./handlers/helpers.js");
 
+// bot properties
+let shardGuilds = [];
+let shardID;
+
 /**
  * Gets all known guilds
  * @returns {[String]} - Array of guildids
@@ -80,19 +84,17 @@ function runCmd(message) {
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-  helpers.log(`Bot is logged in. Shard: ${client.shard.ids}`);
-  client.user.setStatus("online");
+  shardID = client.shard.ids;
+  helpers.log(`Bot is logged in. Shard: ${shardID}`);
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
     .then((results) => {
-      const shardGuilds = [];
       results.forEach(function (item) { // iterate over shards
         item.forEach(function (item) { // iterate over servers
           shardGuilds.push(item.id); // add server id to shardGuilds
         });
       });
       addMissingGuilds(shardGuilds); // start adding missing guilds
-      console.log(shardGuilds);
       return helpers.log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
