@@ -2,6 +2,7 @@ const defer = require("promise-defer");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const guilds = require("./guilds.js");
+const debug = require("debug")("niles:helpers");
 
 // event types
 const eventType = {
@@ -75,6 +76,7 @@ function validateTz(tz) {
  * @return {string} - nicely formatted string for date event
  */
 function getStringTime(date, guild) {
+  debug(`getStringTime | ${guild.id}`);
   const format = guild.getSetting("format");
   const zDate = DateTime.fromISO(date, {setZone: true});
   return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
@@ -87,6 +89,7 @@ function getStringTime(date, guild) {
  */
 function checkRole(message) {
   const guild = new guilds.Guild(message.guild.id);
+  debug(`checkRole | ${guild.id}`);
   const allowedRoles = guild.getSetting("allowedRoles");
   const userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
@@ -97,6 +100,7 @@ function checkRole(message) {
  * @param {Snowflake} channel - Channel to create collector in
  */
 function yesThenCollector(channel) {
+  debug(`yesThenCollector | ${channel.guild.id}`);
   let p = defer();
   const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
@@ -144,6 +148,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
       eventMatchType = eventType.MULTIMID;
     } 
   }
+  debug(`classifyEventMatch | type ${eventMatchType}`);
   return eventMatchType;
 }
 
@@ -154,6 +159,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
  * @return {string} eventName - A string wit max 23 chars length
  */
 function trimEventName(eventName, trimLength){
+  debug(`trimEventName | eventname: ${eventName}`);
   // if no trim length, just return
   if (trimLength === null || trimLength === 0) return eventName;
   // trim down to length
@@ -167,6 +173,7 @@ function trimEventName(eventName, trimLength){
  * @return {string} strippedString - string stripped of html
  */
 function descriptionParser(inputString) {
+  debug(`descriptionParser | pre: ${inputString}`);
   const brRegex = /(<br>)+/gi; // match <br>
   const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags
   const decoded = decodeURI(inputString); // decode URI
@@ -180,6 +187,7 @@ function descriptionParser(inputString) {
  * @returns {bool} - if calendar ID is valid
  */
 function matchCalType(calendarID, channel) {
+  debug(`matchCalType | id: ${calendarID}`);
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
   const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");

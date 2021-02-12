@@ -1,6 +1,7 @@
 let discord = require("discord.js");
 const { readdirSync } = require("fs");
 const path = require("path");
+const log = require("debug")("niles:bot");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
@@ -18,6 +19,7 @@ let shardID;
  * @returns {[String]} - Array of guildids
  */
 function getKnownGuilds() {
+  log("start getKnownGuilds");
   let fullPath = path.join(__dirname, "stores");
   return readdirSync(fullPath, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
@@ -33,6 +35,7 @@ function addMissingGuilds(availableGuilds) {
   const knownGuilds = getKnownGuilds();
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildID) => {
+    log(`creating new guild: ${guildID}`);
     guilds.createGuild(guildID);
   });
 }
@@ -99,6 +102,7 @@ client.on("ready", () => {
       return helpers.log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
+      log(`guild cache error: ${err}`);
       if (err.name === "Error [SHARDING_IN_PROCESS]") {
         console.log("spawning shards ..."); // send error to console - still sharding
       }

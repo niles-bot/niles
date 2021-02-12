@@ -3,6 +3,7 @@ const path = require("path");
 const { DateTime } = require("luxon");
 const { oauth2, sa } = require("../settings.js");
 const helpers = require("./helpers.js");
+const log = require("debug")("niles:guilds");
 
 const emptyCal = {
   "day0": [],
@@ -58,6 +59,7 @@ function deleteFolderRecursive(path) {
  * @param {String} file - file name to write to - calendar/settings 
  */
 function writeGuildSpecific(guildID, json, file) {
+  log(`writeGuildSpecific | ${guildID} | json: ${json} | file: ${file}`);
   let fullPath = path.join(__dirname, "..", "stores", guildID, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
     if (err) return helpers.log("error writing guild specific database: " + err);
@@ -115,6 +117,7 @@ function readFile(path) {
  * @param {String} file 
  */
 function getGuildSpecific(guildID, file) {
+  log(`writeGuildSpecific | ${guildID} | file: ${file}`);
   let filePath = path.join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
@@ -159,11 +162,6 @@ function Guild(guildID) {
     settings[key] = value;
     writeGuildSpecific(guildID, settings, "settings");
   };
-  /**
-   * Set all settings
-   * @param {Object} newSettings - new settings object
-   */
-  this.setSettings = (newSettings) => { writeGuildSpecific(guildID, newSettings, "settings"); };
   // common properties
   this.prefix = settings.prefix;
   this.id = guildID;
@@ -193,7 +191,7 @@ function Guild(guildID) {
     this.setCalendar();
   };
   // generate daymap
-  this.getDayMap = generateDayMap(settings);
+  this.getDayMap = () => generateDayMap(settings);
   // get OAuth2 Token
   this.getToken = () => getGuildSpecific(guildID, "token.json");
   /**
@@ -217,6 +215,7 @@ function Guild(guildID) {
    * Update settings and calendar
    */
   this.update = () => {
+    log(`Guild.update | ${guildID}`);
     settings = getGuildSpecific(guildID, "settings.json");
     calendar = getGuildSpecific(guildID, "calendar.json");
   };
