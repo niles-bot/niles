@@ -2,6 +2,7 @@
 layout: default
 title: Home
 nav_order: 1
+last_modified_date: true
 description: "Niles is a bot for displaying a simple calendar in Discord."
 ---
 
@@ -46,5 +47,3 @@ The new artwork for Niles was created and supplied by Meris#2810
 ## License
 
 [MIT License](https://seanecoffey.mit-license.org/)
-
-Last update: 2 Nov 2020

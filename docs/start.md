@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Getting Started
+last_modified_date: true
 nav_order: 2
 ---
 
