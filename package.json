@@ -1,6 +1,6 @@
 {
   "name": "niles",
-  "version": "4.2.2",
+  "version": "4.3.0",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "promise-defer": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.19.0"
+    "eslint": "^7.20.0"
   },
   "repository": {
     "type": "git",
