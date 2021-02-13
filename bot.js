@@ -77,7 +77,7 @@ function runCmd(message) {
   // ignore non-whitelisted commands
   if (!validCmd.includes(cmd)) return;
   // check if user has restricted role
-  if (!helpers.checkRole(message)) {
+  if (!helpers.checkRole(message, guildSettings)) {
     return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
       .then((message) => message.delete({ timeout: 10000 }));
   }

@@ -1,7 +1,6 @@
 const defer = require("promise-defer");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
-const guilds = require("./guilds.js");
 const debug = require("debug")("niles:helpers");
 
 // event types
@@ -87,10 +86,9 @@ function getStringTime(date, guild) {
  * @param {Snowflake} message - message from user to be checked
  * @returns {bool} - return if no allowed roles or user has role
  */
-function checkRole(message) {
-  const guild = new guilds.Guild(message.guild.id);
-  debug(`checkRole | ${guild.id}`);
-  const allowedRoles = guild.getSetting("allowedRoles");
+function checkRole(message, guildSettings) {
+  debug(`checkRole | ${message.guild.id}`);
+  const allowedRoles = guildSettings.allowedRoles;
   const userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
