@@ -104,7 +104,7 @@ function killUpdateTimer(guildID) {
 function clean(channel, numMsg, deleteCal) {
   log(`clean | ${channel.guild.id}`);
   numMsg = ((numMsg <= 97) ? numMsg+= 3 : 100); // add 3 messages from collector
-  const guild = new helpers.Guild(channel.guild.id);
+  const guild = new guilds.Guild(channel.guild.id);
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (deleteCal) {
     guild.setCalendarID(""); // delete calendar id
@@ -704,7 +704,7 @@ function displayOptions(args, guild, channel) {
  */
 function deleteEventById(eventID, calendarID, channel) {
   log(`deleteEventById | ${channel.guild.id} | eventID: ${eventID}`);
-  const guild = new helpers.Guild(channel.guild.id);
+  const guild = new guilds.Guild(channel.guild.id);
   const params = {
     calendarID,
     eventID,

@@ -121,7 +121,12 @@ function getGuildSpecific(guildID, file) {
   let filePath = path.join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
-  return (file === "settings.json" ? {...defaultSettings, ...storedData} : storedData);
+  // if settings - merge defaults and stored
+  // if calendar - send default if empty
+  // otherwise return normal
+  return (file === "settings.json") ? {...defaultSettings, ...storedData}
+    : (file === "calendar.json" && !Object.entries(storedData).length) ? emptyCal
+      : storedData;
 }
 
 /**
