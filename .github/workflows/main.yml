@@ -1,9 +1,13 @@
-name: CI to Docker Hub
+name: docker-ci
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
     branches:
       - master
+    tags:
+      - v*
   workflow_dispatch:
 
 jobs:
