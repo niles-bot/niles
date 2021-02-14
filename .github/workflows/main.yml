@@ -15,7 +15,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/${GITHUB_REPOSITORY#*/}
+          DOCKER_IMAGE=nilesbot/niles
           VERSION=latest
           SHORTREF=${GITHUB_SHA::8}
 
