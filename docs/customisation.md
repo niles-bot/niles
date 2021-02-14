@@ -28,7 +28,8 @@ Use display options (!displayoptions) to customise the way the calendar appears 
 | [inline](#make-embed-style-calendar-inline)          | `!displayoptions inline 0|1`        | Makes embed display style use inline fields              |
 | [description](#hideshow-event-description)           | `!displayoptions description 0|1`   | Hide/show event descriptions (embed calendar style only) |
 | [url](#inline-url-title)                             | `!displayoptions url 0|1`           | Hide/show "location" as embedded link (embed only)       |
-
+| [startonly](#show-start-only)                        | `!displayoptions startonly 0|1`     | Only show start time for events                          |
+| [desclength](#limit-description-length)              | `!displayoptions desclength <n>`    | Limit description length (embed only)                    |
 
 ---
 
@@ -159,3 +160,12 @@ The title will be transformed into a link:
 
 ![title-as-link](../../assets/images/title-as-link.png)
 {: .text-center }
+
+# Show Start Only
+use `!displayoptions startonly 0|1` to toggle this off/on. Only the start time of the event will be shown - for ending multi-day events, the ending time will not be shown 
+
+## Limit Description Length
+
+If you are using the embed style calendar and have descriptions on, you can limit the number of characters displayed.
+
+Use `!displayoptions desclength <n>` to limit the description display to n characters.

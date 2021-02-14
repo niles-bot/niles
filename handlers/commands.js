@@ -748,6 +748,7 @@ function nextEvent(guild, channel) {
   log(`nextEvent | ${guild.id}`);
   const now = DateTime.local().setZone(guild.tz);
   listSingleEventsWithinDateRange(guild).then((resp) => {
+    if (!resp.data) return; // return if no data
     for (const eventObj of resp.data.items) {
       const isoDate = eventObj.start.dateTime || eventObj.start.date;
       const luxonDate = DateTime.fromISO(isoDate);
@@ -781,6 +782,7 @@ function deleteEvent(args, guild, channel) {
   const text = args.join(" "); // join
   const calendarID = guild.getSetting("calendarID");
   listSingleEventsWithinDateRange(guild).then((resp) => {
+    if (!resp.data) return; // return if no data
     for (const curEvent of resp.data.items) {
       if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
         let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
