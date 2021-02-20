@@ -1,4 +1,5 @@
 # Niles Discord Bot
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/389e3ab3b7e54bd080c7db118bc87a0f)](https://app.codacy.com/gh/niles-bot/niles?utm_source=github.com&utm_medium=referral&utm_content=niles-bot/niles&utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/42ad70ef7e0842da99a2176d5684e0a3)](https://www.codacy.com/gh/niles-bot/niles/dashboard)
 [![codebeat Badge](https://codebeat.co/badges/dc7cdd12-2d64-48b4-95c7-7fe3f5cf81a4)](https://codebeat.co/projects/github-com-niles-bot-niles-master)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/niles-bot/niles/docker-ci)](https://hub.docker.com/r/nilesbot/niles)
