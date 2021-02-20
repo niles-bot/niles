@@ -706,8 +706,8 @@ function deleteEventById(eventID, calendarID, channel) {
   log(`deleteEventById | ${channel.guild.id} | eventID: ${eventID}`);
   const guild = new guilds.Guild(channel.guild.id);
   const params = {
-    calendarID,
-    eventID,
+    calendarId: calendarID,
+    eventId: eventID,
     sendNotifications: true
   };
   const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
@@ -1032,11 +1032,11 @@ function logTz(channel, args, guild) {
 function setPrefix(channel, args, guild) {
   log(`setPrefix | ${guild.id}`);
   const newPrefix = args[0];
-  if (!newPrefix) { channel.send(`You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
+  if (!newPrefix) { send(channel, `You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
     helpers.yesThenCollector(channel).then(() => {
-      send(`prefix set to ${newPrefix}`);
+      send(channel, `prefix set to ${newPrefix}`);
       log(`setPrefix | ${guild.id} | set to: ${newPrefix}`);
       return guild.setSetting("prefix", newPrefix);
     }).catch((err) => { helpers.log(err); });
