@@ -3,7 +3,7 @@ const { stripHtml } = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const guilds = require("./guilds.js");
-
+const strings = require("./strings.js");
 
 // event types
 const eventType = {
@@ -57,8 +57,6 @@ function log(...logItems) {
     });
 }
 
-
-
 // timezone validation
 function validateTz(tz) {
   return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
@@ -88,24 +86,24 @@ function checkRole(message) {
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
 
-
 /**
  * Collects response for a message
  * @param {Snowflake} channel - Channel to create collector in
+ * @param {String} lng - locale of response
  */
-function yesThenCollector(channel) {
+function yesThenCollector(channel, lng) {
   let p = defer();
   const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
     if (["y", "yes"].includes(m.content.toLowerCase())) { p.resolve();
     } else {
-      channel.send("Okay, I won't do that");
+      channel.send(strings.i18n.t("collector.reject", { lng: lng }));
       p.reject();
     }
     collector.stop();
   });
   collector.on("end", (collected, reason) => {
-    if (reason === "time") return channel.send("Command response timeout");
+    if (reason === "time") return channel.send(strings.i18n.t("collector.timeout", { lng: lng }));
   });
   return p.promise;
 }
@@ -173,10 +171,11 @@ function descriptionParser(inputString) {
 /**
  * This function makes sure that the calendar matches a specified type
  * @param {String} calendarID - calendar ID to classify
- *  @param {Snowflake} channel - Channel to send callback to
+ * @param {Snowflake} channel - Channel to send callback to
+ * @param {Guild} guild - Guild to pull settings from
  * @returns {bool} - if calendar ID is valid
  */
-function matchCalType(calendarID, channel) {
+function matchCalType(calendarID, channel, guild) {
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
   const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
@@ -190,11 +189,11 @@ function matchCalType(calendarID, channel) {
   } else if (importCalId.test(calendarID)) { // matches import ID
   } else if (groupCalId.test(calendarID)) {
     if (cGroupCalId.test(calendarID)) { // matches cGroup
-    } else if (domainCalId.test(calendarID)) {channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
-    } else if (underscoreCalId.test(calendarID)) { channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
+    } else if (domainCalId.test(calendarID)) { channel.send(strings.i18n.t("caltype.domain", { lng: guild.lng }));
+    } else if (underscoreCalId.test(calendarID)) { channel.send(strings.i18n.t("caltype.underscore", { lng: guild.lng }));
     }
     return true; // normal group id or any variation
-  } else if (domainAddress.test(calendarID)) { channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+  } else if (domainAddress.test(calendarID)) { channel.send(strings.i18n.t("caltype.domain", { lng: guild.lng }));
   } else { return false; // break and return false
   }
   return true; // if did not reach false

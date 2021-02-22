@@ -118,3 +118,47 @@ displayoptions:
       !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
       !displayoptions desclength   (n)           trim description to n characters (0 =  off)
     ```
+
+caltype:
+  domain: If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace
+  underscore: If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format
+
+norole: You must have the {{allowedrole}} role to use Niles in this server
+collector:
+  timeout: Command response timeout
+  reject: Okay, I won't do that
+
+auth:
+  noarg: Set up authentication with `auth sa` or `auth oauth`. For details see https://nilesbot.com/start/#google-calendar-authentication
+  oauth:
+    notinstalled: OAuth2 credentials not installed
+    reauth: Already using OAuth, use `!auth oauth force` to force reauthentication
+    prompt: "Authorize Niles by visiting this [url]({{authUrl}}) \n Send the code from the page:"
+    err: Error retrieving access token {{err}}
+    success: Successfuly Authenticated
+  sa:
+    invite: Invite {{saId}} to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
+    notinstalled: SA credentials not installed
+
+delete:
+  noarg: You can only use a number to delete messages. i.e. `!clean 10`
+  confirm: You are about to delete {{argMessages}} messages. Are you sure? (y/n)
+
+timerkilled: update timer has been killed.
+
+calendar:
+  no_upcoming:
+  too_long:
+  help:
+
+update_timer:
+  starting:
+  error:
+  not_started:
+  killed: update timer has been killed.
+
+update:
+  no_msg_id:
+  cannot_find:
+  undefined:
+  error_fetching:

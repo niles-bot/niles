@@ -10,7 +10,7 @@ const guilds = require("./guilds.js");
 let autoUpdater = [];
 let timerCount = [];
 const eventType = helpers.eventType;
-const {google} = require("googleapis");
+const { google } = require("googleapis");
 const { oauth2, sa } = require("../settings.js");
 
 //functions
@@ -39,25 +39,24 @@ function getAccessToken(force, guild, channel) {
     scope: ["https://www.googleapis.com/auth/calendar.events"],
   });
   if (guild.getSetting("auth") === "oauth" && !force) {
-    return send(channel, "Already using OAuth, use `!auth oauth force` to force reauthentication");
+    return send(channel, strings.i18n.t("auth.oauth.reauth", { lng: guild.lng }));
   }
   const authEmbed = {
     color: 0x0099e1,
-    description: `Authorize Niles by visiting this [url](${authUrl})
-    Send the code from the page:`
+    description: strings.i18n.t("auth.oauth.prompt", { lng: guild.length, authUrl })
   };
   send(channel, { embed: authEmbed }, 30000 );
   const collector = channel.createMessageCollector({ time: 30000 });
   collector.on("collect", (m) => {
     oauth2.getToken(m.content, (err, token) => {
-      if (err) return send(channel, `Error retrieving access token \`${err}\``);
-      send(channel, "Successfuly Authenticated");
+      if (err) return send(channel, strings.i18n.t("auth.oauth.err", { lng: guild.lng, err }));
+      send(channel, strings.i18n.t("auth.oauth.success", { lng: guild.lng }));
       guild.setSetting("auth", "oauth");
       guild.setToken(token);
     });
   });
   collector.on("end", (collected, reason) => {
-    if (reason === "time") send(channel, "Command response timeout");
+    if (reason === "time") send(channel, strings.i18n.t("collector.timeout", { lng: guild.lng }));
   });
 }
 
@@ -70,14 +69,14 @@ function getAccessToken(force, guild, channel) {
 function setupAuth(args, guild, channel) {
   if (args[0] === "oauth") {
     if (!oauth2) {
-      return send(channel, "OAuth2 credentials not installed");
+      return send(channel, strings.i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
     }
     getAccessToken((args[1] === "force"), guild, channel);
   } else if (args[0] === "sa") {
-    if (!sa) return send(channel, "SA credentials not installed");
+    if (!sa) return send(channel, strings.i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
     guild.getSetting("auth", "sa");
-    send(channel, `Invite \`${settings.saId}\` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles`, 10000);
-  } else { send(channel, "Set up authentication with `auth sa` or `auth oauth`. For details see https://nilesbot.com/start/#google-calendar-authentication", 10000);
+    send(channel, strings.i18n.t("auth.sa.invite", { lng: guild.lng, saId: settings.saId }), 10000);
+  } else { send(channel, strings.i18n.t("auth.noarg", { lng: guild.lng }), 10000);
   }
 }
 
@@ -120,15 +119,17 @@ function clean(channel, numMsg, deleteCal) {
  * Interface to warn users before deleting messages
  * @param {[String]} args - arguments passed in 
  * @param {Snowflake} channel - Channel to clean
+ * @param {String} lng - Locale of guild
  */
-function deleteMessages(args, channel) {
+function deleteMessages(args, channel, lng) {
   const argMessages = Number(args[0]);
   const deleteCalendar = Boolean(args[1]);
+  const guild = new guilds.guild(channel.guild.id);
   if (!args[0] || isNaN(argMessages)) {
-    return channel.send("You can only use a number to delete messages. i.e. `!clean 10`");
+    return channel.send(strings.i18n.t("delete.noarg", { lng }));
   } else {
-    channel.send(`You are about to delete ${argMessages} messages. Are you sure? (y/n)`);
-    helpers.yesThenCollector(channel).then(() => { // collect yes
+    channel.send(strings.i18n.t("delete.confirm", { lng, argMessages }));
+    helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
       return clean(channel, argMessages, deleteCalendar);
     }).catch((err) => {
       helpers.log(err);
@@ -203,7 +204,7 @@ function getEvents(guild, channel) {
       } else {
         helpers.log(`Error in function getEvents in guild: ${guild.id} : ${err}`);
       }
-      channel.send("update timer has been killed.");
+      channel.send(strings.i18n.t("timerkilled", { lng: guild.lng }));
       killUpdateTimer(guild.id);
     });
   } catch (err) {
@@ -565,7 +566,7 @@ function displayOptionHelper(args, guildSettings, channel) {
   if (value) {
     send(channel, value === "1" ? `Set ${optionName[setting].name} on` : `Set ${optionName[setting].name} off`);
     guildSettings[optionName[setting].name] = value; // set value
-  } else { send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guildSettings.locale, help: optionName[setting].help }));
+  } else { send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guildSettings.lng, help: optionName[setting].help }));
   }
   return guildSettings;
 }
@@ -749,7 +750,7 @@ function deleteEvent(args, guild, channel) {
       if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
         let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
         send(channel, strings.i18n.t("delete.confirm", {lng: guild.lng, summary: curEvent.summary, promptDate}), 30000);
-        helpers.yesThenCollector(channel).then(() => { // collect yes
+        helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
           deleteEventById(curEvent.id, calendarID, channel)
             .then(() => { return send(channel, `Event **${curEvent.summary}** deleted`);
             }).then((res) => { return res.delete({ timeout: 10000 });
@@ -822,7 +823,7 @@ function validate(guild, channel) {
   // basic check
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
-    **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel))}
+    **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
     **Calendar Test:** ${passFail(calTest)}
     **Missing Permissions:** ${permissionCheck(channel)}
     **Guild ID:** \`${guild.id}\`
@@ -870,7 +871,7 @@ function calName(args, guild, channel) {
   // chain togeter args
   else newCalName = args.join(" "); // join
   send(channel, `Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`, 30000);
-  helpers.yesThenCollector(channel).then(() => {
+  helpers.yesThenCollector(channel, guild.lng).then(() => {
     guild.setSetting("calendarName", newCalName);
     return send(channel, `Changed calendar name to \`${newCalName}\``);
   }).catch((err) => { helpers.log(err);
@@ -899,7 +900,7 @@ function setChannel(args, guild, channel) {
   } else if (args[0] === "set") {
     send(channel, `This will make the channel with name \`${channel.name}\` the primary channel for the calendar. All new calendars and updates will target this channel until \`!channel delete\` is run. Are you sure? (y/n)`, 30000);
     // set after collecting yes
-    helpers.yesThenCollector(channel).then(() => { return guild.setSetting("channelid", channel.id);
+    helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("channelid", channel.id);
     }).catch((err) => { helpers.log(err);
     });
   }
@@ -921,11 +922,11 @@ function logID(channel, args, guild) {
     else channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
   }
   // did not pass validation
-  else if (!helpers.matchCalType(newCalendarID, channel)) { channel.send("I don't think that's a valid calendar ID... try again");
+  else if (!helpers.matchCalType(newCalendarID, channel, guild)) { channel.send("I don't think that's a valid calendar ID... try again");
   // overwrite calendarid, passed validation
   } else if (oldCalendarID) {
     channel.send(`I've already been setup to use \`${oldCalendarID}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${newCalendarID}\`? **(y/n)**"`);
-    helpers.yesThenCollector(channel).then(() => { return guild.setSetting("calendarID", newCalendarID);
+    helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("calendarID", newCalendarID);
     }).catch((err) => { helpers.log(err);
     });
   // no set calendarid, passed validation
@@ -952,7 +953,7 @@ function logTz(channel, args, guild) {
   else if (helpers.validateTz(tz)) { // passes validation
     if (currentTz) { // timezone set
       channel.send(strings.i18n.t("tz.confirm", { lng: guild.lng, currentTz, tz }));
-      helpers.yesThenCollector(channel).then(() => { return guild.setSetting("timezone", tz);
+      helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("timezone", tz);
       }).catch((err) => { helpers.log(err);
       });
     // timezone is not set
@@ -972,7 +973,7 @@ function setPrefix(channel, args, guild) {
   if (!newPrefix) { channel.send(`You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
-    helpers.yesThenCollector(channel).then(() => {
+    helpers.yesThenCollector(channel, guild.lng).then(() => {
       send(`prefix set to ${newPrefix}`);
       return guild.setSetting("prefix", newPrefix);
     }).catch((err) => { helpers.log(err); });
@@ -1009,7 +1010,7 @@ function setRoles(message, args, guild) {
       roleArray = [adminRole];
     }
     // prompt for confirmation
-    helpers.yesThenCollector(message.channel).then(() => { return guild.setSetting("allowedRoles", roleArray);
+    helpers.yesThenCollector(message.channel, guild.lng).then(() => { return guild.setSetting("allowedRoles", roleArray);
     }).catch((err) => { helpers.log(err); });
   }
 }
@@ -1064,7 +1065,7 @@ function run(cmd, args, message) {
     else { channel.send(strings.i18n.t("setup.error", {lng})); }
   // if in setup mode, hard stop & force exit
   } else if (["help"].includes(cmd)) { channel.send(strings.i18n.t("help", { lng }));
-  } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel);
+  } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel, guild.lng);
   } else if (["display"].includes(cmd)) {
     setTimeout(() => { getEvents(guild, guildChannel); }, 1000);
     setTimeout(() => { postCalendar(guild, guildChannel); }, 2000);

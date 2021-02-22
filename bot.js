@@ -8,6 +8,7 @@ const settings = require("./settings.js");
 const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
 const helpers = require("./handlers/helpers.js");
+const strings = require("./strings.js");
 
 // bot properties
 let shardGuilds = [];
@@ -72,7 +73,7 @@ function runCmd(message) {
   if (!validCmd.includes(cmd)) return;
   // check if user is allowed to interact with Niles
   if (!helpers.checkRole(message)) { // if no permissions, warn
-    return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
+    return message.channel.send(strings.i18n.t("norole", { lng: guild.ln, allowedrole: guildSettings.allowedRoles[0] }))
       .then((message) => message.delete({ timeout: 10000 }));
   }
   // all checks passsed - log command
