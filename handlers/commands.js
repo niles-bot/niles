@@ -384,7 +384,8 @@ function generateCalendar(guild, channel) {
     embed.setDescription(generateCalendarCodeblock(guild));
     //Handle Calendars Greater Than 2048 Characters Long
     if (embed.length>2048) {
-      channel.send("Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events");
+      channel.send(strings.i18n.t("calendar.too_long", { lng: guild.lng })
+      );
       p.reject(2048);
       return p.promise;
     }
@@ -393,7 +394,7 @@ function generateCalendar(guild, channel) {
   }
   // add other embeds after code
   if (guildSettings.helpmenu === "1") {
-    embed.addField("USING THIS CALENDAR", "To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.", false);
+    embed.addField(strings.i18n.t("calendar.embed.help_title", { lng: guild.lng }), strings.i18n.t("calendar.embed.help_desc", { lng: guild.lng }), false);
   }
   if (guildSettings.tzDisplay === "1") { // display timezone
     embed.addField("Timezone", guildSettings.timezone, false);
@@ -444,7 +445,7 @@ function startUpdateTimer(guildID, channel, guild) {
 function updateCalendar(guild, channel, human) {
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID === "") {
-    channel.send("Cannot find calendar to update, maybe try a new calendar with `!display`");
+    channel.send(strings.i18n.t("update.undefined", { lng: guild.lng }));
     helpers.log(`calendar undefined in ${guild.id}. Killing update timer.`);
     killUpdateTimer(guild.id);
   }
@@ -459,8 +460,8 @@ function updateCalendar(guild, channel, human) {
   }).catch((err) => {
     helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
     //If theres an updater running try and kill it.
-    channel.send("update timer has been killed.");
-    channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.");
+    channel.send(strings.i18n.t("update_timer.killed", { lng: guild.lng }));
+    channel.send(strings.i18n.t("update.cannot_find", { lng: guild.lng }));
     killUpdateTimer(guild.id);
     guild.setCalendarID("");
     return;
@@ -519,7 +520,7 @@ function postCalendar(guild, channel) {
  * @param {Snowflake} channel - Channel to callback to
  */
 function quickAddEvent(args, guild, channel) {
-  if (!args[0]) return send(channel, "You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`");
+  if (!args[0]) return send(channel, strings.i18n.t("quick_add.no_arg", { lng: guild.lng }));
   const params = {
     calendarId: guild.getSetting("calendarID"),
     text: args.join(" ") // join

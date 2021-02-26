@@ -73,11 +73,8 @@ no_cal: |-
   
   If you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn
 
-next:
-  no_upcoming: No upcoming events within date range
-
 delete:
-  noarg: You need to enter an argument for this command. i.e `!scrim xeno thursday 8pm - 9pm`
+  noarg: You need to enter an argument for this command. i.e `!delete xeno thursday 8pm - 9pm`
   confirm: Are you sure you want to delete the event **{{summary}}** on {{promptDate}}? **(y/n)**
   not_found: Couldn't find event with that name - make sure you use exactly what the event is named!
   error: There was an error finding this event
@@ -148,8 +145,14 @@ timerkilled: update timer has been killed.
 
 calendar:
   no_upcoming:
-  too_long:
+  too_long: Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events
   help:
+  embed:
+    help_title: USING THIS CALENDAR
+    help_desc: To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.
+
+next:
+  no_upcoming: No upcoming events within date range
 
 update_timer:
   starting:
@@ -159,6 +162,9 @@ update_timer:
 
 update:
   no_msg_id:
-  cannot_find:
-  undefined:
+  cannot_find: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
+  undefined: Cannot find calendar to update, maybe try a new calendar with `!display`
   error_fetching:
+
+quick_add:
+  no_arg: You need to enter an argument for this command. i.e `!create xeno thursday 8pm - 9pm`
