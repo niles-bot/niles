@@ -174,8 +174,10 @@ function descriptionParser(inputString) {
   debug(`descriptionParser | pre: ${inputString}`);
   const brRegex = /(<br>)+/gi; // match <br>
   const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags
-  const decoded = decodeURI(inputString); // decode URI
-  return decoded.replace(brRegex, "\n").replace(htmlRegex, "").trim(); // replace <br> with \n and stripped html tags
+  let cleanString;
+  try { cleanString = decodeURI(inputString); } // decode URI
+  catch(e) { cleanString = inputString; }
+  return cleanString.replace(brRegex, "\n").replace(htmlRegex, "").trim(); // replace <br> with \n and stripped html tags
 }
 
 /**

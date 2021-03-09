@@ -327,6 +327,7 @@ function generateCalendarEmbed(guild) {
   let guildCalendar = guild.getCalendar();
   let guildSettings = guild.getSetting();
   const dayMap = guild.getDayMap();
+  let msgLength = 0;
   let fields = [];
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
@@ -359,6 +360,8 @@ function generateCalendarEmbed(guild) {
         // add link if there is a location
         const eventTitle = eventNameCreator(event, guildSettings);
         tempValue += `**${duration}** | ${eventTitle}\n`;
+        // add title length to counter
+        msgLength += eventTitle.length;
         // limitDescriptionLength
         const descLength = guildSettings.descLength;
         const description = helpers.descriptionParser(event.description);
@@ -366,6 +369,8 @@ function generateCalendarEmbed(guild) {
         // if we should add description
         if ((description !== "undefined") && (guildSettings.description === "1")) {
           tempValue += `\`${trimmed}\`\n`;
+          // add description length to counter
+          msgLength += trimmed.length;
         }
       });
     }
@@ -373,6 +378,14 @@ function generateCalendarEmbed(guild) {
     log(`generateCalendarEmbed | ${guild.id} | value ${tempValue}`);
     fieldObj.value = tempValue;
     fields.push(fieldObj);
+  }
+  // check if too many characters
+  // 200 character buffer - 
+  if (msgLength + 200 > 6000) {
+    fields = [{
+      "name": "Error: Calendar Too Long",
+      "value": `Your calendar has over ${msgLength} characters. This must be under 6000, as mandated by Discord. Try \`displayoptions desclength\` to limit description length or \`displayoptions descriptions\` to toggle descriptions.`
+    }];
   }
   return fields; // return field array
 }
@@ -653,7 +666,7 @@ function displayOptions(args, guild, channel) {
     if (dispOption) {
       const format = Number(dispOption);
       guild.setSetting("format", format);
-      send(channel, (format === "12" ? "Set to 12-Hour clock format" : "Set to 24-Hour clock format"));
+      send(channel, (format === 12 ? "Set to 12-Hour clock format" : "Set to 24-Hour clock format"));
     } else { send(channel, "Please only use 12 or 24 for the clock display options");
     }
   } else if (dispCmd === "trim") {
