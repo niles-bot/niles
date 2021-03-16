@@ -34,5 +34,3 @@ docker run -d \
 Recommended OS for just running docker is [Alpine Linux](https://alpinelinux.org/) or [Flatcar Container Linux](https://flatcar-linux.org/)
 
 One CPU core should be enough for bots serving under 10 Servers
-
-Niles currently has [a memory leak](https://github.com/niles-bot/Niles/issues/78) so 300MB will let the bot run for about 1 month without crashing

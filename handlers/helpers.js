@@ -1,8 +1,7 @@
 const defer = require("promise-defer");
-const { stripHtml } = require("string-strip-html");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
-const guilds = require("./guilds.js");
+const debug = require("debug")("niles:helpers");
 const strings = require("./strings.js");
 
 // event types
@@ -14,6 +13,10 @@ const eventType = {
   MULTYEND: "me"
 };
 
+/**
+ * Gets settings file
+ * @returns {Object} - Settings object
+ */
 function getSettings() {
   return require("../settings.js");
 }
@@ -57,7 +60,11 @@ function log(...logItems) {
     });
 }
 
-// timezone validation
+/**
+ * Validates timezone
+ * @param {String} tz 
+ * @returns {Boolean}
+ */
 function validateTz(tz) {
   return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 }
@@ -69,6 +76,7 @@ function validateTz(tz) {
  * @return {string} - nicely formatted string for date event
  */
 function getStringTime(date, guild) {
+  debug(`getStringTime | ${guild.id}`);
   const format = guild.getSetting("format");
   const zDate = DateTime.fromISO(date, {setZone: true});
   return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
@@ -79,9 +87,9 @@ function getStringTime(date, guild) {
  * @param {Snowflake} message - message from user to be checked
  * @returns {bool} - return if no allowed roles or user has role
  */
-function checkRole(message) {
-  const guild = new guilds.Guild(message.guild.id);
-  const allowedRoles = guild.getSetting("allowedRoles");
+function checkRole(message, guildSettings) {
+  debug(`checkRole | ${message.guild.id}`);
+  const allowedRoles = guildSettings.allowedRoles;
   const userRoles = message.member.roles.cache.map((role) => role.name); // roles of user
   return (allowedRoles.length === 0 || userRoles.includes(allowedRoles[0]));
 }
@@ -92,6 +100,7 @@ function checkRole(message) {
  * @param {String} lng - locale of response
  */
 function yesThenCollector(channel, lng) {
+  debug(`yesThenCollector | ${channel.guild.id}`);
   let p = defer();
   const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
@@ -139,6 +148,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
       eventMatchType = eventType.MULTIMID;
     } 
   }
+  debug(`classifyEventMatch | type ${eventMatchType}`);
   return eventMatchType;
 }
 
@@ -149,6 +159,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
  * @return {string} eventName - A string wit max 23 chars length
  */
 function trimEventName(eventName, trimLength){
+  debug(`trimEventName | eventname: ${eventName}`);
   // if no trim length, just return
   if (trimLength === null || trimLength === 0) return eventName;
   // trim down to length
@@ -162,10 +173,13 @@ function trimEventName(eventName, trimLength){
  * @return {string} strippedString - string stripped of html
  */
 function descriptionParser(inputString) {
-  const decoded = decodeURI(inputString); // decode URI
-  const replaced = decoded.replace(/(<br>)+/g, "\n"); // replace <br> with \n
-  const { result } = stripHtml(replaced);
-  return result;
+  debug(`descriptionParser | pre: ${inputString}`);
+  const brRegex = /(<br>)+/gi; // match <br>
+  const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags
+  let cleanString;
+  try { cleanString = decodeURI(inputString); } // decode URI
+  catch(e) { cleanString = inputString; }
+  return cleanString.replace(brRegex, "\n").replace(htmlRegex, "").trim(); // replace <br> with \n and stripped html tags
 }
 
 /**
@@ -176,6 +190,7 @@ function descriptionParser(inputString) {
  * @returns {bool} - if calendar ID is valid
  */
 function matchCalType(calendarID, channel, guild) {
+  debug(`matchCalType | id: ${calendarID}`);
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
   const cGroupCalId = RegExp("^(c_[a-z0-9]{26}@)");
@@ -209,5 +224,5 @@ module.exports = {
   eventType,
   trimEventName,
   descriptionParser,
-  matchCalType,
+  matchCalType
 };

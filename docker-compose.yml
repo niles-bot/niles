@@ -1,22 +1,25 @@
 version: "3"
 services:
-    niles:
-        image: niles-bot/niles:latest
-        container_name: niles
-        restart: unless-stopped
-        volumes:
-            - type: volumes
-              source: niles-stores
-              target: /usr/src/niles/stores
-            - type: bind
-              source: ./secrets.json
-              target: /usr/src/niles/config/secrets.json
-            - type: bind
-              source: ./niles-sa.json
-              target: /usr/src/niles/config/niles-sa.json
-            - type: bind
-              source: ./niles-oauth.json
-              target: /usr/src/niles/config/niles-oauth.json
+  niles:
+    image: niles-bot/niles:latest
+      container_name: niles
+      restart: unless-stopped
+      volumes:
+        - type: volumes
+          source: niles-stores
+          target: /usr/src/niles/stores
+        - type: bind
+          source: ./secrets.json
+          target: /usr/src/niles/config/secrets.json
+        # at least one of oauth2 or service account is required
+        # if you are using oauth2 only, remove this volume
+        - type: bind
+          source: ./niles-sa.json
+          target: /usr/src/niles/config/niles-sa.json
+        # if you are using service account only, remove this volume
+        - type: bind
+          source: ./niles-oauth.json
+          target: /usr/src/niles/config/niles-oauth.json
 
 volumes:
-    niles-stores:
+  niles-stores:

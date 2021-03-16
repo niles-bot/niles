@@ -1,6 +1,7 @@
 let discord = require("discord.js");
 const { readdirSync } = require("fs");
 const path = require("path");
+const log = require("debug")("niles:bot");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
@@ -19,10 +20,11 @@ let shardID;
  * @returns {[String]} - Array of guildids
  */
 function getKnownGuilds() {
+  log("start getKnownGuilds");
   let fullPath = path.join(__dirname, "stores");
   return readdirSync(fullPath, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 }
 
 /**
@@ -34,6 +36,7 @@ function addMissingGuilds(availableGuilds) {
   const knownGuilds = getKnownGuilds();
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildID) => {
+    log(`creating new guild: ${guildID}`);
     guilds.createGuild(guildID);
   });
 }
@@ -53,33 +56,34 @@ const validCmd = [
   // bot help
   "stats", "info", "invite", "ping", 
   // admin cmd
-  "timers", "reset", 
+  "timers", "reset"
 ];
 
+/**
+ * command runner
+ * @param {Snowflake} message - message to run command from
+ */
 function runCmd(message) {
   // load settings
   const guild = new guilds.Guild(message.guild.id);
   const guildSettings = guild.getSetting();
-  //Ignore messages that dont use guild prefix or mentions.
+  // ignore messages without prefix or mention
   if (!message.content.toLowerCase().startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
-  // command parser
   // parse command and arguments
   let args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
-  let cmd = (message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift());
-  args = (args ? args : []); // return empty array if no args
+  let cmd = message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift();
+  args = args ? args : []; // return empty array if no args
   cmd = cmd.toLowerCase();
-  // ignore messages that do not have one of the whitelisted commands
+  // ignore non-whitelisted commands
   if (!validCmd.includes(cmd)) return;
   // check if user is allowed to interact with Niles
   if (!helpers.checkRole(message)) { // if no permissions, warn
     return message.channel.send(strings.i18n.t("norole", { lng: guild.ln, allowedrole: guildSettings.allowedRoles[0] }))
       .then((message) => message.delete({ timeout: 10000 }));
   }
-  // all checks passsed - log command
   helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
-  // all checks passed - run command
-  commands.run(cmd, args, message);
+  commands.run(cmd, args, message); // all checks passed - run command
 }
 
 client.login(settings.secrets.bot_token);
@@ -99,6 +103,7 @@ client.on("ready", () => {
       return helpers.log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
+      log(`guild cache error: ${err}`);
       if (err.name === "Error [SHARDING_IN_PROCESS]") {
         console.log("spawning shards ..."); // send error to console - still sharding
       }
@@ -123,26 +128,25 @@ client.on("message", (message) => {
 });
 
 // ProcessListeners
+/**
+ * handles exit
+ * @param {String} msg - message prior to exit
+ */
+function handle(msg) {
+  helpers.log(`Exiting - ${msg}`);
+  client.destroy();
+  process.exit();
+}
+
+process.on("SIGINT", handle);
+
 process.on("uncaughtException", (err) => {
   helpers.log("uncaughtException error" + err);
-  process.exit();
-});
-
-process.on("SIGINT", () => {
-  client.destroy();
-  process.exit();
-});
-
-process.on("exit", () => {
-  client.destroy();
-  process.exit();
+  console.log(err.stack);
+  handle("uncaughtException");
 });
 
 process.on("unhandledRejection", (err) => {
   helpers.log("Promise Rejection: " + err);
-  // watch for ECONNRESET
-  if (err.code === "ECONNRESET") {
-    helpers.log("Connection Lost, Signalling restart");
-    process.exit();
-  }
+  if (err.code === "ECONNRESET") handle("ECONNRESET");
 });
