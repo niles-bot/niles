@@ -43,7 +43,7 @@ function getAccessToken(force, guild, channel) {
   }
   const authEmbed = {
     color: 0x0099e1,
-    description: strings.i18n.t("auth.oauth.prompt", { lng: guild.length, authUrl })
+    description: strings.i18n.t("auth.oauth.confirm", { lng: guild.length, authUrl })
   };
   send(channel, { embed: authEmbed }, 30000 );
   const collector = channel.createMessageCollector({ time: 30000 });
@@ -461,7 +461,7 @@ function updateCalendar(guild, channel, human) {
     helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
     //If theres an updater running try and kill it.
     channel.send(strings.i18n.t("timerkilled", { lng: guild.lng }));
-    channel.send(strings.i18n.t("update.cannot_find", { lng: guild.lng }));
+    channel.send(strings.i18n.t("update.not_found", { lng: guild.lng }));
     killUpdateTimer(guild.id);
     guild.setCalendarID("");
     return;
@@ -520,7 +520,7 @@ function postCalendar(guild, channel) {
  * @param {Snowflake} channel - Channel to callback to
  */
 function quickAddEvent(args, guild, channel) {
-  if (!args[0]) return send(channel, strings.i18n.t("quick_add.no_arg", { lng: guild.lng }));
+  if (!args[0]) return send(channel, strings.i18n.t("quick_add.noarg", { lng: guild.lng }));
   const params = {
     calendarId: guild.getSetting("calendarID"),
     text: args.join(" ") // join
@@ -528,7 +528,7 @@ function quickAddEvent(args, guild, channel) {
   const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
   gCal.events.quickAdd(params).then((res) => {
     const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
-    return send(channel, strings.i18n.t("quick_add.created", { lng: guild.lng, summary: res.data.summary, promptDate: promptDate }));
+    return send(channel, strings.i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate: promptDate }));
   }).catch((err) => { helpers.log(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
   });
 }
@@ -595,11 +595,11 @@ function embedStyleHelper(args, guildSettings, channel) {
   const optionTranslate = strings.i18n.t(`displayoptions.embed.${optionName[setting]}`);
   if (curStyle === "code") { send(channel, "This displayoption is only compatible with the `embed` display style");
   } else if (value) { // if set to embed, set
-    send(channel, (value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`));
+    send(channel, (value === "1" ? `Set ${optionTranslate} on` : `Set ${optionTranslate} off`));
     guildSettings[setting] = value; // set value
   // if no response, prompt with customization
   } else {
-    send(channel, `Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on) - see https://nilesbot.com/customisation`);
+    send(channel, `Please only use 0 or 1 for the **${optionTranslate}** setting, (off or on) - see https://nilesbot.com/customisation`);
   }
   return guildSettings;
 }
@@ -731,7 +731,7 @@ function nextEvent(guild, channel) {
         if (timeTo.days) timeToString += `${timeTo.days} days `;
         if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
         if (timeTo.minutes) timeToString += `${timeTo.minutes} minutes`;
-        return channel.send(`The next event is \`${eventObj.summary}\` in ${timeToString}`);
+        return channel.send(strings.i18n.t(`The next event is \`${eventObj.summary}\` in ${timeToString}`, { summary: eventObj.summary, timeToString, lng: guild.lng }));
       }
     }
     // run if message not sent
@@ -872,10 +872,10 @@ function displayStats(channel) {
 function calName(args, guild, channel) {
   let newCalName = args[0];
   // no name passed in
-  if (!newCalName) return send(channel, strings.i18n.t("calname.current", {curName: guild.getSetting("calendarName"), lng: guild.lng }));
+  if (!newCalName) return send(channel, strings.i18n.t("calname.exist", {curName: guild.getSetting("calendarName"), lng: guild.lng }));
   // chain togeter args
   else newCalName = args.join(" "); // join
-  send(channel, strings.i18n.t("calname.new", { newCalName, lng: guild.lng }), 30000);
+  send(channel, strings.i18n.t("calname.prompt", { newCalName, lng: guild.lng }), 30000);
   helpers.yesThenCollector(channel, guild.lng).then(() => {
     guild.setSetting("calendarName", newCalName);
     return send(channel, strings.i18n.t("calname.confirm", { newCalName, lng: guild.lng }));
@@ -952,12 +952,12 @@ function logTz(channel, args, guild) {
     // no current tz
     if (!currentTz) channel.send(strings.i18n.t("tz.noarg", { lng: guild.lng }));
     // timezone define
-    else channel.send(strings.i18n.t("tz.exists", { lng: guild.lng, currentTz }));
+    else channel.send(strings.i18n.t("tz.exist", { lng: guild.lng, currentTz }));
   }
   // valid input
   else if (helpers.validateTz(tz)) { // passes validation
     if (currentTz) { // timezone set
-      channel.send(strings.i18n.t("tz.confirm", { lng: guild.lng, currentTz, tz }));
+      channel.send(strings.i18n.t("tz.prompt", { lng: guild.lng, currentTz, tz }));
       helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("timezone", tz);
       }).catch((err) => { helpers.log(err);
       });
@@ -1001,17 +1001,17 @@ function setRoles(message, args, guild) {
     // no argument defined
     if (allowedRoles.length === 0) return message.channel.send(strings.i18n.t("admin.noarg", {lng}));
     // admin role exists
-    message.channel.send(strings.i18n.t("admin.exists", { lng, allowedrole: allowedRoles}));
+    message.channel.send(strings.i18n.t("admin.exist", { lng, allowedrole: allowedRoles}));
   } else if (adminRole) {
     // add everyone
     if (adminRole.toLowerCase() === "everyone") {
-      message.channel.send(strings.i18n.t("admin.everyone_prompt", {lng}));
+      message.channel.send(strings.i18n.t("admin.prompt_everyone", {lng}));
       roleArray = [];
     // no role selected
     } else if (!userRoles.includes(adminRole)) { message.channel.send(strings.i18n.t("admin.no_role", {lng}));
     } else {
       // restricting succeeded
-      message.channel.send(strings.i18n.t("admin.confirm", {lng, adminRole}));
+      message.channel.send(strings.i18n.t("admin.prompt", {lng, adminRole}));
       roleArray = [adminRole];
     }
     // prompt for confirmation

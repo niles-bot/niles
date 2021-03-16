@@ -26,8 +26,8 @@ help: |-
 
 tz:
   noarg: Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.
-  exists: You didn't enter a timezone, you are currently using `{{currentTz}}`
-  confirm: I've already been setup to use `{{currentTz}}`, do you want to overwrite this and use `{{tz}}`? **(y/n)**
+  exist: You didn't enter a timezone, you are currently using `{{currentTz}}`
+  prompt: I've already been setup to use `{{currentTz}}`, do you want to overwrite this and use `{{tz}}`? **(y/n)**
   invalid: 
 
 admin:
@@ -36,13 +36,13 @@ admin:
     Niles will only allow one role to be used, and it must have a unique name.
     The person assigning the restriction must have the role being assigned.
     i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)
-  exists: |- 
+  exist: |- 
     The admin role for this discord is {{allowedrole}}. You can change this setting using `!admin <ROLE>`, making sure to spell the role as you've created it.
     You must have this role to set it as the admin role.
     You can allow everyone to use Niles again by entering `!admin everyone`
-  confirm: Do you want to restrict the use of the calendar to people with the `{[adminRole}}`? **(y/n)**
+  prompt: Do you want to restrict the use of the calendar to people with the `{[adminRole}}`? **(y/n)**
   no_role: You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive
-  everyone_prompt: Do you want to allow everyone in this channel/server to use Niles? **(y/n)**
+  prompt_everyone: Do you want to allow everyone in this channel/server to use Niles? **(y/n)**
 
 setup:
   error: You haven't finished setting up! Try `!setup` for details on how to start.
@@ -127,7 +127,7 @@ auth:
     reauth: Already using OAuth, use `!auth oauth force` to force reauthentication
     prompt: "Authorize Niles by visiting this [url]({{authUrl}}) \n Send the code from the page:"
     err: Error retrieving access token {{err}}
-    success: Successfuly Authenticated
+    confirm: Successfuly Authenticated
   sa:
     invite: Invite {{saId}} to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
     notinstalled: SA credentials not installed
@@ -154,18 +154,19 @@ calendar:
 
 next:
   no_upcoming: No upcoming events within date range
+next: The next event is `{{summary}` in {{timeToString}}
 
 update:
-  cannot_find: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
+  not_found: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
   undefined: Cannot find calendar to update, maybe try a new calendar with `!display`
 
 quick_add:
-  no_arg: You need to enter an argument for this command. i.e `!create xeno thursday 8pm - 9pm`
-  created: Event `{{summary}}` on `{{promptDate}}` has been created
+  noarg: You need to enter an argument for this command. i.e `!create xeno thursday 8pm - 9pm`
+  confirm: Event `{{summary}}` on `{{promptDate}}` has been created
 
 calname:
-  current: You are currently using `{{curName}} as the calendar name. To change the name use `!calname <newname>` or `@Niles calname <newname>`
-  new: Do you want to set the calendar name to `{{newCalName}}` ? **(y/n)**
+  exist: You are currently using `{{curName}} as the calendar name. To change the name use `!calname <newname>` or `@Niles calname <newname>`
+  prompt: Do you want to set the calendar name to `{{newCalName}}` ? **(y/n)**
   confirm: Changed calendar name to `{{newCalName}}`
 
 setchannel:
