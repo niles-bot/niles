@@ -460,7 +460,7 @@ function updateCalendar(guild, channel, human) {
   }).catch((err) => {
     helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
     //If theres an updater running try and kill it.
-    channel.send(strings.i18n.t("update_timer.killed", { lng: guild.lng }));
+    channel.send(strings.i18n.t("timerkilled", { lng: guild.lng }));
     channel.send(strings.i18n.t("update.cannot_find", { lng: guild.lng }));
     killUpdateTimer(guild.id);
     guild.setCalendarID("");
@@ -528,7 +528,7 @@ function quickAddEvent(args, guild, channel) {
   const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
   gCal.events.quickAdd(params).then((res) => {
     const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
-    return send(channel, `Event \`${res.data.summary}\` on \`${promptDate}\` has been created`);
+    return send(channel, strings.i18n.t("quick_add.created", { lng: guild.lng, summary: res.data.summary, promptDate: promptDate }));
   }).catch((err) => { helpers.log(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
   });
 }
@@ -564,10 +564,12 @@ function displayOptionHelper(args, guildSettings, channel) {
       help: "start time only"
     }
   };
+  const optionTranslate = strings.i18n.t(`displayoptions.binary.${optionName[setting]}`);
   if (value) {
-    send(channel, value === "1" ? `Set ${optionName[setting].name} on` : `Set ${optionName[setting].name} off`);
+    send(channel, value === "1" ? `Set ${optionTranslate} on` : `Set ${optionTranslate} off`);
     guildSettings[optionName[setting].name] = value; // set value
-  } else { send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guildSettings.lng, help: optionName[setting].help }));
+  } else {
+    send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guildSettings.lng, help: optionTranslate }));
   }
   return guildSettings;
 }
@@ -590,12 +592,14 @@ function embedStyleHelper(args, guildSettings, channel) {
     url: "embedded link"
   };
   // if set to code, do not allow
+  const optionTranslate = strings.i18n.t(`displayoptions.embed.${optionName[setting]}`);
   if (curStyle === "code") { send(channel, "This displayoption is only compatible with the `embed` display style");
   } else if (value) { // if set to embed, set
     send(channel, (value === "1" ? `Set ${optionName[setting]} on` : `Set ${optionName[setting]} off`));
     guildSettings[setting] = value; // set value
   // if no response, prompt with customization
-  } else { send(channel, `Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on) - see https://nilesbot.com/customisation`);
+  } else {
+    send(channel, `Please only use 0 or 1 for the **${optionName[setting]}** setting, (off or on) - see https://nilesbot.com/customisation`);
   }
   return guildSettings;
 }
@@ -731,7 +735,7 @@ function nextEvent(guild, channel) {
       }
     }
     // run if message not sent
-    return send(channel, strings.i18n.t("next.no_upcoming", {lng: guild.lng}), 10000);
+    return send(channel, strings.i18n.t("next.no_upcoming", {lng: guild.lng }), 10000);
   }).catch((err) => { helpers.log(err);
   });
 }
@@ -743,17 +747,17 @@ function nextEvent(guild, channel) {
  * @returns {Snowflake} command response
  */
 function deleteEvent(args, guild, channel) {
-  if (!args[0]) return send(channel, strings.i18n.t("delete.noarg", {lng: guild.lng}));
+  if (!args[0]) return send(channel, strings.i18n.t("deleteevent.noarg", {lng: guild.lng }));
   const text = args.join(" "); // join
   const calendarID = guild.getSetting("calendarID");
   listSingleEventsWithinDateRange(guild).then((resp) => {
     for (const curEvent of resp.data.items) {
       if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
         let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
-        send(channel, strings.i18n.t("delete.confirm", {lng: guild.lng, summary: curEvent.summary, promptDate}), 30000);
+        send(channel, strings.i18n.t("deleteevent.prompt", {lng: guild.lng, summary: curEvent.summary, promptDate}), 30000);
         helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
           deleteEventById(curEvent.id, calendarID, channel)
-            .then(() => { return send(channel, `Event **${curEvent.summary}** deleted`);
+            .then(() => { return send(channel, strings.i18n.t("deleteevent.confirm", {lng: guild.lng, summary: curEvent.summary }));
             }).then((res) => { return res.delete({ timeout: 10000 });
             }).catch((err) => { helpers.log(err);
             });
@@ -761,10 +765,10 @@ function deleteEvent(args, guild, channel) {
         return;
       }
     }
-    send(channel, strings.i18n.t("delete.not_found", {lng: guild.lng}));
+    send(channel, strings.i18n.t("deleteevent.not_found", {lng: guild.lng }));
   }).catch((err) => {
     helpers.log(err);
-    return send(channel, strings.i18n.t("delete.error", {lng: guild.lng}));
+    return send(channel, strings.i18n.t("deleteevent.error", {lng: guild.lng }));
   });
 }
 
@@ -868,13 +872,13 @@ function displayStats(channel) {
 function calName(args, guild, channel) {
   let newCalName = args[0];
   // no name passed in
-  if (!newCalName) return send(channel, `You are currently using \`${guild.getSetting("calendarName")}\` as the calendar name. To change the name use \`${guild.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
+  if (!newCalName) return send(channel, strings.i18n.t("calname.current", {curName: guild.getSetting("calendarName"), lng: guild.lng }));
   // chain togeter args
   else newCalName = args.join(" "); // join
-  send(channel, `Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`, 30000);
+  send(channel, strings.i18n.t("calname.new", { newCalName, lng: guild.lng }), 30000);
   helpers.yesThenCollector(channel, guild.lng).then(() => {
     guild.setSetting("calendarName", newCalName);
-    return send(channel, `Changed calendar name to \`${newCalName}\``);
+    return send(channel, strings.i18n.t("calname.confirm", { newCalName, lng: guild.lng }));
   }).catch((err) => { helpers.log(err);
   });
 }
@@ -890,16 +894,16 @@ function setChannel(args, guild, channel) {
     const guildChannelId = guild.getSetting("channelid");
     if (guildChannelId) { // if existing channel
       const guildChannel = bot.client.channels.cache.get(guildChannelId);
-      send(channel, `The current calendar channel is \`${guildChannel.name}\``);
+      send(channel, strings.i18n.t("setchannel.current", { name: guildChannel.name, lng: guild.lng }));
     // if no channel set
-    } else { send(channel, "There is no current calendar channel set"); }
+    } else { send(channel, strings.i18n.t("setchannel.not_set", { lng: guild.lng })); }
     // no arguments
-    send(channel, "Use `!channel set` or `!channel delete` to set or delete the current \"Calendar\" Channel");
+    send(channel, strings.i18n.t("setchannel.help", { lng: guild.lng }));
   } else if (args[0] === "delete") { // remove channel
     guild.setSetting("channelid", "");
-    send(channel, "Removed existing calendar channel");
+    send(channel, strings.i18n.t("setchannel.delete", { lng: guild.lng }));
   } else if (args[0] === "set") {
-    send(channel, `This will make the channel with name \`${channel.name}\` the primary channel for the calendar. All new calendars and updates will target this channel until \`!channel delete\` is run. Are you sure? (y/n)`, 30000);
+    send(channel, strings.i18n.t("setchannel.prompt", { channel: channel.name, lng: guild.lng }), 30000);
     // set after collecting yes
     helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("channelid", channel.id);
     }).catch((err) => { helpers.log(err);
@@ -918,7 +922,7 @@ function logID(channel, args, guild) {
   const oldCalendarID = guild.getSetting("calendarID");
   if (!newCalendarID) {
     // no input, display current id
-    if (oldCalendarID) channel.send(`You didn't enter a calendar ID, you are currently using \`${oldCalendarID}\``);
+    if (oldCalendarID) channel.send(strings.i18n.t("setchannel.delete", { oldCalendarID, lng: guild.lng }));
     // no input
     else channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
   }
@@ -971,7 +975,7 @@ function logTz(channel, args, guild) {
  */
 function setPrefix(channel, args, guild) {
   const newPrefix = args[0];
-  if (!newPrefix) { channel.send(`You are currently using \`${guild.prefix}\` as the prefix. To change the prefix use \`${guild.prefix}prefix <newprefix>\` or \`@Niles prefix <newprefix>\``);
+  if (!newPrefix) { channel.send(strings.i18n.t("setprefix.current", { prefix: guild.prefix, lng: guild.lng }));
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
     helpers.yesThenCollector(channel, guild.lng).then(() => {

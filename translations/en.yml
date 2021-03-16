@@ -73,15 +73,10 @@ no_cal: |-
   
   If you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn
 
-delete:
-  noarg: You need to enter an argument for this command. i.e `!delete xeno thursday 8pm - 9pm`
-  confirm: Are you sure you want to delete the event **{{summary}}** on {{promptDate}}? **(y/n)**
-  not_found: Couldn't find event with that name - make sure you use exactly what the event is named!
-  error: There was an error finding this event
-
 displayoptions:
   binary:
     prompt: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
+    
   format:
     confirm: Set to {{format}}-Hour clock format
     help: Please only use 12 or 24 for the clock display options
@@ -141,12 +136,18 @@ delete:
   noarg: You can only use a number to delete messages. i.e. `!clean 10`
   confirm: You are about to delete {{argMessages}} messages. Are you sure? (y/n)
 
+deleteevent:
+  noarg: You need to enter an argument for this command. i.e `!delete xeno thursday 8pm - 9pm`
+  prompt: Are you sure you want to delete the event **{{summary}}** on {{promptDate}}? **(y/n)**
+  confirm: Event **{{summary}}** deleted
+  not_found: Couldn't find event with that name - make sure you use exactly what the event is named!
+  error: There was an error finding this event
+
 timerkilled: update timer has been killed.
 
 calendar:
   no_upcoming:
   too_long: Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events
-  help:
   embed:
     help_title: USING THIS CALENDAR
     help_desc: To create events use ``!create`` or ``!scrim`` followed by your event details i.e. ``!scrim xeno on monday at 8pm-10pm``\n\nTo delete events use``!delete <day> <start time>`` i.e. ``!delete monday 5pm``\n\nHide this message using ``!displayoptions help 0``\n\nEnter ``!help`` for a full list of commands.
@@ -154,17 +155,30 @@ calendar:
 next:
   no_upcoming: No upcoming events within date range
 
-update_timer:
-  starting:
-  error:
-  not_started:
-  killed: update timer has been killed.
-
 update:
-  no_msg_id:
   cannot_find: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
   undefined: Cannot find calendar to update, maybe try a new calendar with `!display`
-  error_fetching:
 
 quick_add:
   no_arg: You need to enter an argument for this command. i.e `!create xeno thursday 8pm - 9pm`
+  created: Event `{{summary}}` on `{{promptDate}}` has been created
+
+calname:
+  current: You are currently using `{{curName}} as the calendar name. To change the name use `!calname <newname>` or `@Niles calname <newname>`
+  new: Do you want to set the calendar name to `{{newCalName}}` ? **(y/n)**
+  confirm: Changed calendar name to `{{newCalName}}`
+
+setchannel:
+  current: The current calendar channel is `{{name}}`
+  not_set: There is no current calendar channel set
+  help: 'Use `!channel set` or `!channel delete` to set or delete the current "Calendar" Channel'
+  delete: Removed existing calendar channel
+  prompt: This will make the channel with name `{{name}}` the primary channel for the calendar. All new calendars and updates will target this channel until `!channel delete` is run. Are you sure? (y/n)
+
+id:
+  current: `You didn't enter a calendar ID, you are currently using `{{oldCalendarID}}`
+  noarg: 
+  invalid:
+
+setprefix:
+  current: You are currently using `{{prefix}` as the prefix. To change the prefix use `{{prefix}}prefix <newprefix>` or `@Niles prefix <newprefix>`
