@@ -401,12 +401,12 @@ function generateCalendar(guild, channel) {
   const guildSettings = guild.getSetting();
   let p = defer();
   // create embed
-  let embed = new bot.discord.MessageEmbed();
-  embed.setTitle(guildSettings.calendarName);
-  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
-  embed.setColor("BLUE");
-  embed.setFooter("Last update");
-  embed.setTimestamp(new Date());
+  let embed = new bot.discord.MessageEmbed()
+    .setTitle(guildSettings.calendarName)
+    .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
+    .setColor("BLUE")
+    .setFooter("Last update")
+    .setTimestamp();
   // set description or fields
   if (isEmptyCalendar(guild, dayMap)) {
     embed.setDescription("```No Upcoming Events```");
