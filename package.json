@@ -20,7 +20,7 @@
     "promise-defer": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.21.0"
+    "eslint": "^7.22.0"
   },
   "repository": {
     "type": "git",
