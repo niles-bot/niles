@@ -1015,6 +1015,7 @@ function calName(args, guild, channel) {
   if (!newCalName) return send(channel, `You are currently using \`${guild.getSetting("calendarName")}\` as the calendar name. To change the name use \`${guild.prefix}calname <newname>\` or \`@Niles calname <newname>\``);
   // chain togeter args
   else newCalName = args.join(" "); // join
+  if (newCalName.length > 256) { return send("Calendar title cannot be more than 256 characters"); }
   send(channel, `Do you want to set the calendar name to \`${newCalName}\` ? **(y/n)**`, 30000);
   helpers.yesThenCollector(channel).then(() => {
     guild.setSetting("calendarName", newCalName);
