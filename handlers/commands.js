@@ -36,24 +36,26 @@ function send(channel, content, timeout=5000) {
  */
 function getAccessToken(force, guild, channel) {
   log(`getAccessToken | ${guild.id}`);
-  if (!oauth2) { return send(channel, "OAuth2 credentials not installed"); }
+  if (!oauth2) { return send(channel, strings.i18n.t("auth.oauth.notinstalled", { lng: guild.lng })); }
   const authUrl = oauth2.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/calendar.events"]
   });
   if (guild.getSetting("auth") === "oauth" && !force) {
+    log("getAccessToken | no reauth");
     return send(channel, strings.i18n.t("auth.oauth.reauth", { lng: guild.lng }));
   }
   const authEmbed = {
     color: 0x0099e1,
-    description: strings.i18n.t("auth.oauth.confirm", { lng: guild.length, authUrl })
+    description: strings.i18n.t("auth.oauth.prompt", { lng: guild.length, authUrl })
   };
+  log("getAccessToken | send auth embed");
   send(channel, { embed: authEmbed }, 30000 );
-  const collector = channel.createMessageCollector({ time: 30000 });
+  let collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
     oauth2.getToken(m.content, (err, token) => {
       if (err) return send(channel, strings.i18n.t("auth.oauth.err", { lng: guild.lng, err }));
-      send(channel, strings.i18n.t("auth.oauth.success", { lng: guild.lng }));
+      send(channel, strings.i18n.t("auth.oauth.confirm", { lng: guild.lng }));
       guild.setSetting("auth", "oauth");
       guild.setToken(token);
     });
@@ -132,7 +134,7 @@ function clean(channel, numMsg, deleteCal) {
 function deleteMessages(args, channel, lng) {
   const argMessages = Number(args[0]);
   const deleteCalendar = Boolean(args[1]);
-  const guild = new guilds.guild(channel.guild.id);
+  const guild = new guilds.Guild(channel.guild.id);
   if (!args[0] || isNaN(argMessages)) {
     return channel.send(strings.i18n.t("delete.noarg", { lng }));
   } else {
@@ -574,7 +576,7 @@ function quickAddEvent(args, guild, channel) {
   const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
   gCal.events.quickAdd(params).then((res) => {
     const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
-    return send(channel, strings.i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate: promptDate }));
+    return send(channel, strings.i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate }));
   }).catch((err) => { helpers.log(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
   });
 }
@@ -782,7 +784,7 @@ function nextEvent(guild, channel) {
         if (timeTo.days) timeToString += `${timeTo.days} days `;
         if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
         if (timeTo.minutes) timeToString += `${timeTo.minutes} minutes`;
-        return channel.send(strings.i18n.t(`The next event is \`${eventObj.summary}\` in ${timeToString}`, { summary: eventObj.summary, timeToString, lng: guild.lng }));
+        return channel.send(strings.i18n.t("next.next", { summary: eventObj.summary, timeToString, lng: guild.lng }));
       }
     }
     // run if message not sent
@@ -880,9 +882,7 @@ function validate(guild, channel) {
       **Calendar ID:** \`${event.organizer.email}\`
     `);
     return true;
-  }).catch((err) => {
-    channel.send(`Error Fetching Calendar: ${err}`);
-  });
+  }).catch((err) => { channel.send(strings.i18n.t("validate.calendar_error", {lng: guild.lng, err})); });
   // basic check
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
@@ -987,17 +987,17 @@ function logID(channel, args, guild) {
   const oldCalendarID = guild.getSetting("calendarID");
   if (!newCalendarID) {
     // no input, display current id
-    if (oldCalendarID) channel.send(strings.i18n.t("setchannel.delete", { oldCalendarID, lng: guild.lng }));
+    if (oldCalendarID) channel.send(strings.i18n.t("id.exist", { oldCalendarID, lng: guild.lng }));
     // no input
-    else channel.send("Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`");
+    else channel.send(strings.i18n.t("id.noarg", { lng: guild.lng }));
   }
   // did not pass validation
   else if (!helpers.matchCalType(newCalendarID, channel, guild)) {
     log(`logID | ${guild.id} | failed calType`);
-    channel.send("I don't think that's a valid calendar ID... try again");
+    channel.send(strings.i18n.t("id.invalid", { lng: guild.lng }));
   // overwrite calendarid, passed validation
   } else if (oldCalendarID) {
-    channel.send(`I've already been setup to use \`${oldCalendarID}\` as the calendar ID in this server, do you want to overwrite this and set the ID to \`${newCalendarID}\`? **(y/n)**"`);
+    channel.send(strings.i18n.t("id.confirm", { oldCalendarID, newCalendarID, lng: guild.lng }));
     helpers.yesThenCollector(channel, guild.lng).then(() => {
       log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
       return guild.setSetting("calendarID", newCalendarID);
@@ -1145,7 +1145,7 @@ function run(cmd, args, message) {
   if (["ping"].includes(cmd)) { channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`);
   } else if (["init"].includes(cmd)) {
     log(`init | ${guildID}`);
-    channel.send("Resetting Niles to default");
+    channel.send(strings.i18n.t("reset", {lng: guild.lng}));
     guilds.recreateGuild(guildID);
   } else if (["invite"].includes(cmd)) {
     const inviteEmbed = {

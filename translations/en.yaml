@@ -58,7 +58,7 @@ setup:
     !admin               -  Restrict the usage of Niles to a specific role
     !help                -  Display this message
     ```
-  Visit https://nilesbot.com/start for more info.
+    Visit https://nilesbot.com/start for more info.
   long: |-
     Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit https://nilesbot.com/start
     1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
@@ -129,7 +129,7 @@ auth:
     err: Error retrieving access token {{err}}
     confirm: Successfuly Authenticated
   sa:
-    invite: Invite {{saId}} to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
+    invite: Invite `{{saId}}` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
     notinstalled: SA credentials not installed
 
 delete:
@@ -154,7 +154,7 @@ calendar:
 
 next:
   no_upcoming: No upcoming events within date range
-next: The next event is `{{summary}` in {{timeToString}}
+  next: The next event is `{{summary}}` in {{timeToString}}
 
 update:
   not_found: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
@@ -165,7 +165,7 @@ quick_add:
   confirm: Event `{{summary}}` on `{{promptDate}}` has been created
 
 calname:
-  exist: You are currently using `{{curName}} as the calendar name. To change the name use `!calname <newname>` or `@Niles calname <newname>`
+  exist: You are currently using `{{curName}}` as the calendar name. To change the name use `!calname <newname>` or `@Niles calname <newname>`
   prompt: Do you want to set the calendar name to `{{newCalName}}` ? **(y/n)**
   confirm: Changed calendar name to `{{newCalName}}`
 
@@ -177,9 +177,15 @@ setchannel:
   prompt: This will make the channel with name `{{name}}` the primary channel for the calendar. All new calendars and updates will target this channel until `!channel delete` is run. Are you sure? (y/n)
 
 id:
-  current: `You didn't enter a calendar ID, you are currently using `{{oldCalendarID}}`
-  noarg: 
-  invalid:
+  exist: You didn't enter a calendar ID, you are currently using `{{oldCalendarID}}`
+  noarg: Enter a calendar ID using `!id`, i.e. `!id 123abc@123abc.com`
+  invalid: I don't think that's a valid calendar ID... try again
+  confirm: I've already been setup to use `{{oldCalendarID}}` as the calendar ID in this server, do you want to overwrite this and set the ID to `{{newCalendarID}}`? **(y/n)**"
 
 setprefix:
   current: You are currently using `{{prefix}` as the prefix. To change the prefix use `{{prefix}}prefix <newprefix>` or `@Niles prefix <newprefix>`
+
+validate:
+  calendar_err: "Error Fetching Calendar: {{err}}"
+
+reset: Resetting Niles to default

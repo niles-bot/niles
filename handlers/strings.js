@@ -1,3 +1,4 @@
+const { join } = require("path");
 const i18next = require("i18next");
 const SyncBackend = require("i18next-fs-backend");
 
@@ -9,7 +10,10 @@ i18next
     initImmediate: false,
     backend: {
       // for all available options read the backend's repository readme file
-      loadPath: "translations/{{lng}}.yml"
+      loadPath: join(__dirname, "../translations/{{lng}}.yaml")
+    },
+    interpolation: {
+      escapeValue: false
     }
   });
 
