@@ -272,7 +272,7 @@ function generateCalendarCodeblock(guild) {
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long"}) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
+    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng }) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" });
     if (guildSettings.emptydays === "0" && guildCalendar[key].length === 0) continue;
     if (guildCalendar[key].length === 0) {
       sendString += "```\n ```";

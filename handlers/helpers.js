@@ -79,7 +79,7 @@ function getStringTime(date, guild) {
   debug(`getStringTime | ${guild.id}`);
   const format = guild.getSetting("format");
   const zDate = DateTime.fromISO(date, {setZone: true});
-  return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
+  return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12), locale: guild.lng });
 }
 
 /**
