@@ -935,24 +935,6 @@ function passFail(bool) {
 }
 
 /**
- * Checks if the bot has all the nesseary permissions
- * @param {Snowflake} channel - Channel to check
- * @returns {String} - returns missing permissions (if any)
- */
-function permissionCheck(channel) {
-  log(`permissionCheck | ${channel.guild.id}`);
-  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
-  const botPermissions = channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.map((permission) => {
-    if (!botPermissions[permission]) {
-      missingPermissions += `\`${String(permission)} \``;
-    }
-  });
-  return (missingPermissions ? missingPermissions : "None 🟢");
-}
-
-/**
  * Checks for any issues with guild configuration
  * @param {Guild} guild - Guild to check agianst
  * @param {Snowflake} channel - Channel to respond to
@@ -981,11 +963,12 @@ function validate(guild, channel) {
     channel.send(`Error Fetching Calendar: ${err}`);
   });
   // basic check
+  const missingPermissions = helpers.permissionCheck(channel);
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
     **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel))}
     **Calendar Test:** ${passFail(calTest)}
-    **Missing Permissions:** ${permissionCheck(channel)}
+    **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
     **Guild ID:** \`${guild.id}\`
     **Shard:** ${bot.client.shard.ids}
   `);
