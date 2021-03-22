@@ -1,3 +1,4 @@
+language: English
 help: |-
   ```
   Niles Usage
@@ -28,7 +29,7 @@ tz:
   noarg: Enter a timezone using `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.
   exist: You didn't enter a timezone, you are currently using `{{currentTz}}`
   prompt: I've already been setup to use `{{currentTz}}`, do you want to overwrite this and use `{{tz}}`? **(y/n)**
-  invalid: 
+  invalid: Enter a timezone in valid format `!tz`, i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.
 
 admin:
   noarg: |-

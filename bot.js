@@ -44,7 +44,7 @@ function addMissingGuilds(availableGuilds) {
 // valid commands
 const validCmd = [
   // init
-  "id", "tz", "setup", "help",
+  "id", "tz", "setup", "help", "locale",
   "init", "prefix", "admin", "auth", 
   // calendar
   "display", "create", "scrim", "delete",
@@ -68,7 +68,7 @@ function runCmd(message) {
   const guild = new guilds.Guild(message.guild.id);
   const guildSettings = guild.getSetting();
   // ignore messages without prefix or mention
-  if (!message.content.toLowerCase().startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
+  if (!message.content.startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
   // parse command and arguments
   let args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command

@@ -976,6 +976,32 @@ function setChannel(args, guild, channel) {
 }
 
 /**
+ * Set guild Locale
+ * @param {[String]} args - passed in arguments 
+ * @param {Guild} guild - Guild to pull or change settings for 
+ * @param {Channel} channel - callback channel
+ */
+function setLocale(args, guild, channel) {
+  log(`setLocale | ${guild.id}`);
+  const currentLocale = guild.getSetting("lng");
+  const locale = args[0];
+  const localeRegex = new RegExp("[a-zA-Z]{2}$");
+  if (!locale) { // no input
+    channel.send(`The current locale is ${currentLocale} for date formatting and ${strings.i18n.t("language", {lng: currentLocale})} for text.`);
+  } else if (localeRegex.test(locale)) { // passes validation
+    channel.send(`I've been setup to use ${currentLocale}, do you want to overwrite this and use ${locale}? (Please see https://nilesbot.com/locale for details) **(y/n)**`);
+    helpers.yesThenCollector(channel, "en").then(() => {
+      log(`setLocale | ${guild.id} | set to locale: ${locale}`);
+      return guild.setSetting("lng", locale);
+    }).catch((err) => { helpers.log(err); });
+  // fails validation
+  } else {
+    log(`setLocale | ${guild.id} | failed validation: ${locale}`);
+    channel.send("Invalid locale, please only use an ISO 3166-1 alpha2 (https://mchang.icu/niles/locale) code");
+  }
+}
+
+/**
  * set guild calendar id
  * @param {Snowflake} channel - Callback channel 
  * @param {[String]} args - command arguments
@@ -1042,7 +1068,7 @@ function logTz(channel, args, guild) {
   // fails validation
   } else {
     log(`logID | ${guild.id} | failed validation: ${tz}`);
-    channel.send(strings.i18n.t("tz.noarg", { lng: guild.lng })); }
+    channel.send(strings.i18n.t("tz.invalid", { lng: guild.lng })); }
 }
 
 /**
@@ -1189,6 +1215,7 @@ function run(cmd, args, message) {
   } else if (["calname"].includes(cmd)) { calName(args, guild, channel);
   } else if (["auth"].includes(cmd)) { setupAuth(args, guild, channel);
   } else if (["channel"].includes(cmd)) { setChannel(args, guild, channel);
+  } else if (["locale"].includes(cmd)) {setLocale(args, guild,channel);
   }
   message.delete({ timeout: 5000 });
 }

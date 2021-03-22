@@ -39,7 +39,8 @@ const defaultSettings = {
   "auth": "sa",
   "channelid": "",
   "descLength": 0,
-  "startonly": "0"
+  "startonly": "0",
+  "lng": "en"
 };
 
 /**
