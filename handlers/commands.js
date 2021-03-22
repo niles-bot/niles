@@ -389,8 +389,8 @@ function generateCalendarEmbed(guild) {
   // 200 character buffer - 
   if (msgLength + 200 > 6000) {
     fields = [{
-      "name": "Error: Calendar Too Long",
-      "value": `Your calendar has over ${msgLength} characters. This must be under 6000, as mandated by Discord. Try \`displayoptions desclength\` to limit description length or \`displayoptions descriptions\` to toggle descriptions.`
+      "name": strings.i18n.t("calendar.too_long", { lng: guild.lng}),
+      "value": strings.i18n.t("calendar.too_long_help", { lng: guild.lng, msgLength })
     }];
   }
   return fields; // return field array
@@ -1021,7 +1021,7 @@ function calName(args, guild, channel) {
   let newCalName = args[0];
   log(`calName | ${guild.id}`);
   // no name passed in
-  if (!newCalName) return send(channel, strings.i18n.t("calname.exist", {curName: guild.getSetting("calendarName"), lng: guild.lng }));
+  if (!newCalName) return send(channel, strings.i18n.t("collector.exist", {name: "$t(calendarname)", old: guild.getSetting("calendarName"), lng: guild.lng }));
   // chain togeter args
   else newCalName = args.join(" "); // join
   if (newCalName.length > 256) { return send("Calendar title cannot be more than 256 characters"); }
@@ -1103,17 +1103,17 @@ function logID(channel, args, guild) {
   const oldCalendarID = guild.getSetting("calendarID");
   if (!newCalendarID) {
     // no input, display current id
-    if (oldCalendarID) channel.send(strings.i18n.t("id.exist", { oldCalendarID, lng: guild.lng }));
+    if (oldCalendarID) channel.send(strings.i18n.t("collector.exist", { name: "$t(calendarid)", old:oldCalendarID, lng: guild.lng }));
     // no input
-    else channel.send(strings.i18n.t("id.noarg", { lng: guild.lng }));
+    else channel.send(strings.i18n.t("collector.noarg", { name: "$t(calendarid)", lng: guild.lng, example: "`!id`, i.e. `!id 123abc@123abc.com`" }));
   }
   // did not pass validation
   else if (!helpers.matchCalType(newCalendarID, channel, guild)) {
     log(`logID | ${guild.id} | failed calType`);
-    channel.send(strings.i18n.t("id.invalid", { lng: guild.lng }));
+    channel.send(strings.i18n.t("collector.invalid", { name: "$t(calendarid)", lng: guild.lng }));
   // overwrite calendarid, passed validation
   } else if (oldCalendarID) {
-    channel.send(strings.i18n.t("id.confirm", { oldCalendarID, newCalendarID, lng: guild.lng }));
+    channel.send(strings.i18n.t("collector.overwrite_prompt", { old: oldCalendarID, new: newCalendarID, lng: guild.lng }));
     helpers.yesThenCollector(channel, guild.lng).then(() => {
       log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
       return guild.setSetting("calendarID", newCalendarID);
@@ -1138,14 +1138,14 @@ function logTz(channel, args, guild) {
   const tz = args[0];
   if (!tz) { // no input
     // no current tz
-    if (!currentTz) channel.send(strings.i18n.t("tz.noarg", { lng: guild.lng }));
+    if (!currentTz) channel.send(strings.i18n.t("collector.noarg", { name: "$t(timezone)", lng: guild.lng, example: "`!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting."}));
     // timezone define
-    else channel.send(strings.i18n.t("tz.exist", { lng: guild.lng, currentTz }));
+    else channel.send(strings.i18n.t("collector.exist", { name: "$t(timezone)", lng: guild.lng, old: currentTz }));
   }
   // valid input
   else if (helpers.validateTz(tz)) { // passes validation
     if (currentTz) { // timezone set
-      channel.send(strings.i18n.t("tz.prompt", { lng: guild.lng, currentTz, tz }));
+      channel.send(strings.i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: tz }));
       helpers.yesThenCollector(channel, guild.lng).then(() => {
         log(`logID | ${guild.id} | set to newID: ${tz}`);
         return guild.setSetting("timezone", tz);
@@ -1158,7 +1158,7 @@ function logTz(channel, args, guild) {
   // fails validation
   } else {
     log(`logID | ${guild.id} | failed validation: ${tz}`);
-    channel.send(strings.i18n.t("tz.invalid", { lng: guild.lng })); }
+    channel.send(strings.i18n.t("collector.invalid", { name: "$t(timezone)", lng: guild.lng })); }
 }
 
 /**
@@ -1170,7 +1170,7 @@ function logTz(channel, args, guild) {
 function setPrefix(channel, args, guild) {
   log(`setPrefix | ${guild.id}`);
   const newPrefix = args[0];
-  if (!newPrefix) { channel.send(strings.i18n.t("setprefix.current", { prefix: guild.prefix, lng: guild.lng }));
+  if (!newPrefix) { channel.send(strings.i18n.t("collector.overwrite_prompt", { old: guild.prefix, new: newPrefix, lng: guild.lng }));
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
     helpers.yesThenCollector(channel, guild.lng).then(() => {
@@ -1198,7 +1198,7 @@ function setRoles(message, args, guild) {
     // no argument defined
     if (allowedRoles.length === 0) return message.channel.send(strings.i18n.t("admin.noarg", {lng}));
     // admin role exists
-    message.channel.send(strings.i18n.t("admin.exist", { lng, allowedrole: allowedRoles}));
+    message.channel.send(strings.i18n.t("collector.exist", { name: "$t(adminrole)", lng, old: allowedRoles}));
   } else if (adminRole) {
     // add everyone
     if (adminRole.toLowerCase() === "everyone") {
