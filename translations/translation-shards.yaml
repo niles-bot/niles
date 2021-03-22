@@ -1,0 +1,142 @@
+format:
+  help:
+    en: clock display options	
+    fr: options d'affichage de l'horaire
+    de: Uhr Anzeigeoptionen
+    ru: параметры отображения часов
+
+displayoptions:
+  help:
+    en: |-
+      **displayoptions USAGE**
+      ```
+        COMMAND                     PARAMS        EFFECT
+      ```
+    fr: |-
+      **displayoptions USAGE**
+      ```
+        COMMANDE                    PARAMS        EFFETS
+        !displayoptions showpast     (0|1)        cacher/montrer événements passés du jour
+      ```
+    de: |-
+      **displayoptions USAGE**
+      ```
+      	COMMAND                     PARAMS        EFFECT
+      ```
+    ru: |-
+      **displayoptions USAGE**
+      ```
+        КОМАНДА                     PARAMS        ЭФФЕКТ
+      ```
+admin:
+  noarg:
+    en: |-
+      i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)
+    fr: |-
+      i.e. Créez un rôle appelé *Planificateur*, puis dites à Niles de n'accepter les ordres que des personnes l'ayant `!admin Scheduler` (sensible à la casse)
+    de: |-
+      i.e. Erstelle eine Rolle mit dem Namen *Scheduler*, und konmfiguriere dann Niles zur Benutzung nur durch Personen mit dieser Rolle `!admin Scheduler` (Groß-/Kleinschreibung unterscheiden	)
+    ru: |-
+      i.e. Создайте роль под названием *Планировщик*, а затем разрешите только людям с этой ролью использовать Niles `!admin Scheduler` (с учетом регистра)
+
+help:
+  en: |-
+    ```
+    Niles Usage - SETUP MODE
+    ---------------------------
+    NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE
+    !setup / !help       -  Get details on how to setup Niles for use.
+    !prefix              -  View or change the prefix for Niles
+    !id                  -  Set the Google calendar ID for the guild
+    !tz                  -  Set the timezone for the guild
+    !admin               -  Restrict the usage of Niles to a specific role
+    ```
+    Visit https://nilesbot.com/start for more info.
+  fr: |-
+    ```
+    Niles Usage - MODE DE CONFIGURATION
+    ---------------------------
+    NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE
+    !setup / !help       -  Get details on how to setup Niles for use.
+    !prefix              -  View or change the prefix for Niles
+    !id                  -  Set the Google calendar ID for the guild
+    !tz                  -  Set the timezone for the guild
+    !admin               -  Restrict the usage of Niles to a specific role
+    ```
+    Visit https://nilesbot.com/start for more info.
+
+
+help: |-
+  ```
+  Niles Usage
+  ---------------------------
+  !display             -  Display your calendar
+  !update / !sync      -  Update the Calendar
+  !create / !scrim     -  Create events using GCal's default interpreter - works best like !scrim xeno June 5 8pm - 9pm
+  !delete              -  Delete an event using the form !delete <event_title>
+  !clean / !purge      -  Deletes messages in current channel, !clean <number>
+  !stats / !info       -  Display list of statistics and information about the Niles bot
+  !invite              -  Get the invite link for Niles to join your server!
+  !setup               -  Get details on how to setup Niles
+  !id                  -  Set the Google calendar ID for the guild
+  !tz                  -  Set the timezone for the guild
+  !prefix              -  View or change the prefix for Niles
+  !displayoptions      -  Change formatting of the calendar display
+  !admin               -  Restrict the usage of Niles to a specific role
+  !help                -  Display this message
+  !next                -  Displays the next upcoming event
+  !validate            -  Checks for any errors with the timezone, calendar ID, calendar fetching or permissions
+  !calname             -  Changes the calendar link name
+  !auth                -  Sets up and switches to OAuth2 or switch back to Service Accounts
+  !channel             -  Sets a channel to be the designated channel for calendar postings and updates
+  ```
+  Visit https://nilesbot.com for more info. 
+
+fr: |-
+  ```
+  Niles Usage
+  ---------------------------
+  !display             -  Afficher votre calendrier
+  !create / !scrim     -  Créer des événements en utilisant le traducteur par défaut de GCal - fonctionne mieux ainsi !scrim xeno June 5 8pm - 9pm
+  !delete              -  Supprimez un évènement en utilisant le symbole !delete <event_title>
+  !clean / !purge      -  Suppression de messages dans le canal actuel, !clean <number>
+  !stats / !info       -  Affichez une liste de statistiques et d'informations sur le bot Niles
+  !displayoptions      -  Changer la mise en forme de l'affichage du calendrier
+  !help                -  Afficher ce message
+  !validate            -  Vérification des erreurs avec le fuseau horaire, l'ID du calendrier, la récupération du calendrier ou les permissions
+  ```
+  Visit https://nilesbot.com for more info. 
+
+de: |-
+  ```
+  Niles Usage
+  ---------------------------
+  !display             -  Kalender anzeigen
+  !create / !scrim     -  Erstelle Events mit GCal's Standardinterpreter - funktioniert am besten wie !scrim xeno June 5 8pm - 9pm
+  !delete              -  Lösche ein Ereignis mit dem Formular !delete <event_title>
+  !clean / !purge      -  Löscht Nachrichten im aktuellen Kanal, !clean <number>
+  !stats / !info       -  Liste von Statistiken und Informationen über den Nilen-Bot anzeigen
+  !displayoptions      -  Formatierung der Kalenderanzeige ändern
+  !help                -  Zeigt diese Nachricht
+  !validate            -  Prüft Fehler mit Zeitzone, Kalender-ID, Kalender-Abruf oder Berechtigungen
+  ```
+  Visit https://nilesbot.com for more info. 
+
+ru: |-
+  ```
+  Niles Usage
+  ---------------------------
+  !display             -  Отобразить ваш календарь
+  !create / !scrim     -  Создавать события используя стандартный интерпретатор GCal's - лучше использовать как !scrim xeno June 5 8pm - 9pm
+  !delete              -  Удалить событие используя форму !delete <event_title>
+  !clean / !purge      -  Удаление сообщений в текущем канале, !clean <number>
+  !stats / !info       -  Отобразить список характеристик и информацию о Niles
+  !displayoptions      -  Изменить форматирование отображения календаря
+  !help                -  	Отобразить это сообщение
+  !validate            -  Проверяет ошибки с часовым поясом, идентификатором календаря, получением календаря или прав доступа
+  ```
+  Visit https://nilesbot.com for more info. 
+
+
+admin:
+  prompt_everyone: Do you want to allow everyone in this channel/server to use Niles? **(y/n)**

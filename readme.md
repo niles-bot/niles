@@ -3,6 +3,7 @@
 [![codebeat Badge](https://codebeat.co/badges/e8acc280-9217-4e06-8085-79bc31f8f45c)](https://codebeat.co/projects/github-com-niles-bot-niles-main)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/niles-bot/niles/docker-ci)](https://hub.docker.com/r/nilesbot/niles)
 [![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m786400338-c0cc4ceea17d04b822cc83d9)](https://status.mchang.icu/786400338)
+[![Crowdin](https://badges.crowdin.net/niles/localized.svg)](https://crowdin.com/project/niles)
 ![node-current](https://img.shields.io/node/v/discord.js)
 
 A [Discord](https://discord.com/) bot for using [Google Calendar](https://calendar.google.com) to manage events.
