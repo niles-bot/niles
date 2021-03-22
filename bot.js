@@ -82,6 +82,11 @@ function runCmd(message) {
     return message.channel.send(strings.i18n.t("norole", { lng: guild.lng, allowedrole: guildSettings.allowedRoles[0] }))
       .then((message) => message.delete({ timeout: 10000 }));
   }
+  // check missing permisions
+  const missingPermissions = helpers.permissionCheck(message.channel);
+  if (missingPermissions.includes("SEND_MESSAGES")) {
+    message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`${missingPermissions}\`\`\``);
+  }
   helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
   commands.run(cmd, args, message); // all checks passed - run command
 }

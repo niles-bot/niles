@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "windowsDebug": "@powershell -Command $env:DEBUG='*';node index.js"
   },
   "author": "Sean Coffey",
   "license": "MIT",

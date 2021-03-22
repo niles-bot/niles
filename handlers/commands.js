@@ -407,12 +407,12 @@ function generateCalendar(guild, channel) {
   const guildSettings = guild.getSetting();
   let p = defer();
   // create embed
-  let embed = new bot.discord.MessageEmbed();
-  embed.setTitle(guildSettings.calendarName);
-  embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
-  embed.setColor("BLUE");
-  embed.setFooter("Last update");
-  embed.setTimestamp(new Date());
+  let embed = new bot.discord.MessageEmbed()
+    .setTitle(guildSettings.calendarName)
+    .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
+    .setColor("BLUE")
+    .setFooter("Last update")
+    .setTimestamp();
   // set description or fields
   if (isEmptyCalendar(guild, dayMap)) {
     embed.setDescription("```No Upcoming Events```");
@@ -840,24 +840,6 @@ function passFail(bool) {
 }
 
 /**
- * Checks if the bot has all the nesseary permissions
- * @param {Snowflake} channel - Channel to check
- * @returns {String} - returns missing permissions (if any)
- */
-function permissionCheck(channel) {
-  log(`permissionCheck | ${channel.guild.id}`);
-  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
-  const botPermissions = channel.permissionsFor(bot.client.user).serialize(true);
-  let missingPermissions = "";
-  minimumPermissions.map((permission) => {
-    if (!botPermissions[permission]) {
-      missingPermissions += `\`${String(permission)} \``;
-    }
-  });
-  return (missingPermissions ? missingPermissions : "None 🟢");
-}
-
-/**
  * Checks for any issues with guild configuration
  * @param {Guild} guild - Guild to check agianst
  * @param {Snowflake} channel - Channel to respond to
@@ -884,11 +866,12 @@ function validate(guild, channel) {
     return true;
   }).catch((err) => { channel.send(strings.i18n.t("validate.calendar_error", {lng: guild.lng, err})); });
   // basic check
+  const missingPermissions = helpers.permissionCheck(channel);
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
     **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
     **Calendar Test:** ${passFail(calTest)}
-    **Missing Permissions:** ${permissionCheck(channel)}
+    **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
     **Guild ID:** \`${guild.id}\`
     **Shard:** ${bot.client.shard.ids}
   `);
@@ -935,6 +918,7 @@ function calName(args, guild, channel) {
   if (!newCalName) return send(channel, strings.i18n.t("calname.exist", {curName: guild.getSetting("calendarName"), lng: guild.lng }));
   // chain togeter args
   else newCalName = args.join(" "); // join
+  if (newCalName.length > 256) { return send("Calendar title cannot be more than 256 characters"); }
   send(channel, strings.i18n.t("calname.prompt", { newCalName, lng: guild.lng }), 30000);
   helpers.yesThenCollector(channel, guild.lng).then(() => {
     guild.setSetting("calendarName", newCalName);

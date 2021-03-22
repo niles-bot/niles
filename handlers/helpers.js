@@ -95,6 +95,20 @@ function checkRole(message, guildSettings) {
 }
 
 /**
+ * Checks if the bot has all the nesseary permissions
+ * @param {Snowflake} channel - Channel to check
+ * @returns {String} - returns missing permissions (if any)
+ */
+function permissionCheck(channel) {
+  log(`permissionCheck | ${channel.guild.id}`);
+  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
+  const botPermissions = channel.permissionsFor(bot.client.user).toArray();
+  const missingPermissions = minimumPermissions.filter(perm => !botPermissions.includes(perm)).join(", ");
+  log(`permissioncheck | missing ${missingPermissions}`);
+  return (missingPermissions);
+}
+
+/**
  * Collects response for a message
  * @param {Snowflake} channel - Channel to create collector in
  * @param {String} lng - locale of response
@@ -219,6 +233,7 @@ module.exports = {
   log,
   getStringTime,
   checkRole,
+  permissionCheck,
   yesThenCollector,
   classifyEventMatch,
   eventType,
