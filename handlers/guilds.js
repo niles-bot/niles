@@ -39,7 +39,8 @@ const defaultSettings = {
   "auth": "sa",
   "channelid": "",
   "descLength": 0,
-  "startonly": "0"
+  "startonly": "0",
+  "lng": "en"
 };
 
 /**
@@ -171,6 +172,7 @@ function Guild(guildID) {
   this.prefix = settings.prefix;
   this.id = guildID;
   this.tz = settings.timezone;
+  this.lng = settings.lng;
   // calendar
   let calendar = getGuildSpecific(guildID, "calendar.json");
   /**
