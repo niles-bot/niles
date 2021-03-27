@@ -6,7 +6,8 @@ i18next
   .use(SyncBackend)
   .init({
     fallbackLng: "en",
-    initImmediate: false,
+    supportedLngs: ["en", "fr"],
+    initImmediate: true,
     backend: {
       // for all available options read the backend's repository readme file
       loadPath: join(__dirname, "../translations/{{lng}}.yaml"),

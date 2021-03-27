@@ -40,6 +40,7 @@ const defaultSettings = {
   "channelid": "",
   "descLength": 0,
   "startonly": "0",
+  "eventtime": "1",
   "lng": "en"
 };
 
