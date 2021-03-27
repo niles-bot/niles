@@ -103,7 +103,7 @@ function permissionCheck(channel) {
   debug(`permissionCheck | ${channel.guild.id}`);
   const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
   const botPermissions = channel.permissionsFor(bot.client.user).toArray();
-  const missingPermissions = minimumPermissions.filter(perm => !botPermissions.includes(perm)).join(", ");
+  const missingPermissions = minimumPermissions.filter((perm) => !botPermissions.includes(perm)).join(", ");
   debug(`permissioncheck | missing: ${missingPermissions}`);
   return (missingPermissions);
 }
@@ -120,13 +120,13 @@ function yesThenCollector(channel, lng) {
   collector.on("collect", (m) => {
     if (["y", "yes"].includes(m.content.toLowerCase())) { p.resolve();
     } else {
-      channel.send(strings.i18n.t("collector.reject", { lng: lng }));
+      channel.send(strings.i18n.t("collector.reject", { lng }));
       p.reject();
     }
     collector.stop();
   });
   collector.on("end", (collected, reason) => {
-    if (reason === "time") return channel.send(strings.i18n.t("collector.timeout", { lng: lng }));
+    if (reason === "time") return channel.send(strings.i18n.t("collector.timeout", { lng }));
   });
   return p.promise;
 }
