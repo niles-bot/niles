@@ -1,0 +1,41 @@
+language: русский
+calendar:
+  allday: Весь день
+  too_long: "Ошибка: Слишком длинный календарь"
+deleteevent:
+  prompt: Вы действительно хотите удалить событие **{{summary}}** в {{promptDate}}? **(y/n)**
+  confirm: Событие **{{summary}}** удалено
+
+delete:
+  confirm: Это действие удалит сообщения {{argMessages}} в этом канале! Вы уверены? **(y/n)**
+update:
+  undefined: Не удается найти календарь для обновления. Возможно попробуйте создать новый календарь командой `!display`
+displayoptions:
+  help: |-
+    **displayoptions USAGE**
+    ```
+      COMMAND                      PARAMS        EFFECT
+      !displayoptions help         (0|1)         hide/show help
+      !displayoptions pin          (0|1)         pin calendar message
+      !displayoptions format       (12|24)       отображение времени: 12 или 24 часовой вариант
+      !displayoptions tzdisplay    (0|1)         hide/show timezone
+      !displayoptions emptydays    (0|1)         hide/show empty days
+      !displayoptions showpast     (0|1)         hide/show today's past events
+      !displayoptions trim         (n)           trim event names to n characters (0 = off)
+      !displayoptions days         (n)           number of days to display (max 25)
+      !displayoptions style        (code|embed)  use old or new event display style (see nilesbot.com/customisation)
+      !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
+      !displayoptions description  (0|1)         hide/show event description (only compatible with embed)
+      !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
+      !displayoptions desclength   (n)           trim description to n characters (0 =  off)
+    ```
+  days:
+    confirm: 'Changed days to display to: {{days}} (you may have to use `!displayoptions emptydays 0`)'
+  style:
+    confirm: "Изменить стиль отображения на `{{style}}`"
+collector:
+  timeout: Время оклика команды вышло
+admin:
+  prompt_everyone: Вы хотите разрешить всем пользователям этого канала/сервера использовать Niles? **(y/n)**
+deleteevent:
+  not_found: Не удалось найти событие с таким именем. Убедитесь, что вы точно используете название события!

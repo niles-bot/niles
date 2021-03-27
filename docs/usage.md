@@ -155,6 +155,23 @@ Use `!setup` or `@niles setup` to display a summary of the setup steps for getti
 
 ---
 
+### locale
+Use `!locale` or `@niles locale` to set up your locale for date/ time and text.
+
+**Text Translation**
+
+You can see the supported languages and translation progress on [Crowdin](https://crowdin.com/project/niles)
+
+If a language's text is not fully supported, it will fall back to English, but the date formatting will be preserved. 
+
+Only ISO 3166-1 Alpha-2 Codes are supported. You can see a list [here](https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes)
+
+If you would like to contribute to the text translations, please let `blabdude#9793` know so they can add you to the translator channel on Discord. If you do not wish to be added, you can join the [Crowdin project](https://crwd.in/niles)
+
+If you would like to request a language to be translated, please fill out this [Google Form](https://forms.gle/F7Agu3irz99F7Pff9)
+
+---
+
 ### invite
 
 Use `!invite` or `@niles display` to generate an invite link to add Niles to a server.

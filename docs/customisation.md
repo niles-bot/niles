@@ -29,6 +29,7 @@ Use display options (!displayoptions) to customise the way the calendar appears 
 | [description](#hideshow-event-description)           | `!displayoptions description 0|1`   | Hide/show event descriptions (embed calendar style only) |
 | [url](#inline-url-title)                             | `!displayoptions url 0|1`           | Hide/show "location" as embedded link (embed only)       |
 | [startonly](#show-start-only)                        | `!displayoptions startonly 0|1`     | Only show start time for events                          |
+| [eventtime](#show-event-time)                        | `!displayoptions eventtime 0|1`     | Show event time                                          |
 | [desclength](#limit-description-length)              | `!displayoptions desclength <n>`    | Limit description length (embed only)                    |
 
 ---
@@ -161,8 +162,11 @@ The title will be transformed into a link:
 ![title-as-link](../../assets/images/title-as-link.png)
 {: .text-center }
 
-# Show Start Only
+## Show Start Only
 use `!displayoptions startonly 0|1` to toggle this off/on. Only the start time of the event will be shown - for ending multi-day events, the ending time will not be shown 
+
+## Show Event Time
+use `displayoptions eventtime 0|1` to toggle this off/on. The event time will not be displayed if it is set to 0.
 
 ## Limit Description Length
 

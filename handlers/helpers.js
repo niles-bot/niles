@@ -2,6 +2,7 @@ const defer = require("promise-defer");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const debug = require("debug")("niles:helpers");
+const strings = require("./strings.js");
 
 // event types
 const eventType = {
@@ -78,7 +79,7 @@ function getStringTime(date, guild) {
   debug(`getStringTime | ${guild.id}`);
   const format = guild.getSetting("format");
   const zDate = DateTime.fromISO(date, {setZone: true});
-  return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12) });
+  return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12), locale: guild.lng });
 }
 
 /**
@@ -94,23 +95,38 @@ function checkRole(message, guildSettings) {
 }
 
 /**
+ * Checks if the bot has all the nesseary permissions
+ * @param {Snowflake} channel - Channel to check
+ * @returns {String} - returns missing permissions (if any)
+ */
+function permissionCheck(channel) {
+  debug(`permissionCheck | ${channel.guild.id}`);
+  const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
+  const botPermissions = channel.permissionsFor(bot.client.user).toArray();
+  const missingPermissions = minimumPermissions.filter((perm) => !botPermissions.includes(perm)).join(", ");
+  debug(`permissioncheck | missing: ${missingPermissions}`);
+  return (missingPermissions);
+}
+
+/**
  * Collects response for a message
  * @param {Snowflake} channel - Channel to create collector in
+ * @param {String} lng - locale of response
  */
-function yesThenCollector(channel) {
+function yesThenCollector(channel, lng) {
   debug(`yesThenCollector | ${channel.guild.id}`);
   let p = defer();
   const collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
     if (["y", "yes"].includes(m.content.toLowerCase())) { p.resolve();
     } else {
-      channel.send("Okay, I won't do that");
+      channel.send(strings.i18n.t("collector.reject", { lng }));
       p.reject();
     }
     collector.stop();
   });
   collector.on("end", (collected, reason) => {
-    if (reason === "time") return channel.send("Command response timeout");
+    if (reason === "time") return channel.send(strings.i18n.t("collector.timeout", { lng }));
   });
   return p.promise;
 }
@@ -183,10 +199,11 @@ function descriptionParser(inputString) {
 /**
  * This function makes sure that the calendar matches a specified type
  * @param {String} calendarID - calendar ID to classify
- *  @param {Snowflake} channel - Channel to send callback to
+ * @param {Snowflake} channel - Channel to send callback to
+ * @param {Guild} guild - Guild to pull settings from
  * @returns {bool} - if calendar ID is valid
  */
-function matchCalType(calendarID, channel) {
+function matchCalType(calendarID, channel, guild) {
   debug(`matchCalType | id: ${calendarID}`);
   // regex filter groups
   const groupCalId = RegExp("([a-z0-9]{26}@group.calendar.google.com)");
@@ -201,11 +218,11 @@ function matchCalType(calendarID, channel) {
   } else if (importCalId.test(calendarID)) { // matches import ID
   } else if (groupCalId.test(calendarID)) {
     if (cGroupCalId.test(calendarID)) { // matches cGroup
-    } else if (domainCalId.test(calendarID)) {channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
-    } else if (underscoreCalId.test(calendarID)) { channel.send("If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format");
+    } else if (domainCalId.test(calendarID)) { channel.send(strings.i18n.t("caltype.domain", { lng: guild.lng }));
+    } else if (underscoreCalId.test(calendarID)) { channel.send(strings.i18n.t("caltype.underscore", { lng: guild.lng }));
     }
     return true; // normal group id or any variation
-  } else if (domainAddress.test(calendarID)) { channel.send("If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace");
+  } else if (domainAddress.test(calendarID)) { channel.send(strings.i18n.t("caltype.domain", { lng: guild.lng }));
   } else { return false; // break and return false
   }
   return true; // if did not reach false
@@ -216,6 +233,7 @@ module.exports = {
   log,
   getStringTime,
   checkRole,
+  permissionCheck,
   yesThenCollector,
   classifyEventMatch,
   eventType,

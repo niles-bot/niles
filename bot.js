@@ -9,8 +9,9 @@ const settings = require("./settings.js");
 const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
 const helpers = require("./handlers/helpers.js");
+const strings = require("./handlers/strings.js");
 
-// static commands
+// bot properties
 let shardGuilds = [];
 let shardID;
 
@@ -43,7 +44,7 @@ function addMissingGuilds(availableGuilds) {
 // valid commands
 const validCmd = [
   // init
-  "id", "tz", "setup", "help",
+  "id", "tz", "setup", "help", "locale",
   "init", "prefix", "admin", "auth", 
   // calendar
   "display", "create", "scrim", "delete",
@@ -67,7 +68,7 @@ function runCmd(message) {
   const guild = new guilds.Guild(message.guild.id);
   const guildSettings = guild.getSetting();
   // ignore messages without prefix or mention
-  if (!message.content.toLowerCase().startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
+  if (!message.content.startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
   // parse command and arguments
   let args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
   // if mentioned return second object as command, if not - return first object as command
@@ -76,10 +77,15 @@ function runCmd(message) {
   cmd = cmd.toLowerCase();
   // ignore non-whitelisted commands
   if (!validCmd.includes(cmd)) return;
-  // check if user has restricted role
-  if (!helpers.checkRole(message, guildSettings)) {
-    return message.channel.send(`You must have the \`${guildSettings.allowedRoles[0]}\` role to use Niles in this server`)
+  // check if user is allowed to interact with Niles
+  if (!helpers.checkRole(message, guildSettings)) { // if no permissions, warn
+    return message.channel.send(strings.i18n.t("norole", { lng: guild.lng, allowedrole: guildSettings.allowedRoles[0] }))
       .then((message) => message.delete({ timeout: 10000 }));
+  }
+  // check missing permisions
+  const missingPermissions = helpers.permissionCheck(message.channel);
+  if (missingPermissions.includes("SEND_MESSAGES")) {
+    message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`${missingPermissions}\`\`\``);
   }
   helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
   commands.run(cmd, args, message); // all checks passed - run command

@@ -1,0 +1,189 @@
+language: English
+calendarid: Calendar ID
+calendarname: calendar name
+timezone: timezone
+adminrole: admin role
+help: |-
+  ```
+  Niles Usage
+  ---------------------------
+  !display             -  Display your calendar
+  !update / !sync      -  Update the Calendar
+  !create / !scrim     -  Create events using GCal's default interpreter - works best like !scrim xeno June 5 8pm - 9pm
+  !delete              -  Delete an event using the form !delete <event_title>
+  !clean / !purge      -  Deletes messages in current channel, !clean <number>
+  !stats / !info       -  Display list of statistics and information about the Niles bot
+  !invite              -  Get the invite link for Niles to join your server!
+  !setup               -  Get details on how to setup Niles
+  !id                  -  Set the Google calendar ID for the guild
+  !tz                  -  Set the timezone for the guild
+  !prefix              -  View or change the prefix for Niles
+  !displayoptions      -  Change formatting of the calendar display
+  !admin               -  Restrict the usage of Niles to a specific role
+  !help                -  Display this message
+  !next                -  Displays the next upcoming event
+  !validate            -  Checks for any errors with the timezone, calendar ID, calendar fetching or permissions
+  !calname             -  Changes the calendar link name
+  !auth                -  Sets up and switches to OAuth2 or switch back to Service Accounts
+  !channel             -  Sets a channel to be the designated channel for calendar postings and updates
+  ```
+  Visit https://nilesbot.com for more info. 
+
+admin:
+  noarg: |-
+    You can restrict who can control Niles and the associated Google Calendar with roles.
+    Niles will only allow one role to be used, and it must have a unique name.
+    The person assigning the restriction must have the role being assigned.
+    You can allow everyone to use Niles again by entering `!admin everyone`
+    i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)
+  prompt: Do you want to restrict the use of the calendar to people with the `{[adminRole}}`? **(y/n)**
+  no_role: You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive
+  prompt_everyone: Do you want to allow everyone in this channel/server to use Niles? **(y/n)**
+
+setup:
+  error: You haven't finished setting up! Try `!setup` for details on how to start.
+  help: |-
+    ```
+    Niles Usage - SETUP MODE
+    ---------------------------
+    NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE
+    !setup / !help       -  Get details on how to setup Niles for use.
+    !prefix              -  View or change the prefix for Niles
+    !id                  -  Set the Google calendar ID for the guild
+    !tz                  -  Set the timezone for the guild
+    !admin               -  Restrict the usage of Niles to a specific role
+    ```
+    Visit https://nilesbot.com/start for more info.
+  long: |-
+    Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit https://nilesbot.com/start
+    1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
+    2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id 123abc@123abc.com`
+    3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. i.e. `!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting.
+    
+    Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
+
+no_cal: |-
+  I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.
+  You should also check that you have entered the correct calendar id using `!id`.
+  
+  If you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn
+
+displayoptions:
+  binary:
+    prompt: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
+  format:
+    confirm: Set to {{format}}-Hour clock format
+    help: Please only use 12 or 24 for the clock display options
+  trim:
+    confirm: Set trimming of event titles to {{size}} (0 = off)
+    help: Please provide a number to trim event titles. (0 = off)
+  days:
+    confirm: 'Changed days to display to: {{days}} (you may have to use `!displayoptions emptydays 0`)'
+    help: Please provide a number of days to display. (7 = default, 25 = max)
+  desclength:
+    confirm: Set trimming of description length to {{size}} (0 = off)
+    help: Please provide a number to trim description length. (0 = off)
+  style:
+    confirm: "Changed display style to `{{style}}`"
+    help: Please only use code or embed for the style choice. (see nilesbot.com/customisation)
+  help: |-
+    **displayoptions USAGE**
+    ```
+      COMMAND                      PARAMS        EFFECT
+      !displayoptions help         (0|1)         hide/show help
+      !displayoptions pin          (0|1)         pin calendar message
+      !displayoptions format       (12|24)       12h or 24h clock display
+      !displayoptions tzdisplay    (0|1)         hide/show timezone
+      !displayoptions emptydays    (0|1)         hide/show empty days
+      !displayoptions showpast     (0|1)         hide/show today's past events
+      !displayoptions trim         (n)           trim event names to n characters (0 = off)
+      !displayoptions days         (n)           number of days to display (max 25)
+      !displayoptions style        (code|embed)  use old or new event display style (see nilesbot.com/customisation)
+      !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
+      !displayoptions description  (0|1)         hide/show event description (embed only)
+      !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
+      !displayoptions startonly    (0|1)         only show start time
+      !displayoptions eventtime    (0|1)         don't show event time
+      !displayoptions desclength   (n)           trim description to n characters (0 =  off)
+    ```
+
+caltype:
+  domain: If you are on a GSuite/ Workplace and having issues see https://nilesbot.com/start/#gsuiteworkplace
+  underscore: If you are having issues adding your calendar see https://nilesbot.com/start/#new-calendar-format
+
+norole: You must have the {{allowedrole}} role to use Niles in this server
+collector:
+  exist: You didn't enter a {{name}}, you are currently using `{{old}}`
+  noarg: Enter a {{name}} using {{example}}
+  overwrite_prompt: I've already been setup to use `{{old}}`, do you want to overwrite this and use `{{new}}`? **(y/n)**
+  invalid: I don't think that's a valid {{name}}... try again
+  timeout: Command response timeout
+  reject: Okay, I won't do that
+
+auth:
+  noarg: Set up authentication with `auth sa` or `auth oauth`. For details see https://nilesbot.com/start/#google-calendar-authentication
+  oauth:
+    notinstalled: OAuth2 credentials not installed
+    reauth: Already using OAuth, use `!auth oauth force` to force reauthentication
+    prompt: "Authorize Niles by visiting this [url]({{authUrl}}) \n Send the code from the page:"
+    err: Error retrieving access token {{err}}
+    confirm: Successfuly Authenticated
+  sa:
+    invite: Invite `{{saId}}` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
+    notinstalled: SA credentials not installed
+
+delete:
+  noarg: You can only use a number to delete messages. i.e. `!clean 10`
+  confirm: You are about to delete {{argMessages}} messages. Are you sure? **(y/n)**
+
+deleteevent:
+  noarg: You need to enter an argument for this command. i.e `!delete xeno thursday 8pm - 9pm`
+  prompt: Are you sure you want to delete the event **{{summary}}** on {{promptDate}}? **(y/n)**
+  confirm: Event **{{summary}}** deleted
+  not_found: Couldn't find event with that name - make sure you use exactly what the event is named!
+  error: There was an error finding this event
+
+timerkilled: update timer has been killed.
+
+calendar:
+  allday: All Day
+  too_long_help: "Your calendar has over {{msgLength}} characters. This must be under 6000, as mandated by Discord. Try `displayoptions desclength` to limit description length or `displayoptions descriptions` to toggle descriptions."
+  too_long: Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events
+  embed:
+    help_title: USING THIS CALENDAR
+    help_desc: |- 
+      To create events use `!create` or `!scrim` followed by your event details i.e. `!scrim xeno on monday at 8pm-10pm`
+      
+      To delete events use `!delete <day> <start time>` i.e. `!delete monday 5pm`
+      
+      Hide this message using `!displayoptions help 0`
+      
+      Enter `!help` for a full list of commands.
+
+next:
+  no_upcoming: No upcoming events within date range
+  next: The next event is `{{summary}}` in {{timeToString}}
+
+update:
+  not_found: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
+  undefined: Cannot find calendar to update, maybe try a new calendar with `!display`
+
+quick_add:
+  noarg: You need to enter an argument for this command. i.e `!create xeno thursday 8pm - 9pm`
+  confirm: Event `{{summary}}` on `{{promptDate}}` has been created
+
+calname:
+  prompt: Do you want to set the calendar name to `{{newCalName}}` ? **(y/n)**
+  confirm: Changed calendar name to `{{newCalName}}`
+
+setchannel:
+  current: The current calendar channel is `{{name}}`
+  not_set: There is no current calendar channel set
+  help: 'Use `!channel set` or `!channel delete` to set or delete the current "Calendar" Channel'
+  delete: Removed existing calendar channel
+  prompt: This will make the channel with name `{{name}}` the primary channel for the calendar. All new calendars and updates will target this channel until `!channel delete` is run. Are you sure? (y/n)
+
+validate:
+  calendar_err: "Error Fetching Calendar: {{err}}"
+
+reset: Resetting Niles to default
