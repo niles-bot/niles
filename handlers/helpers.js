@@ -100,11 +100,11 @@ function checkRole(message, guildSettings) {
  * @returns {String} - returns missing permissions (if any)
  */
 function permissionCheck(channel) {
-  log(`permissionCheck | ${channel.guild.id}`);
+  debug(`permissionCheck | ${channel.guild.id}`);
   const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
   const botPermissions = channel.permissionsFor(bot.client.user).toArray();
   const missingPermissions = minimumPermissions.filter(perm => !botPermissions.includes(perm)).join(", ");
-  log(`permissioncheck | missing ${missingPermissions}`);
+  debug(`permissioncheck | missing: ${missingPermissions}`);
   return (missingPermissions);
 }
 

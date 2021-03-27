@@ -298,7 +298,7 @@ function generateCalendarCodeblock(guild) {
         if (Object.keys(event.start).includes("date")) {
           // no need for temp start/fin dates
           const tempString = {"All Day": eventTitle};
-          sendString += columnify(tempString, options) + "\n";
+          sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
         } else if (Object.keys(event.start).includes("dateTime")) {
           // keep the - centered depending on format option
           let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
@@ -313,7 +313,7 @@ function generateCalendarCodeblock(guild) {
           if (event.type === eventType.MULTIMID) duration = "All Day";
           else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
           const tempString = {[duration]: eventTitle};
-          sendString += columnify(tempString, options) + "\n";
+          sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
         }
       });
       sendString += "```";
@@ -365,7 +365,7 @@ function generateCalendarEmbed(guild) {
         // construct field object with summary + description
         // add link if there is a location
         const eventTitle = eventNameCreator(event, guildSettings);
-        tempValue += `**${duration}** | ${eventTitle}\n`;
+        tempValue += (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
         // add title length to counter
         msgLength += eventTitle.length;
         // limitDescriptionLength
@@ -611,9 +611,12 @@ function displayOptionHelper(args, guild, channel) {
     }, startonly: {
       name: "startonly",
       help: "start time only"
+    }, eventtime: {
+      name: "eventtime",
+      help: "event time display"
     }
   };
-  const optionTranslate = strings.i18n.t(`displayoptions.binary.${optionName[setting]}`);
+  const optionTranslate = optionName[setting].help;
   if (value) {
     send(channel, value === "1" ? `Set ${optionTranslate} on` : `Set ${optionTranslate} off`);
     log(`displayOptionsHelper | ${guild.id} | setting: ${setting} | value: ${value}`);
@@ -665,7 +668,7 @@ function displayOptions(args, guild, channel) {
   const lng = guild.lng;
   log(`displayOptions | ${guild.id} | cmd: ${dispCmd} | option: ${dispOption}`);
   const binaryDisplayOptions = [
-    "pin", "tzdisplay", "emptydays", "showpast", "help", "startonly"
+    "pin", "tzdisplay", "emptydays", "showpast", "help", "startonly", "eventtime"
   ];
   const embedStyleOptions = [
     "inline", "description", "url"
@@ -714,8 +717,7 @@ function displayOptions(args, guild, channel) {
     if (dispOption) {
       guild.setSetting("style", dispOption);
       send(channel, strings.i18n.t("displayoptions.style.confirm", { style: dispOption, lng }));
-    } else { send(channel, strings.i18n.t("displayoptions.style.help", {lng}));
-    }
+    } else { send(channel, strings.i18n.t("displayoptions.style.help", {lng})); }
   } else { send(channel, strings.i18n.t("displayoptions.help", {lng}));
   }
 }

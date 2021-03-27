@@ -1,8 +1,6 @@
 language: Français
 calendarid: l'ID du calendrier
 timezone: Fuseau horaire
-deleteevent:
-  prompt: Êtes vous sûr de vouloir supprimer cet évènement **{{summary}}** le {{promptDate}}? **(y=oui/n=non)**
 calendar:
   allday: Toute la journée
   too_long: "Erreur: Calendrier trop long"
@@ -41,9 +39,9 @@ collector:
   timeout: Délai de réponse à la commande dépassé
 
 next:
-  next: The next event is `{{summary}}` in {{timeToString}}
   next: Le prochain évènement est `{{summary}}` dans {{timeToString}}
 
 deleteevent:
+  prompt: Êtes vous sûr de vouloir supprimer cet évènement **{{summary}}** le {{promptDate}}? **(y=oui/n=non)**
   not_found: Impossible de trouver un événement portant ce nom - assurez-vous d'utiliser exactement le même nom que l'événement!
   error: Une erreur est survenue lors de la recherche de cet évènement

@@ -1,8 +1,4 @@
 language: English
-calendar:
-  allday: All Day
-  too_long: "Error: Calendar too long"
-  too_long_help: "Your calendar has over {{msgLength}} characters. This must be under 6000, as mandated by Discord. Try `displayoptions desclength` to limit description length or `displayoptions descriptions` to toggle descriptions."
 calendarid: Calendar ID
 calendarname: calendar name
 timezone: timezone
@@ -106,6 +102,8 @@ displayoptions:
       !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
       !displayoptions description  (0|1)         hide/show event description (embed only)
       !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
+      !displayoptions startonly    (0|1)         only show start time
+      !displayoptions eventtime    (0|1)         don't show event time
       !displayoptions desclength   (n)           trim description to n characters (0 =  off)
     ```
 
@@ -148,6 +146,8 @@ deleteevent:
 timerkilled: update timer has been killed.
 
 calendar:
+  allday: All Day
+  too_long_help: "Your calendar has over {{msgLength}} characters. This must be under 6000, as mandated by Discord. Try `displayoptions desclength` to limit description length or `displayoptions descriptions` to toggle descriptions."
   too_long: Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events
   embed:
     help_title: USING THIS CALENDAR
