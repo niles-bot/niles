@@ -1172,12 +1172,12 @@ function logTz(channel, args, guild) {
 function setPrefix(channel, args, guild) {
   log(`setPrefix | ${guild.id}`);
   const newPrefix = args[0];
-  if (!newPrefix) { channel.send(strings.i18n.t("collector.overwrite_prompt", { old: guild.prefix, new: newPrefix, lng: guild.lng }));
+  if (!newPrefix) { channel.send(strings.i18n.t("collector.exist", { old: guild.prefix, name: "prefix", lng: guild.lng }));
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
     helpers.yesThenCollector(channel, guild.lng).then(() => {
       log(`setPrefix | ${guild.id} | set to: ${newPrefix}`);
-      send(`prefix set to ${newPrefix}`);
+      channel.send(`prefix set to ${newPrefix}`);
       return guild.setSetting("prefix", newPrefix);
     }).catch((err) => { helpers.log(err); });
   }

@@ -1,6 +1,6 @@
 {
   "name": "niles",
-  "version": "4.4.0",
+  "version": "4.4.1",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "discord.js": "^12.5.1",
     "googleapis": "^68.0.0",
     "i18next": "^20.1.0",
-    "i18next-fs-backend": "^1.1.0",
+    "i18next-fs-backend": "^1.1.1",
     "luxon": "^1.26.0",
     "promise-defer": "^1.0.0"
   },
