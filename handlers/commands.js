@@ -251,7 +251,7 @@ function isEmptyCalendar(guild, dayMap) {
  */
 function eventNameCreator(event, guildSettings) {
   log("eventNameCreator");
-  const titleName = helpers.trimEventName(event.summary, guildSettings.trim);
+  const titleName = helpers.trimEventName(event.summary, guildSettings.trim).replaceAll("[\\.$|`|']", "\"");
   const urlPattern = new RegExp("^https?://");
   // if location is url & setting is on
   const addURL = (urlPattern.test(event.location) && guildSettings.url === "1");
@@ -811,7 +811,7 @@ function displayOptions(args, guild, channel) {
           : size > 25 ? 25 // discord field limit is 25
             : size; // otherwise defualt to size
       guild.setSetting("days", days); // set to 0 if invalid, otherwise take number
-      send(channel, strings.i18n.t("displayoptions.days.help", {lng, days: guildSettings.days}));
+      send(channel, strings.i18n.t("displayoptions.days.confirm", {lng, days: guildSettings.days}));
     } else { send(channel, strings.i18n.t("displayoptions.days.help", {lng}));
     }
   } else if (dispCmd === "style") {
