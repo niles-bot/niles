@@ -184,6 +184,6 @@ setchannel:
   prompt: This will make the channel with name `{{name}}` the primary channel for the calendar. All new calendars and updates will target this channel until `!channel delete` is run. Are you sure? (y/n)
 
 validate:
-  calendar_err: "Error Fetching Calendar: {{err}}"
+  calendar_error: "Error Fetching Calendar: {{err}}"
 
 reset: Resetting Niles to default
