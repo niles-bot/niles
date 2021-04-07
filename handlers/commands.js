@@ -581,44 +581,40 @@ function quickAddEvent(args, guild, channel) {
   });
 }
 
-
 const doHelpArray = {
   pin: {
     name: "pin",
-    help: "calendar pinning",
     type: "binaryNumber"
   }, tzdisplay: {
     name: "tzDisplay",
-    help: "calendar timezone display",
     type: "binaryNumber"
   }, emptydays: {
     name: "emptydays",
-    help: "calendar empty days",
     type: "binaryNumber"
   }, showpast: {
     name: "showpast",
-    help: "display of today's past events",
     type: "binaryNumber"
   }, help: {
     name: "helpmenu",
-    help: "calendar help menu",
     type: "binaryNumber"
   }, startonly: {
     name: "startonly",
-    help: "start time only",
     type: "binaryNumber"
   }, inline: {
     name: "inline",
-    help: "inline events",
     type: "binaryEmbed"
   }, description: {
     name: "description",
-    help: "display of descriptions",
     type: "binaryEmbed"
   }, url: {
     name: "url",
-    help: "embedded link",
     type: "binaryEmbed"
+  }, eventtime: {
+    name: "eventtime",
+    type: "binaryNumber"
+  }, format: {
+    name: "format",
+    type: "binaryChoice"
   }
 };
 
@@ -629,107 +625,51 @@ function doHelp(args, guild, channel) {
   const setting = args[0];
   const value = args[1];
   // find setting
-  if (doHelpArray.hasOwnProperty(setting)) {
-    const settingObj = doHelpArray[setting];
-    if (settingObj.type === "binaryNumber") {
-      send(channel, doBinary(value, guild, settingObj));
-    } else if (settingObj.type === "binaryChoice") {
-      //
-    } else if (settingObj.type === "binaryEmbed") {
-      //
-    } else if (settingObj.type ===  "int") {
-      //
-    }
-  };
-  const optionTranslate = strings.i18n.t(`displayoptions.binary.${optionName[setting]}`);
-  if (value) {
-    send(channel, value === "1" ? `Set ${optionTranslate} on` : `Set ${optionTranslate} off`);
-    guildSettings[optionName[setting].name] = value; // set value
-  } else {
-    send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guildSettings.lng, help: optionTranslate }));
+  if (!( setting in doHelpArray)) return send(channel, strings.i18n.t("displayoptions.help", { lng: guild.lng }));
+  const settingObj = doHelpArray[setting];
+  const settingName = settingObj.name;
+  if (settingObj.type === "binaryNumber") {
+    send(channel, doBinary(value, guild, settingName));
+  } else if (settingObj.type === "binaryChoice") {
+    //
+  } else if (settingObj.type === "binaryEmbed") {
+    send(channel, doBinaryEmbed(value, guild, settingName));
+  } else if (settingObj.type ===  "int") {
+    //
   }
-  return guildSettings;
 }
 
 /**
  * handle binary display options
  * @param {String} value - value passed in
  * @param {Guild} guild - Guild object 
- * @param {Object} setting - setting object to fetch from
+ * @param {String} setting - setting name
  * @returns {String} callback string
  */
 function doBinary(value, guild, setting) {
+  log(`doBinary | ${guild.id} | setting: ${setting} | value: ${value}`);
+  const help = strings.i18n.t(`displayoptions.binary.${setting}`);
   if (value) {
-    log(`displayOptionsHelper | ${guild.id} | setting: ${setting.name} | value: ${value}`);
-    guild.setSetting(setting.name, value); // set value
-    return value === "1" ? `Set ${setting.name} on` : `Set ${setting.name} off`;
-  } else { return `Please only use 0 or 1 for the **${setting.help}** setting, (off or on)`;
+    guild.setSetting(setting, value); // set value
+    return (value === "1" ? `Set ${help} on` : `Set ${help} off`);
+  } else {
+    return strings.i18n.t("displayoptions.binary.prompt", { lng: guild.lng, help });
   }
 }
 
 /**
- * 
- * @param {*} value 
- * @param {*} guild 
- * @param {*} setting 
- * @returns 
+ * handle binary embed display options
+ * @param {String} value - value passed in
+ * @param {Guild} guild - Guild object 
+ * @param {String} setting - setting name
+ * @returns {String} callback string
  */
 function doBinaryEmbed(value, guild, setting) {
   const curStyle = guild.getSetting("style");
-  log(`embedStyleHelper | ${guild.id} | setting: ${setting.name} | value: ${value} | style: ${curStyle}`);
+  log(`doBinaryEmbed | ${guild.id} | setting: ${setting} | value: ${value} | style: ${curStyle}`);
   // if set to code, do not allow
-  if (curStyle === "code") { return "This displayoption is only compatible with the `embed` display style";
-  } else if (value) { // if set to embed, set
-    guild.setSetting(setting.name, value); // set value
-    return (value === "1" ? `Set ${setting.name} on` : `Set ${setting.name} off`);
-  // if no response, prompt with customization
-  } else { return `Please only use 0 or 1 for the **${setting.help}** setting, (off or on) - see https://nilesbot.com/customisation`;
-  }
-}
-
-/**
- * handle binary display options
- * @param {[String]} args - Arguments passed in
- * @param {Guild} guild - Guild object 
- * @param {Snowflake} channel - callback channel
- * @returns {Object} guild settings without or without changes
- */
-function displayOptionHelper(args, guild, channel) {
-  log(`displayOptionsHelper | ${guild.id} | args: ${args}`);
-  const setting = args[0];
-  const value = args[1];
-  const optionName = {
-    pin: {
-      name: "pin",
-      help: "calendar pinning"
-    }, tzdisplay: {
-      name: "tzDisplay",
-      help: "calendar timezone display"
-    }, emptydays: {
-      name: "emptydays",
-      help: "calendar empty days"
-    },showpast: {
-      name: "showpast",
-      help: "display of today's past events"
-    }, help: {
-      name: "helpmenu",
-      help: "calendar help menu"
-    }, startonly: {
-      name: "startonly",
-      help: "start time only"
-    }, eventtime: {
-      name: "eventtime",
-      help: "event time display"
-    }
-  };
-  const optionTranslate = optionName[setting].help;
-  if (value) {
-    send(channel, value === "1" ? `Set ${optionTranslate} on` : `Set ${optionTranslate} off`);
-    log(`displayOptionsHelper | ${guild.id} | setting: ${setting} | value: ${value}`);
-    guild.setSetting([optionName[setting].name], value); // set value
-  } else {
-    send(channel, strings.i18n.t("displayoptions.binary.prompt", { lng: guild.lng, help: optionTranslate }));
-  }
+  if (curStyle === "code") return "This displayoption is only compatible with the `embed` display style";
+  return doBinary(value, guild, setting);
 }
 
 /**

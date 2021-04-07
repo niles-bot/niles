@@ -71,6 +71,17 @@ no_cal: |-
 displayoptions:
   binary:
     prompt: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
+    pin: calendar pinning
+    tzDisplay: calendar timezone display
+    emptydays: calendar empty days
+    showpast: display of today's past events
+    startonly: start time only
+    helpmenu: calendar help menu
+    inline: inline events
+    description: display of descriptions
+    url: embedded link
+    eventtime: event time display
+
   format:
     confirm: Set to {{format}}-Hour clock format
     help: Please only use 12 or 24 for the clock display options
@@ -87,7 +98,7 @@ displayoptions:
     confirm: "Changed display style to `{{style}}`"
     help: Please only use code or embed for the style choice. (see nilesbot.com/customisation)
   help: |-
-    **displayoptions USAGE**
+    **displayoptions USAGE** - (see nilesbot.com/customisation)
     ```
       COMMAND                      PARAMS        EFFECT
       !displayoptions help         (0|1)         hide/show help
@@ -98,8 +109,8 @@ displayoptions:
       !displayoptions showpast     (0|1)         hide/show today's past events
       !displayoptions trim         (n)           trim event names to n characters (0 = off)
       !displayoptions days         (n)           number of days to display (max 25)
-      !displayoptions style        (code|embed)  use old or new event display style (see nilesbot.com/customisation)
-      !displayoptions inline       (0|1)         makes embed display inline (see nilesbot.com/customisation)
+      !displayoptions style        (code|embed)  use old or new event display style
+      !displayoptions inline       (0|1)         makes embed display inline (embed only)
       !displayoptions description  (0|1)         hide/show event description (embed only)
       !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
       !displayoptions startonly    (0|1)         only show start time
