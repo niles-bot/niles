@@ -174,6 +174,8 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
  */
 function trimEventName(eventName, trimLength){
   debug(`trimEventName | eventname: ${eventName}`);
+  // remove json invalids
+  eventName = eventName.replace("[\\.$|`|']/g", "\"");
   // if no trim length, just return
   if (trimLength === null || trimLength === 0) return eventName;
   // trim down to length

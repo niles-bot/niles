@@ -251,7 +251,7 @@ function isEmptyCalendar(guild, dayMap) {
  */
 function eventNameCreator(event, guildSettings) {
   log("eventNameCreator");
-  const titleName = helpers.trimEventName(event.summary, guildSettings.trim).replaceAll("[\\.$|`|']", "\"");
+  const titleName = (event.summary) ? helpers.trimEventName(event.summary, guildSettings.trim) : " ";
   const urlPattern = new RegExp("^https?://");
   // if location is url & setting is on
   const addURL = (urlPattern.test(event.location) && guildSettings.url === "1");
@@ -294,7 +294,7 @@ function generateCalendarCodeblock(guild) {
             }
           }
         };
-        let eventTitle = helpers.trimEventName(event.summary, guildSettings.trim);
+        const eventTitle = (event.summary) ? helpers.trimEventName(event.summary, guildSettings.trim) : " ";
         if (Object.keys(event.start).includes("date")) {
           // no need for temp start/fin dates
           const tempString = {"All Day": eventTitle};
