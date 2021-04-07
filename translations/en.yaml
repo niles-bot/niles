@@ -137,7 +137,7 @@ delete:
   confirm: You are about to delete {{argMessages}} messages. Are you sure? **(y/n)**
 
 deleteevent:
-  noarg: You need to enter an argument for this command. i.e `!delete xeno thursday 8pm - 9pm`
+  noarg: You need to enter the exact event title for this command. i.e `!delete event name`
   prompt: Are you sure you want to delete the event **{{summary}}** on {{promptDate}}? **(y/n)**
   confirm: Event **{{summary}}** deleted
   not_found: Couldn't find event with that name - make sure you use exactly what the event is named!
