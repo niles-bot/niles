@@ -69,6 +69,7 @@ no_cal: |-
   If you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn
 
 displayoptions:
+  embedonly: This displayoption is only compatible with the `embed` display style
   binary:
     prompt: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
     pin: calendar pinning
@@ -81,10 +82,11 @@ displayoptions:
     description: display of descriptions
     url: embedded link
     eventtime: event time display
+  choice:
+    prompt: Changed {{help}} to {{value}}. (see nilesbot.com/customisation)
+    style: display style
+    format: clock format
 
-  format:
-    confirm: Set to {{format}}-Hour clock format
-    help: Please only use 12 or 24 for the clock display options
   trim:
     confirm: Set trimming of event titles to {{size}} (0 = off)
     help: Please provide a number to trim event titles. (0 = off)
@@ -94,9 +96,7 @@ displayoptions:
   desclength:
     confirm: Set trimming of description length to {{size}} (0 = off)
     help: Please provide a number to trim description length. (0 = off)
-  style:
-    confirm: "Changed display style to `{{style}}`"
-    help: Please only use code or embed for the style choice. (see nilesbot.com/customisation)
+  
   help: |-
     **displayoptions USAGE** - (see nilesbot.com/customisation)
     ```

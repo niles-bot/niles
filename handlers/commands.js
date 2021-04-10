@@ -615,6 +615,22 @@ const doHelpArray = {
   }, format: {
     name: "format",
     type: "binaryChoice"
+  }, style: {
+    name: "style",
+    type: "binaryChoice"
+  }, trim: {
+    name: "trim",
+    type: "int",
+    default: 0
+  }, desclength: {
+    name: "descLength",
+    type: "int",
+    default: 0
+  }, days: {
+    name: "days",
+    type: "int",
+    default: 7,
+    max: 25
   }
 };
 
@@ -666,39 +682,47 @@ function doBinary(value, guild, setting) {
  */
 function doBinaryEmbed(value, guild, setting) {
   const curStyle = guild.getSetting("style");
+  const help = strings.i18n.t(`displayoptions.binary.${setting}`);
   log(`doBinaryEmbed | ${guild.id} | setting: ${setting} | value: ${value} | style: ${curStyle}`);
   // if set to code, do not allow
-  if (curStyle === "code") return "This displayoption is only compatible with the `embed` display style";
-  return doBinary(value, guild, setting);
+  if (value) {
+    guild.setSetting(setting, value); // set value
+    return (value === "1" ? `Set ${help} on` : `Set ${help} off`);
+  } else {
+    return strings.i18n.t("displayoptions.binary.prompt", { lng: guild.lng, help });
+  }
 }
 
 /**
- * Handle embed display options
- * @param {[String]} args - Arguments passed in
+ * handle string choice display options
+ * @param {String} value - value passed in
  * @param {Guild} guild - Guild object 
- * @param {Snowflake} channel - callback channel
+ * @param {String} setting - setting to change
+ * @returns {String} setting name
  */
-function embedStyleHelper(args, guild, channel) {
-  const setting = args[0];
-  const value = args[1];
-  // current option
-  const curStyle = guild.getSetting("style");
-  log(`embedStyleHelper | ${guild.id} | setting: ${setting} | value: ${value} | style: ${curStyle}`);
-  const optionName = {
-    inline: "inline events",
-    description: "display of descriptions",
-    url: "embedded link"
-  };
-  // if set to code, do not allow
-  const optionTranslate = strings.i18n.t(`displayoptions.embed.${optionName[setting]}`);
-  if (curStyle === "code") { send(channel, "This displayoption is only compatible with the `embed` display style");
-  } else if (value) { // if set to embed, set
-    send(channel, (value === "1" ? `Set ${optionTranslate} on` : `Set ${optionTranslate} off`));
-    guild.setSetting([setting], value); // set value
-  // if no response, prompt with customization
-  } else {
-    send(channel, `Please only use 0 or 1 for the **${optionTranslate}** setting, (off or on) - see https://nilesbot.com/customisation`);
-  }
+function doChoice(value, guild, setting) {
+  log(`doChoice | ${guild.id} | setting: ${setting} | value: ${value}`);
+  const help = strings.i18n.t(`displayoptions.choice.${setting}`);
+  guild.setSetting(setting, value);
+  return strings.i18n.t("displayoptions.choice.prompt", { lng: guild.lng, help, value });
+}
+
+/**
+ * Handle integer choice display options
+ * @param {Integer} value - value passed in 
+ * @param {Guild} guild - Guild object
+ * @param {Object} settingObj - settingsObj object
+ * @returns 
+ */
+function doInt(value, guild, settingObj) {
+  log(`doInt | ${guild.id} | setting: ${settingObj.name} | value: ${value}`);
+  const help = strings.i18n.t(`displayoptions.choice.${settingObj.help}`);
+  const setValue =
+    isNaN(value) ? settingObj.default
+      : value > settingObj.max ? settingObj.max
+        : value;
+  guild.setSetting(settingObj.name, setValue);
+  return strings.i18n.t("displayoptions.choice.prompt", { lng: guild.lng, help, value });
 }
 
 /**
