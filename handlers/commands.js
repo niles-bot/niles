@@ -199,7 +199,7 @@ function getEvents(guild, channel) {
               start: event.start,
               end: event.end,
               description: event.description,
-              location: event.location,
+              location: event.location || event.hangoutLink,
               type: eType
             });
           }
