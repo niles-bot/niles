@@ -71,7 +71,8 @@ no_cal: |-
 displayoptions:
   embedonly: This displayoption is only compatible with the `embed` display style
   binary:
-    prompt: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
+    confirmOn: Set {{help}} on
+    confirmOff: Set {{help}} off
     pin: calendar pinning
     tzDisplay: calendar timezone display
     emptydays: calendar empty days
@@ -83,19 +84,15 @@ displayoptions:
     url: embedded link
     eventtime: event time display
   choice:
-    prompt: Changed {{help}} to {{value}}. (see nilesbot.com/customisation)
+    confirm: Changed {{help}} to {{value}}. (see nilesbot.com/customisation)
     style: display style
     format: clock format
-
-  trim:
-    confirm: Set trimming of event titles to {{size}} (0 = off)
-    help: Please provide a number to trim event titles. (0 = off)
-  days:
-    confirm: 'Changed days to display to: {{days}} (you may have to use `!displayoptions emptydays 0`)'
-    help: Please provide a number of days to display. (7 = default, 25 = max)
-  desclength:
-    confirm: Set trimming of description length to {{size}} (0 = off)
-    help: Please provide a number to trim description length. (0 = off)
+  badarg:
+    binary: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
+    style: Please only use code or embed for the style choice. (see nilesbot.com/customisation)
+    days: Please provide a number of days to display. (7 = default, 25 = max)
+    trim: Please provide a number to trim event titles. (0 = off)
+    desclength: Please provide a number to trim description length. (0 = off)
   
   help: |-
     **displayoptions USAGE** - (see nilesbot.com/customisation)
