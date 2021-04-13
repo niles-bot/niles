@@ -2,7 +2,7 @@ const defer = require("promise-defer");
 const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const debug = require("debug")("niles:helpers");
-const strings = require("./strings.js");
+const { i18n } = require("./strings.js");
 
 // event types
 const eventType = {
@@ -120,13 +120,13 @@ function yesThenCollector(channel, lng) {
   collector.on("collect", (m) => {
     if (["y", "yes"].includes(m.content.toLowerCase())) { p.resolve();
     } else {
-      channel.send(strings.i18n.t("collector.reject", { lng }));
+      channel.send(i18n.t("collector.reject", { lng }));
       p.reject();
     }
     collector.stop();
   });
   collector.on("end", (collected, reason) => {
-    if (reason === "time") return channel.send(strings.i18n.t("collector.timeout", { lng }));
+    if (reason === "time") return channel.send(i18n.t("collector.timeout", { lng }));
   });
   return p.promise;
 }
@@ -220,11 +220,11 @@ function matchCalType(calendarID, channel, guild) {
   } else if (importCalId.test(calendarID)) { // matches import ID
   } else if (groupCalId.test(calendarID)) {
     if (cGroupCalId.test(calendarID)) { // matches cGroup
-    } else if (domainCalId.test(calendarID)) { channel.send(strings.i18n.t("caltype.domain", { lng: guild.lng }));
-    } else if (underscoreCalId.test(calendarID)) { channel.send(strings.i18n.t("caltype.underscore", { lng: guild.lng }));
+    } else if (domainCalId.test(calendarID)) { channel.send(i18n.t("caltype.domain", { lng: guild.lng }));
+    } else if (underscoreCalId.test(calendarID)) { channel.send(i18n.t("caltype.underscore", { lng: guild.lng }));
     }
     return true; // normal group id or any variation
-  } else if (domainAddress.test(calendarID)) { channel.send(strings.i18n.t("caltype.domain", { lng: guild.lng }));
+  } else if (domainAddress.test(calendarID)) { channel.send(i18n.t("caltype.domain", { lng: guild.lng }));
   } else { return false; // break and return false
   }
   return true; // if did not reach false
