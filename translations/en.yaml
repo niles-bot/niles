@@ -87,13 +87,17 @@ displayoptions:
     confirm: Changed {{help}} to {{value}}. (see nilesbot.com/customisation)
     style: display style
     format: clock format
+    trim: trimming of event titles
+    descLength: trimming of description length
+    days: days to display
   badarg:
     binary: Please only use 0 or 1 for the **{{help}}** setting, (off or on)
     style: Please only use code or embed for the style choice. (see nilesbot.com/customisation)
-    days: Please provide a number of days to display. (7 = default, 25 = max)
+    format: Please only use 12 or 24 for the clock display options
     trim: Please provide a number to trim event titles. (0 = off)
     desclength: Please provide a number to trim description length. (0 = off)
-  
+    days: Please provide a number of days to display. (7 = default, 25 = max)
+
   help: |-
     **displayoptions USAGE** - (see nilesbot.com/customisation)
     ```
