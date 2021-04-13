@@ -11,6 +11,7 @@ const guilds = require("./guilds.js");
 let autoUpdater = [];
 let timerCount = [];
 const eventType = helpers.eventType;
+const { doHandler } = require("./displayoptions.js");
 const { google } = require("googleapis");
 const { oauth2, sa } = require("../settings.js");
 
@@ -1046,7 +1047,7 @@ function run(cmd, args, message) {
     log(`create | ${guildID}`);
     quickAddEvent(args, guild, channel);
     calendarUpdater(guild, guildChannel, true);
-  } else if (["displayoptions"].includes(cmd)) { displayOptions(args, guild, channel);
+  } else if (["displayoptions"].includes(cmd)) { doHandler(args, guild, channel);
   } else if (["stats", "info"].includes(cmd)) { displayStats(channel);
   } else if (["get"].includes(cmd)) { getEvents(guild, channel);
   } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id);

@@ -58,31 +58,6 @@ const doHelpArray = {
 };
 
 /**
- * Handle al displayoptions and pass to respective handlers
- * @param {[String]} args - arguemnts passed in
- * @param {Guild} guild - Guild object that called command
- * @param {Snowflake} channel - Channel that called coammand
- * @returns 
- */
-function doHandler(args, guild, channel) {
-  const setting = args[0];
-  const value = args[1];
-  // find setting
-  if (!( setting in doHelpArray)) return send(channel, strings.i18n.t("displayoptions.help", { lng: guild.lng }));
-  const settingObj = doHelpArray[setting];
-  const settingName = settingObj.name;
-  if (settingObj.type === "binaryNumber") {
-    send(channel, doBinary(value, guild, settingName));
-  } else if (settingObj.type === "binaryChoice") {
-    //
-  } else if (settingObj.type === "binaryEmbed") {
-    send(channel, doBinaryEmbed(value, guild, settingName));
-  } else if (settingObj.type ===  "int") {
-    //
-  }
-}
-
-/**
  * handle binary display options
  * @param {String} value - value passed in
  * @param {Guild} guild - Guild object 
@@ -94,7 +69,7 @@ function doBinary(value, guild, setting) {
   const help = strings.i18n.t(`displayoptions.binary.${setting}`);
   if (value) {
     guild.setSetting(setting, value); // set value
-    return (value === "1" ? `Set ${help} on` : `Set ${help} off`);
+    return strings.i18n.t(`displayoptions.binary.${(value === "1" ? "confirmOn" : "confirmOff")}`);
   } else {
     return strings.i18n.t("displayoptions.binary.prompt", { lng: guild.lng, help });
   }
@@ -161,6 +136,32 @@ function doInt(value, guild, settingObj) {
     return strings.i18n.t("displayoptions.choice.confirm", { lng: guild.lng, help, value });
   } else {
     return strings.i18n.t(`displayoptions.badarg.${settingObj.name}`);
+  }
+}
+
+/**
+ * Handle all displayoptions and pass to respective handlers
+ * @param {[String]} args - arguemnts passed in
+ * @param {Guild} guild - Guild object that called command
+ * @param {Snowflake} channel - Channel that called command
+ * @returns 
+ */
+function doHandler(args, guild, channel) {
+  const setting = args[0];
+  const value = args[1];
+  // find setting
+  if (!( setting in doHelpArray)) return send(channel, strings.i18n.t("displayoptions.help", { lng: guild.lng }));
+  const settingObj = doHelpArray[setting];
+  const settingName = settingObj.name;
+  if (settingObj.type === "binaryNumber") {
+    send(channel, doBinary(value, guild, settingName));
+  } else if (settingObj.type === "binaryChoice") {
+    send(channel, doChoice(value, guild, settingObj));
+  } else if (settingObj.type === "binaryEmbed") {
+    send(channel, doBinaryEmbed(value, guild, settingName));
+  } else if (settingObj.type ===  "int") {
+    const valueInt = parseInt(value);
+    send(channel, doInt(valueInt, guild, settingObj));
   }
 }
 
