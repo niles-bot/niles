@@ -1,6 +1,6 @@
 const secrets = require("./config/secrets.json");
 const fs = require("fs");
-const {google} = require("googleapis");
+const { auth } = require("@googleapis/calendar");
 
 let keyFileAuth = false;
 let saId = "";
@@ -8,7 +8,7 @@ try {
   const SA_KEYPATH = secrets.service_acct_keypath;
   const SA_JSON = JSON.parse(fs.readFileSync(SA_KEYPATH, "utf8"));
   saId = SA_JSON.client_email;
-  keyFileAuth = new google.auth.GoogleAuth({
+  keyFileAuth = new auth.GoogleAuth({
     keyFile: SA_KEYPATH,
     scopes: ["https://www.googleapis.com/auth/calendar.events"]
   });
@@ -21,7 +21,7 @@ try {
   let oauthJson = fs.readFileSync(OAUTH_KEYPATH, "utf8");
   let oauthKey = JSON.parse(oauthJson).installed;
   const {client_secret, client_id, redirect_uris} = oauthKey;
-  oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+  oAuth2Client = new auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 } catch (err) { console.log(`Error fetching OAuth2: ${err}`);
 }
 
