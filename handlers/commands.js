@@ -11,7 +11,7 @@ const guilds = require("./guilds.js");
 let autoUpdater = [];
 let timerCount = [];
 const eventType = helpers.eventType;
-const { google } = require("googleapis");
+const gCalendar = require("@googleapis/calendar").calendar;
 const { oauth2, sa } = require("../settings.js");
 
 //functions
@@ -169,7 +169,7 @@ function getEvents(guild, channel) {
     orderBy: "startTime",
     timeZone: tz
   };
-  const gCal = google.calendar({version: "v3", auth});
+  const gCal = gCalendar({version: "v3", auth});
   try {
     let matches = [];
     gCal.events.list(params).then((res) => {
@@ -573,7 +573,7 @@ function quickAddEvent(args, guild, channel) {
     calendarId: guild.getSetting("calendarID"),
     text: args.join(" ") // join
   };
-  const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   gCal.events.quickAdd(params).then((res) => {
     const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
     return send(channel, strings.i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate }));
@@ -736,7 +736,7 @@ function deleteEventById(eventID, calendarID, channel) {
     eventId: eventID,
     sendNotifications: true
   };
-  const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   return gCal.events.delete(params).then(() => {
     getEvents(guild, channel);
     setTimeout(() => { updateCalendar(guild, channel, true); }, 2000);
@@ -753,7 +753,7 @@ function listSingleEventsWithinDateRange(guild) {
   log(`listSingleEventsWithinDateRange | ${guild.id}`);
   const dayMap = guild.getDayMap();
   const calendarID = guild.getSetting("calendarID");
-  const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   const params = {
     calendarId: calendarID,
     timeMin: dayMap[0].toISO(),
@@ -850,7 +850,7 @@ function passFail(bool) {
 function validate(guild, channel) {
   log(`validate | ${guild.id}`);
   const guildSettings = guild.getSetting();
-  const gCal = google.calendar({version: "v3", auth: guild.getAuth()});
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   const params = {
     calendarId: guildSettings.calendarID,
     timeMin: DateTime.local().toISO(),
