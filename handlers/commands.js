@@ -531,6 +531,22 @@ function calendarUpdater(guild, channel, human) {
 }
 
 /**
+ * starts calendarUpdater from sidecar
+ * @param {Guild} guild 
+ * @param {String} channelid 
+ */
+function sidecarUpdater(guild, channelid) {
+  log(`sidecarUpdater | ${guild.id} | ${channelid}`);
+  bot.client.shard.broadcastEval(`
+    // fetch log channel
+    const channel = this.channels.cache.get('${channelid}');
+    if (channel) { // check for channel on shard
+      calendarUpdater(guild, channel, true)
+    }
+  `);
+}
+
+/**
  * Post calendar in message channel
  * @param {Guild} guild - Guild to post relative to
  * @param {Snowflake} channel - Initiating channel
@@ -1068,5 +1084,6 @@ function run(cmd, args, message) {
 
 module.exports = {
   run,
-  killUpdateTimer
+  killUpdateTimer,
+  sidecarUpdater
 };

@@ -1,5 +1,5 @@
 let discord = require("discord.js");
-const { readdirSync } = require("fs");
+const { readdirSync, appendFileSync } = require("fs");
 const path = require("path");
 const log = require("debug")("niles:bot");
 let client = new discord.Client();
