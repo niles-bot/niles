@@ -1,6 +1,14 @@
-const fs = require("fs");
-const path = require("path");
-const filename = path.join("stores", "todo_list.json");
+// imports
+const { readFileSync, writeFileSync} = require("fs");
+const { join } = require("path");
+// define todo_list
+const filename = join("..", "stores", "todo_list.json");
+
+/**
+ * Load json file
+ * @returns {[{guild, channel}]} - Array with objects containing guild and chnanel
+ */
+const load = () => JSON.parse(readFileSync(filename, "utf8")).list;
 
 /**
  * Append guild to list
@@ -19,21 +27,16 @@ function append(guild, channel) {
  */
 function remove(guild) {
   let list = load();
+  // recreate list without target
   list = list.filter((item) => item.guild !== guild);
   write(list);
 }
 
 /**
- * Load json file
- * @returns {[{guild, channel}]} - Array with objects containing guild and chnanel
- */
-const load = () => JSON.parse(fs.readFileSync(filename, "utf8")).list;
-
-/**
  * Write list to file
  */
 function write(list) {
-  fs.writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => {
+  writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => {
     if (err) console.log(err);
   });
 }

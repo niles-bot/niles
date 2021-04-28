@@ -1,15 +1,16 @@
 let discord = require("discord.js");
-const { readdirSync, appendFileSync } = require("fs");
-const path = require("path");
+const { readdirSync } = require("fs");
+const { join } = require("path");
 const log = require("debug")("niles:bot");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-const settings = require("./settings.js");
+const TOKEN = require("./settings.js").secrets.bot_token;
 const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
 const helpers = require("./handlers/helpers.js");
 const {i18n} = require("./handlers/strings.js");
+const Bree = require("bree");
 
 // bot properties
 let shardGuilds = [];
@@ -21,7 +22,7 @@ let shardID;
  */
 function getKnownGuilds() {
   log("start getKnownGuilds");
-  let fullPath = path.join(__dirname, "stores");
+  let fullPath = join(__dirname, "stores");
   return readdirSync(fullPath, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
@@ -40,6 +41,16 @@ function addMissingGuilds(availableGuilds) {
     guilds.createGuild(guildID);
   });
 }
+
+const bree = new Bree({
+  jobs: [
+    {
+      name: "sidecar",
+      interval: "1m",
+      timeout: 0
+    }
+  ]
+});
 
 // valid commands
 const validCmd = [
@@ -91,7 +102,7 @@ function runCmd(message) {
   commands.run(cmd, args, message); // all checks passed - run command
 }
 
-client.login(settings.secrets.bot_token);
+client.login(TOKEN);
 
 client.on("ready", () => {
   shardID = client.shard.ids;
@@ -113,6 +124,12 @@ client.on("ready", () => {
         console.log("spawning shards ..."); // send error to console - still sharding
       }
     });
+  // start scheduler
+  bree.start();
+});
+
+bree.on("message", (msg) => {
+  console.log(`master received ${msg}`);
 });
 
 client.on("guildCreate", (guild) => {
