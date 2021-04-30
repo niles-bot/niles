@@ -1,8 +1,8 @@
-let discord = require("discord.js");
+const discord = require("discord.js");
 const { readdirSync } = require("fs");
 const { join } = require("path");
 const log = require("debug")("niles:bot");
-let client = new discord.Client();
+const client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
 const TOKEN = require("./settings.js").secrets.bot_token;
@@ -10,11 +10,17 @@ const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
 const helpers = require("./handlers/helpers.js");
 const {i18n} = require("./handlers/strings.js");
-const Bree = require("bree");
 
 // bot properties
 let shardGuilds = [];
 let shardID;
+
+/**
+ * Start worker update
+ * @param {String} gid - guildid to update from
+ * @param {String} cid - channelid to update to
+ */
+client.workerUpdate = (gid, cid) => commands.workerUpdate(gid, cid);
 
 /**
  * Gets all known guilds
@@ -42,16 +48,6 @@ function addMissingGuilds(availableGuilds) {
   });
 }
 
-const bree = new Bree({
-  jobs: [
-    {
-      name: "sidecar",
-      interval: "1m",
-      timeout: 0
-    }
-  ]
-});
-
 // valid commands
 const validCmd = [
   // init
@@ -63,11 +59,11 @@ const validCmd = [
   // display options
   "displayoptions", "channel", "calname", 
   // channel maintenance
-  "clean", "purge", "validate", "count",
+  "clean", "purge", "validate",
   // bot help
   "stats", "info", "invite", "ping", 
   // admin cmd
-  "timers", "reset"
+  "reset"
 ];
 
 /**
@@ -124,12 +120,6 @@ client.on("ready", () => {
         console.log("spawning shards ..."); // send error to console - still sharding
       }
     });
-  // start scheduler
-  bree.start();
-});
-
-bree.on("message", (msg) => {
-  console.log(`master received ${msg}`);
 });
 
 client.on("guildCreate", (guild) => {

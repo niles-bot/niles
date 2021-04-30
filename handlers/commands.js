@@ -8,8 +8,7 @@ let bot = require("../bot.js");
 const settings = require("../settings.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
-let autoUpdater = [];
-let timerCount = [];
+const updaterList = require("./updaterList.js");
 const eventType = helpers.eventType;
 const { doHandler } = require("./displayoptions.js");
 const gCalendar = require("@googleapis/calendar").calendar;
@@ -92,13 +91,7 @@ function setupAuth(args, guild, channel) {
  * Safely deletes update timer
  * @param {String} guildID - guild to remove from timers
  */
-function killUpdateTimer(guildID) {
-  log(`killUpdateTimer | ${guildID}`);
-  try { 
-    clearInterval(autoUpdater[guildID]);
-    delete timerCount[guildID];
-  } catch (err) { helpers.log(err, `Guild: ${guildID}`); }
-}
+const killUpdateTimer = (guildID) => updaterList.remove(guildID);
 
 /**
  * Cleans messages from the channel
@@ -421,8 +414,7 @@ function generateCalendar(guild, channel) {
     embed.setDescription(generateCalendarCodeblock(guild));
     //Handle Calendars Greater Than 2048 Characters Long
     if (embed.length>2048) {
-      channel.send(i18n.t("calendar.too_long", { lng: guild.lng })
-      );
+      channel.send(i18n.t("calendar.too_long", { lng: guild.lng }));
       p.reject(2048);
       return p.promise;
     }
@@ -444,37 +436,15 @@ function generateCalendar(guild, channel) {
  * Start update timer for guild mentioned
  * @param {String} guildID - ID of guild to update
  * @param {Snowflake} channel - Channel to callback to
- * @param {Guild} guild - Guild object
  */
-function startUpdateTimer(guildID, channel, guild) {
-  log(`startUpdateTimer | ${guildID}`);
-  if (!timerCount[guildID]) {
-    timerCount[guildID] = 0;
-  }
-  //Pull updates on set interval
-  if (!autoUpdater[guildID]) {
-    log(`startUpdateTimer | ${guildID} | no current AU`);
-    timerCount[guildID] += 1;
-    helpers.log(`Starting update timer in guild: ${guildID}`);
-    return autoUpdater[guildID] = setInterval(function func() {
-      calendarUpdater(guild, channel, false);
-    }, settings.secrets.calendar_update_interval);
-  }
-  if (autoUpdater[guildID]._idleTimeout !== settings.secrets.calendar_update_interval) {
-    log(`startUpdateTimer | ${guildID} | restart invalid timeout`);
-    try {
-      timerCount[guildID] += 1;
-      helpers.log(`Starting update timer in guild: ${guildID}`);
-      return autoUpdater[guildID] = setInterval(function func() {
-        calendarUpdater(guild, channel, false);
-      }, settings.secrets.calendar_update_interval);
-    } catch (err) {
-      helpers.log(`error starting the autoupdater ${err}`);
-      killUpdateTimer(guildID);
-    }
-  } else {
-    log(`startUpdateTimer | ${guildID} | not started`);
+function startUpdateTimer(guildID, channel) {
+  if (updaterList.exists(guildID)) {
+    log(`startUpdateTimer | ${guildID} | updater exists exists`);
     return helpers.log(`timer not started in guild: ${guildID}`);
+  } else {
+    log(`startUpdateTimer | ${guildID} | no current updater`);
+    helpers.log(`Starting update timer in guild: ${guildID}`);
+    updaterList.append(guildID, channel);
   }
 }
 
@@ -497,12 +467,10 @@ function updateCalendar(guild, channel, human) {
     generateCalendar(guild, channel).then((embed) => {
       if (embed === 2048) return null;
       m.edit({ embed });
-      if ((timerCount[guild.id] === 0 || !timerCount[guild.id]) && human) {
-        startUpdateTimer(guild.id, channel, guild);
-      }
+      if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel);
     });
   }).catch((err) => {
-    log(`startUpdateTimer | ${err}`);
+    log(`updateCalendar | ${err}`);
     helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
     //If theres an updater running try and kill it.
     channel.send(i18n.t("timerkilled", { lng: guild.lng }));
@@ -531,19 +499,14 @@ function calendarUpdater(guild, channel, human) {
 }
 
 /**
- * starts calendarUpdater from sidecar
- * @param {Guild} guild 
+ * starts workerUpdate from sidecar
+ * @param {String} guildid
  * @param {String} channelid 
  */
-function sidecarUpdater(guild, channelid) {
+function workerUpdate(guildid, channelid) {
+  const guild = new guilds.Guild(guildid);
   log(`sidecarUpdater | ${guild.id} | ${channelid}`);
-  bot.client.shard.broadcastEval(`
-    // fetch log channel
-    const channel = this.channels.cache.get('${channelid}');
-    if (channel) { // check for channel on shard
-      calendarUpdater(guild, channel, true)
-    }
-  `);
+  calendarUpdater(guild, channelid, false);
 }
 
 /**
@@ -565,12 +528,11 @@ function postCalendar(guild, channel) {
     if (embed === 2048) return null;
     channel.send({ embed
     }).then((sent) => {
-      log(`startUpdateTimer | ${guild.id} | calID ${sent.id}`);
+      log(`generateCalendar | ${guild.id} | calID ${sent.id}`);
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
     });
-  }).then(() => {
-    setTimeout(() => { startUpdateTimer(guild.id, channel, guild); }, 2000);
+  }).then(() => { startUpdateTimer(guild.id, channel);
   }).catch((err) => {
     if (err===2048) helpers.log(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
     else helpers.log(`function postCalendar error in guild: ${guild.id} : ${err}`);
@@ -584,7 +546,7 @@ function postCalendar(guild, channel) {
  * @param {Snowflake} channel - Channel to callback to
  */
 function quickAddEvent(args, guild, channel) {
-  log(`startUpdateTimer | ${guild.id} | args ${args}`);
+  log(`quickAddEvent | ${guild.id} | args ${args}`);
   if (!args[0]) return send(channel, i18n.t("quick_add.noarg", { lng: guild.lng }));
   const params = {
     calendarId: guild.getSetting("calendarID"),
@@ -1001,9 +963,7 @@ function setRoles(message, args, guild) {
  */
 function adminCmd (cmd, args) {
   log(`adminCmd | cmd ${cmd} | args: ${args}`);
-  if (cmd === "timers") {
-    return (`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);
-  } else if (cmd === "reset") {
+  if (cmd === "reset") {
     let response = "";
     const shardNo = Number(args[0]); // check for valid shard
     if (isNaN(shardNo)) { response = "Invalid shard number"; // check for valid number
@@ -1069,9 +1029,6 @@ function run(cmd, args, message) {
   } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id);
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
-  } else if (["count"].includes(cmd)) {
-    const theCount = (!timerCount[guildID] ? 0 : timerCount[guildID]);
-    channel.send(`There are ${theCount} timer threads running in this guild`);
   } else if (["timers", "reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
   } else if (["calname"].includes(cmd)) { calName(args, guild, channel);
@@ -1085,5 +1042,5 @@ function run(cmd, args, message) {
 module.exports = {
   run,
   killUpdateTimer,
-  sidecarUpdater
+  workerUpdate
 };

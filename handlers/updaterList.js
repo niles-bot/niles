@@ -1,8 +1,13 @@
-// imports
 const { readFileSync, writeFileSync} = require("fs");
-const { join } = require("path");
-// define todo_list
-const filename = join("..", "stores", "todo_list.json");
+const { join, basename } = require("path");
+const log = require("debug")("updater-list");
+// it ran by bot, do not go to upper directory
+const entry = basename(require.main.filename);
+console.log("===ENTRYPOINT===");
+console.log(entry);
+const filename = join("stores", "todo_list.json");
+
+//const filename = (entry === "commands.js") ? join("..", "stores", "todo_list.json") : join("stores", "todo_list.json");
 
 /**
  * Load json file
@@ -19,6 +24,7 @@ function append(guild, channel) {
   let list = load();
   list.push({guild: guild, channel: channel});
   write(list);
+  log(`append ${guild}`);
 }
 
 /**
@@ -27,18 +33,23 @@ function append(guild, channel) {
  */
 function remove(guild) {
   let list = load();
-  // recreate list without target
-  list = list.filter((item) => item.guild !== guild);
+  list = list.filter((item) => item.guild !== guild); // recreate list without target
   write(list);
+  log(`remove ${guild}`);
 }
 
 /**
- * Write list to file
+ * check if guild exists
+ * @param {String} guild 
+ */
+const exists = (guild) => load().some((obj) => obj.guild === guild);
+
+/**
+ * Append guild to list
+ * @param {String} list 
  */
 function write(list) {
-  writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => {
-    if (err) console.log(err);
-  });
+  writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => { if (err) console.log(err); });
 }
 
 /**
@@ -50,5 +61,6 @@ const getIterator = () => load()[Symbol.iterator]();
 module.exports = {
   append,
   remove,
+  exists,
   getIterator
 };
