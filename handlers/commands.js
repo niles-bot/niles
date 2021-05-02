@@ -1,9 +1,11 @@
 const columnify = require("columnify");
-const os = require("os");
+const { totalmem } = require("os");
+const discord = require("discord.js");
 const { DateTime, Duration } = require("luxon");
 const log = require("debug")("niles:cmd");
+const { discordLog } = require("./discordLog.js");
 const { i18n } = require("./strings.js");
-let bot = require("../bot.js");
+const { client } = require("../bot.js");
 const settings = require("../settings.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
@@ -11,7 +13,6 @@ const updaterList = require("./updaterList.js");
 const eventType = helpers.eventType;
 const { doHandler } = require("./displayoptions.js");
 const gCalendar = require("@googleapis/calendar").calendar;
-const { oauth2, sa } = require("../settings.js");
 
 //functions
 /**
@@ -35,8 +36,8 @@ function send(channel, content, timeout=5000) {
  */
 function getAccessToken(force, guild, channel) {
   log(`getAccessToken | ${guild.id}`);
-  if (!oauth2) { return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng })); }
-  const authUrl = oauth2.generateAuthUrl({
+  if (!settings.oauth2) { return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng })); }
+  const authUrl = settings.oauth2.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/calendar.events"]
   });
@@ -52,7 +53,7 @@ function getAccessToken(force, guild, channel) {
   send(channel, { embed: authEmbed }, 30000 );
   let collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
-    oauth2.getToken(m.content, (err, token) => {
+    settings.oauth2.getToken(m.content, (err, token) => {
       if (err) return send(channel, i18n.t("auth.oauth.err", { lng: guild.lng, err }));
       send(channel, i18n.t("auth.oauth.confirm", { lng: guild.lng }));
       guild.setSetting("auth", "oauth");
@@ -74,12 +75,12 @@ function getAccessToken(force, guild, channel) {
 function setupAuth(args, guild, channel) {
   log(`setupAuth | ${guild.id}`);
   if (args[0] === "oauth") {
-    if (!oauth2) {
+    if (!settings.oauth2) {
       return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
     }
     getAccessToken((args[1] === "force"), guild, channel);
   } else if (args[0] === "sa") {
-    if (!sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
+    if (!settings.sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
     guild.getSetting("auth", "sa");
     send(channel, i18n.t("auth.sa.invite", { lng: guild.lng, saId: settings.saId }), 10000);
   } else { send(channel, i18n.t("auth.noarg", { lng: guild.lng }), 10000);
@@ -91,10 +92,12 @@ function setupAuth(args, guild, channel) {
  * @param {String} guildID - guild to remove from timers
  * @param {String} reason - reason for removal
  */
-const killUpdateTimer = (guildID, reason = "none") => {
+function killUpdateTimer (guildID, reason = "none") {
   updaterList.remove(guildID);
-  console.error(`removed ${guildID} | ${reason}`);
-};
+  const message = `removed ${guildID} | ${reason}`;
+  discordLog(message);
+  console.error(message);
+}
 
 /**
  * Cleans messages from the channel
@@ -139,7 +142,7 @@ function deleteMessages(args, channel, lng) {
     helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
       return clean(channel, argMessages, deleteCalendar);
     }).catch((err) => {
-      helpers.log(err);
+      discordLog(err);
     });
   }
 }
@@ -208,19 +211,19 @@ function getEvents(guild, channel) {
     }).catch((err) => {
       log(`getEvents | ${guild.id} | ${err}`);
       if (err.message.includes("notFound")) {
-        helpers.log(`function getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
+        discordLog(`function getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
         channel.send(i18n.t("no_cal", { lng: guild.lng }));
       } else if (err.message.includes("Invalid Credentials")) { // Catching periodic google rejections;
-        return helpers.log(`function getEvents error in guild: ${guild.id} : 401 invalid credentials`);
+        return discordLog(`function getEvents error in guild: ${guild.id} : 401 invalid credentials`);
       } else {
-        helpers.log(`Error in function getEvents in guild: ${guild.id} : ${err}`);
+        discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
       }
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
       killUpdateTimer(guild.id, "getEvents");
     });
   } catch (err) {
     channel.send(err.code);
-    return helpers.log(`Error in function getEvents in guild: ${guild.id} : ${err}`);
+    return discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
   }
 }
 
@@ -403,7 +406,7 @@ function generateCalendar(guild, channel) {
   const dayMap = guild.getDayMap();
   const guildSettings = guild.getSetting();
   // create embed
-  let embed = new bot.discord.MessageEmbed()
+  let embed = new discord.MessageEmbed()
     .setTitle(guildSettings.calendarName)
     .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
     .setColor("BLUE")
@@ -440,10 +443,10 @@ function generateCalendar(guild, channel) {
 function startUpdateTimer(guildID, channelid) {
   if (updaterList.exists(guildID)) {
     log(`startUpdateTimer | ${guildID} | updater exists exists`);
-    return helpers.log(`timer not started in guild: ${guildID}`);
+    return discordLog(`timer not started in guild: ${guildID}`);
   } else {
     log(`startUpdateTimer | ${guildID} | no current updater`);
-    helpers.log(`Starting update timer in guild: ${guildID}`);
+    discordLog(`Starting update timer in guild: ${guildID}`);
     updaterList.append(guildID, channelid);
   }
 }
@@ -460,7 +463,7 @@ function updateCalendar(guild, channel, human) {
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID === "") {
     channel.send(i18n.t("update.undefined", { lng: guild.lng }));
-    helpers.log(`calendar undefined in ${guild.id}. Killing update timer.`);
+    discordLog(`calendar undefined in ${guild.id}. Killing update timer.`);
     return killUpdateTimer(guild.id, "calendar undefined");
   }
   const embed = generateCalendar(guild, channel);
@@ -469,7 +472,7 @@ function updateCalendar(guild, channel, human) {
     .then((m) => m.edit({ embed }))
     .catch((err) => {
       log(`updateCalendar | ${err}`);
-      helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
+      discordLog(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
       //If theres an updater running try and kill it.
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
       channel.send(i18n.t("update.not_found", { lng: guild.lng }));
@@ -493,7 +496,7 @@ function calendarUpdater(guild, channel, human) {
     setTimeout(() => { getEvents(guild, channel); }, 2000);
     setTimeout(() => { updateCalendar(guild, channel, human); }, 4000);
   } catch (err) {
-    helpers.log(`error in autoupdater in guild: ${guild.id} : ${err}`);
+    discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
     killUpdateTimer(guild.id, "error in autoupdater");
   }
 }
@@ -521,7 +524,7 @@ function postCalendar(guild, channel) {
     channel.messages.fetch(guildCalendarMessageID).then((message) => { message.delete();
     }).catch((err) => {
       if (err.code === 10008) guild.setCalendarID("");
-      return helpers.log(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
+      return discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
     });
   }
   try {
@@ -534,8 +537,8 @@ function postCalendar(guild, channel) {
     });
     startUpdateTimer(guild.id, channel.id);
   } catch (err) {
-    if (err===2048) helpers.log(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
-    else helpers.log(`function postCalendar error in guild: ${guild.id} : ${err}`);
+    if (err===2048) discordLog(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
+    else discordLog(`function postCalendar error in guild: ${guild.id} : ${err}`);
   }
 }
 
@@ -556,7 +559,7 @@ function quickAddEvent(args, guild, channel) {
   gCal.events.quickAdd(params).then((res) => {
     const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
     return send(channel, i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate }));
-  }).catch((err) => { helpers.log(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
+  }).catch((err) => { discordLog(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
   });
 }
 
@@ -579,7 +582,7 @@ function deleteEventById(eventID, calendarID, channel) {
     getEvents(guild, channel);
     setTimeout(() => { updateCalendar(guild, channel, true); }, 2000);
   }).catch((err) => {
-    helpers.log(`function deleteEventById error in guild: ${guild.id} : ${err}`);
+    discordLog(`function deleteEventById error in guild: ${guild.id} : ${err}`);
   });
 }
 
@@ -630,7 +633,7 @@ function nextEvent(guild, channel) {
     // run if message not sent
     log(`deleteEventById | ${guild.id} | no upcoming`);
     return send(channel, i18n.t("next.no_upcoming", {lng: guild.lng }), 10000);
-  }).catch((err) => { helpers.log(err);
+  }).catch((err) => { discordLog(err);
   });
 }
 
@@ -655,7 +658,7 @@ function deleteEvent(args, guild, channel) {
           deleteEventById(curEvent.id, calendarID, channel)
             .then(() => { return send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: curEvent.summary }));
             }).then((res) => { return res.delete({ timeout: 10000 });
-            }).catch((err) => { helpers.log(err);
+            }).catch((err) => { discordLog(err);
             });
         });
         return;
@@ -665,7 +668,7 @@ function deleteEvent(args, guild, channel) {
     log(`deleteEvent | ${guild.id} | no event within range`);
   }).catch((err) => {
     log(`deleteEvent | ${guild.id} | error ${err}`);
-    helpers.log(err);
+    discordLog(err);
     return send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
   });
 }
@@ -714,7 +717,7 @@ function validate(guild, channel) {
     **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
     **On Updater List:** ${passFail(updaterList.exists(guild.id))}
     **Guild ID:** \`${guild.id}\`
-    **Shard:** ${bot.client.shard.ids}
+    **Shard:** ${client.shard.ids}
   `);
 }
 
@@ -724,25 +727,25 @@ function validate(guild, channel) {
  */
 function displayStats(channel) {
   log(`displayStats | ${channel.guild.id}`);
-  bot.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
+  client.shard.fetchClientValues("guilds.cache.size").then((results) => {
     const { version } = require("../package.json");
     const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
-    const totalMem = (os.totalmem()>1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB");
-    const embed = new bot.discord.MessageEmbed()
+    const totalMem = (totalmem()>1073741824 ? (totalmem() / 1073741824).toFixed(1) + " GB" : (totalmem() / 1048576).toFixed() + " MB");
+    const embed = new discord.MessageEmbed()
       .setColor("RED")
       .setTitle(`Niles Bot ${version}`)
       .setURL("https://github.com/niles-bot/niles")
       .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
       .addField("Uptime", Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"), true)
-      .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
+      .addField("Ping", `${(client.ws.ping).toFixed(0)} ms`, true)
       .addField("RAM Usage", `${usedMem}/${totalMem}`, true)
       .addField("System Info", `${process.platform} (${process.arch})\n${totalMem}`, true)
-      .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
-      .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
+      .addField("Libraries", `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
+      .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
       .setFooter("Created by the Niles Bot Team");
     return channel.send({ embed });
   }).catch((err) => {
-    helpers.log(err);
+    discordLog(err);
   });
 }
 
@@ -765,7 +768,7 @@ function calName(args, guild, channel) {
     guild.setSetting("calendarName", newCalName);
     log(`calName | ${guild.id} | changed to ${newCalName}`);    
     return send(channel, i18n.t("calname.confirm", { newCalName, lng: guild.lng }));
-  }).catch((err) => { helpers.log(err);
+  }).catch((err) => { discordLog(err);
   });
 }
 
@@ -780,7 +783,7 @@ function setChannel(args, guild, channel) {
   if (!args[0]) {
     const guildChannelId = guild.getSetting("channelid");
     if (guildChannelId) { // if existing channel
-      const guildChannel = bot.client.channels.cache.get(guildChannelId);
+      const guildChannel = client.channels.cache.get(guildChannelId);
       send(channel, i18n.t("setchannel.current", { name: guildChannel.name, lng: guild.lng }));
     // if no channel set
     } else { send(channel, i18n.t("setchannel.not_set", { lng: guild.lng })); }
@@ -795,7 +798,7 @@ function setChannel(args, guild, channel) {
     send(channel, i18n.t("setchannel.prompt", { channel: channel.name, lng: guild.lng }), 30000);
     // set after collecting yes
     helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("channelid", channel.id);
-    }).catch((err) => { helpers.log(err);
+    }).catch((err) => { discordLog(err);
     });
   }
 }
@@ -818,7 +821,7 @@ function setLocale(args, guild, channel) {
     helpers.yesThenCollector(channel, "en").then(() => {
       log(`setLocale | ${guild.id} | set to locale: ${locale}`);
       return guild.setSetting("lng", locale);
-    }).catch((err) => { helpers.log(err); });
+    }).catch((err) => { discordLog(err); });
   // fails validation
   } else {
     log(`setLocale | ${guild.id} | failed validation: ${locale}`);
@@ -852,7 +855,7 @@ function logID(channel, args, guild) {
     helpers.yesThenCollector(channel, guild.lng).then(() => {
       log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
       return guild.setSetting("calendarID", newCalendarID);
-    }).catch((err) => { helpers.log(err);
+    }).catch((err) => { discordLog(err);
     });
   // no set calendarid, passed validation
   } else {
@@ -884,7 +887,7 @@ function logTz(channel, args, guild) {
       helpers.yesThenCollector(channel, guild.lng).then(() => {
         log(`logID | ${guild.id} | set to newID: ${tz}`);
         return guild.setSetting("timezone", tz);
-      }).catch((err) => { helpers.log(err);
+      }).catch((err) => { discordLog(err);
       });
     // timezone is not set
     } else {
@@ -912,7 +915,7 @@ function setPrefix(channel, args, guild) {
       log(`setPrefix | ${guild.id} | set to: ${newPrefix}`);
       channel.send(`prefix set to ${newPrefix}`);
       return guild.setSetting("prefix", newPrefix);
-    }).catch((err) => { helpers.log(err); });
+    }).catch((err) => { discordLog(err); });
   }
 }
 
@@ -952,7 +955,7 @@ function setRoles(message, args, guild) {
     }
     // prompt for confirmation
     helpers.yesThenCollector(message.channel, guild.lng).then(() => { return guild.setSetting("allowedRoles", roleArray);
-    }).catch((err) => { helpers.log(err); });
+    }).catch((err) => { discordLog(err); });
   }
 }
 
@@ -970,8 +973,8 @@ function adminCmd (cmd, args) {
     if (isNaN(shardNo)) { response = "Invalid shard number"; // check for valid number
     } else {
       response = `Restarting shard ${shardNo}`;
-      helpers.log(response);
-      bot.client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
+      discordLog(response);
+      client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
     }
     return response;
   }
@@ -987,18 +990,18 @@ function run(cmd, args, message) {
   const guildSettings = guild.getSetting();
   const channel = message.channel;
   const lng = guildSettings.lng;
-  const guildChannel = (guildSettings.channelid ? bot.client.channels.cache.get(guildSettings.channelid) : channel);
+  const guildChannel = (guildSettings.channelid ? client.channels.cache.get(guildSettings.channelid) : channel);
   const sentByAdmin = (settings.secrets.admins.includes(message.author.id)); // check if author is admin
   log(`run | ${guildID} | cmd: ${cmd} | args: ${args}`);
   // start commands
-  if (["ping"].includes(cmd)) { channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`);
+  if (["ping"].includes(cmd)) { channel.send(`:ping_pong: !Pong! ${(client.ws.ping).toFixed(0)}ms`);
   } else if (["init"].includes(cmd)) {
     log(`init | ${guildID}`);
     channel.send(i18n.t("reset", {lng: guild.lng}));
     guilds.recreateGuild(guildID);
   } else if (["invite"].includes(cmd)) {
     const inviteEmbed = {
-      description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`,
+      description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) to invite me to your server`,
       color: 0xFFFFF };
     channel.send({ embed: inviteEmbed });
   } else if (["admin"].includes(cmd)) { setRoles(message, args, guild);

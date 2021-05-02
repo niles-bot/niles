@@ -1,7 +1,7 @@
-const settings = require("./settings.js");
+const { secrets } = require("./settings.js");
 const Bree = require("bree");
 const { ShardingManager } = require("discord.js");
-const manager = new ShardingManager("./bot.js", { token: settings.secrets.bot_token });
+const manager = new ShardingManager("./bot.js", { token: secrets.bot_token });
 const debug = require("debug");
 
 manager.spawn(4); // spawn auto
@@ -27,7 +27,7 @@ function workerMessageHandler(msg) {
 const bree = new Bree({
   jobs: [{
     name: "updater",
-    interval: settings.secrets.calendar_update_interval,
+    interval: secrets.calendar_update_interval,
     timeout: "10s"
   }],
   workerMessageHandler,

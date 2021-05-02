@@ -9,6 +9,13 @@ const filename = join(__dirname, "..", "stores", "todo_list.json");
  */
 const load = () => JSON.parse(readFileSync(filename, "utf8")).list;
 
+/**
+ * Append guild to list
+ * @param {String} list 
+ */
+function write(list) {
+  writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => { if (err) console.log(err); });
+}
 
 /**
  * Append guild to list
@@ -17,7 +24,7 @@ const load = () => JSON.parse(readFileSync(filename, "utf8")).list;
  */
 function append(guild, channel) {
   let list = load();
-  list.push({guild: guild, channel: channel});
+  list.push({guild, channel});
   write(list);
   log(`append ${guild}`);
 }
@@ -38,14 +45,6 @@ function remove(guild) {
  * @param {String} guild 
  */
 const exists = (guild) => load().some((obj) => obj.guild === guild);
-
-/**
- * Append guild to list
- * @param {String} list 
- */
-function write(list) {
-  writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => { if (err) console.log(err); });
-}
 
 /**
  * Load iterator from array

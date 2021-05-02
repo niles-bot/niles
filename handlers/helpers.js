@@ -14,60 +14,11 @@ const eventType = {
 };
 
 /**
- * Gets settings file
- * @returns {Object} - Settings object
- */
-function getSettings() {
-  return require("../settings.js");
-}
-
-/**
- * Format log messages with DateTime string
- * [Sun, 10 Sep 2001 00:00:00 GMT]
- * @param {Snowflake} message 
- */
-function formatLogMessage(message) {
-  return `[${new Date().toUTCString()}] ${message}`;
-}
-
-/**
- * Log Messages to discord channel and console
- * @param  {...any} logItems - items to log
- */
-function log(...logItems) {
-  const logMessage = logItems.join(" ");
-  const tripleGrave = "```";
-  const logString = formatLogMessage(logMessage);
-  const logChannelId = getSettings().secrets.log_discord_channel;
-  const superAdmin = getSettings().secrets.admins[0];
-  // send to all shards
-  bot.client.shard.broadcastEval(`
-    if (!'${logChannelId}') {
-      console.log("no log channel defined");
-    }
-    // fetch log channel
-    const channel = this.channels.cache.get('${logChannelId}');
-    if (channel) { // check for channel on shard
-      channel.send('${tripleGrave} ${logString} ${tripleGrave}');
-      if ('${logString}'.includes("all shards spawned")) {
-        channel.send("<@${superAdmin}>");
-      }
-      console.log('${logString}'); // send to console only once to avoid multiple lines
-    }
-  `)
-    .catch((err) => {
-      console.log(err);
-    });
-}
-
-/**
  * Validates timezone
  * @param {String} tz 
  * @returns {Boolean}
  */
-function validateTz(tz) {
-  return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
-}
+const validateTz = (tz) => (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 
 /**
  * Make a guild setting formatted time string from timezone adjusted date object
@@ -232,7 +183,6 @@ function matchCalType(calendarID, channel, guild) {
 
 module.exports = {
   validateTz,
-  log,
   getStringTime,
   checkRole,
   permissionCheck,
