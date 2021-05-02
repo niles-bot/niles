@@ -15,16 +15,13 @@ const {i18n} = require("./handlers/strings.js");
 let shardGuilds = [];
 let shardID;
 
-/**
- * Start worker update
- * @param {String} gid - guildid to update from
- * @param {String} cid - channelid to update to
- */
-client.workerUpdate = (gid, cid) => {
-  log("workerUpdater start");
-  console.log(`gid: ${gid}, cid ${cid}`);
-  commands.workerUpdate(gid, cid);
-};
+client.on("nilesCalendarUpdate", (gid, cid) => {
+  const channel = client.channels.cache.get(cid);
+  if (channel) { // only run updater if channel is on shard
+    log (`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
+    commands.workerUpdate(gid, channel);
+  }
+});
 
 /**
  * Gets all known guilds

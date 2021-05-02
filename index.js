@@ -4,7 +4,7 @@ const { ShardingManager } = require("discord.js");
 const manager = new ShardingManager("./bot.js", { token: settings.secrets.bot_token });
 const debug = require("debug");
 
-manager.spawn(); // spawn auto
+manager.spawn(4); // spawn auto
 manager.on("shardCreate", (shard) => {
   console.log(`Spawned shard ${shard.id}`);
 });
@@ -21,15 +21,7 @@ const logger = {
  */
 function workerMessageHandler(msg) {
   const { guild, channel } = msg.message;
-  // fetch and check for channel
-  manager.broadcastEval(`
-    try {
-      const uChannel = this.channels.cache.get('${channel}');
-      if (uChannel) this.workerUpdate('${guild}', '${channel}')
-    } catch (err) {
-      if (err.name === "Error [SHARDING_IN_PROCESS]") console.log("spawning shards ...");
-    }
-  `);
+  manager.broadcastEval(`this.emit('nilesCalendarUpdate', '${guild}', '${channel}')`);
 }
 
 const bree = new Bree({

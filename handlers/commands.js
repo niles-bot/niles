@@ -89,8 +89,12 @@ function setupAuth(args, guild, channel) {
 /**
  * Safely deletes update timer
  * @param {String} guildID - guild to remove from timers
+ * @param {String} reason - reason for removal
  */
-const killUpdateTimer = (guildID) => updaterList.remove(guildID);
+const killUpdateTimer = (guildID, reason = "none") => {
+  updaterList.remove(guildID);
+  console.error(`removed ${guildID} | ${reason}`);
+};
 
 /**
  * Cleans messages from the channel
@@ -105,7 +109,7 @@ function clean(channel, numMsg, deleteCal) {
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (deleteCal) {
     guild.setCalendarID(""); // delete calendar id
-    killUpdateTimer(guild.id);
+    killUpdateTimer(guild.id, "clean");
     channel.bulkDelete(numMsg, true); // delete messages
   } else {
     channel.messages.fetch({ limit: numMsg })
@@ -212,7 +216,7 @@ function getEvents(guild, channel) {
         helpers.log(`Error in function getEvents in guild: ${guild.id} : ${err}`);
       }
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-      killUpdateTimer(guild.id);
+      killUpdateTimer(guild.id, "getEvents");
     });
   } catch (err) {
     channel.send(err.code);
@@ -457,23 +461,24 @@ function updateCalendar(guild, channel, human) {
   if (guildCalendarMessageID === "") {
     channel.send(i18n.t("update.undefined", { lng: guild.lng }));
     helpers.log(`calendar undefined in ${guild.id}. Killing update timer.`);
-    return killUpdateTimer(guild.id);
+    return killUpdateTimer(guild.id, "calendar undefined");
   }
   const embed = generateCalendar(guild, channel);
-  channel.messages.fetch(guildCalendarMessageID).then((m) => {
-    if (embed === 2048) return null;
-    m.edit({ embed });
-    if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel.id);
-  }).catch((err) => {
-    log(`updateCalendar | ${err}`);
-    helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
-    //If theres an updater running try and kill it.
-    channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-    channel.send(i18n.t("update.not_found", { lng: guild.lng }));
-    killUpdateTimer(guild.id);
-    guild.setCalendarID("");
-    return;
-  });
+  if (embed === 2048) return null;
+  channel.messages.fetch(guildCalendarMessageID)
+    .then((m) => m.edit({ embed }))
+    .catch((err) => {
+      log(`updateCalendar | ${err}`);
+      helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
+      //If theres an updater running try and kill it.
+      channel.send(i18n.t("timerkilled", { lng: guild.lng }));
+      channel.send(i18n.t("update.not_found", { lng: guild.lng }));
+      killUpdateTimer(guild.id, "previous not found");
+      guild.setCalendarID("");
+      return;
+    });
+  // if no errors thrown and not on updaterlist, start timer
+  if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel.id);
 }
 
 /**
@@ -489,24 +494,19 @@ function calendarUpdater(guild, channel, human) {
     setTimeout(() => { updateCalendar(guild, channel, human); }, 4000);
   } catch (err) {
     helpers.log(`error in autoupdater in guild: ${guild.id} : ${err}`);
-    killUpdateTimer(guild.id);
+    killUpdateTimer(guild.id, "error in autoupdater");
   }
 }
 
 /**
  * starts workerUpdate from sidecar
  * @param {String} guildid
- * @param {String} channelid 
+ * @param {Snowflake} channel
  */
-function workerUpdate(guildid, channelid) {
-  console.log("start cmd wu");
+function workerUpdate(guildid, channel) {
   const guild = new guilds.Guild(guildid);
-  console.log(guild.id);
-  const channel = bot.client.channels.cache.get(channel);
-  console.log(channel.id);
-  console.log(`sidecarUpdater | ${guild.id} | ${channelid}`);
+  log(`workerUpdate | ${guild.id} | ${channel.id}`);
   calendarUpdater(guild, channel, false);
-  console.log("end cmd wu");
 }
 
 /**
@@ -524,19 +524,19 @@ function postCalendar(guild, channel) {
       return helpers.log(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
     });
   }
-  generateCalendar(guild, channel).then((embed) => {
+  try {
+    const embed = generateCalendar(guild, channel);
     if (embed === 2048) return null;
-    channel.send({ embed
-    }).then((sent) => {
+    channel.send({ embed }).then((sent) => {
       log(`generateCalendar | ${guild.id} | calID ${sent.id}`);
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
     });
-  }).then(() => { startUpdateTimer(guild.id, channel.id);
-  }).catch((err) => {
+    startUpdateTimer(guild.id, channel.id);
+  } catch (err) {
     if (err===2048) helpers.log(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
     else helpers.log(`function postCalendar error in guild: ${guild.id} : ${err}`);
-  });
+  }
 }
 
 /**
@@ -712,6 +712,7 @@ function validate(guild, channel) {
     **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
     **Calendar Test:** ${passFail(calTest)}
     **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
+    **On Updater List:** ${passFail(updaterList.exists(guild.id))}
     **Guild ID:** \`${guild.id}\`
     **Shard:** ${bot.client.shard.ids}
   `);
@@ -1026,7 +1027,7 @@ function run(cmd, args, message) {
   } else if (["displayoptions"].includes(cmd)) { doHandler(args, guild, channel);
   } else if (["stats", "info"].includes(cmd)) { displayStats(channel);
   } else if (["get"].includes(cmd)) { getEvents(guild, channel);
-  } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id);
+  } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id, "stop command");
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
   } else if (["timers", "reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
