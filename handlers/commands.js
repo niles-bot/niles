@@ -1,4 +1,3 @@
-const defer = require("promise-defer");
 const columnify = require("columnify");
 const os = require("os");
 const { DateTime, Duration } = require("luxon");
@@ -399,7 +398,6 @@ function generateCalendar(guild, channel) {
   log(`generateCalendar | ${guild.id}`);
   const dayMap = guild.getDayMap();
   const guildSettings = guild.getSetting();
-  let p = defer();
   // create embed
   let embed = new bot.discord.MessageEmbed()
     .setTitle(guildSettings.calendarName)
@@ -415,8 +413,7 @@ function generateCalendar(guild, channel) {
     //Handle Calendars Greater Than 2048 Characters Long
     if (embed.length>2048) {
       channel.send(i18n.t("calendar.too_long", { lng: guild.lng }));
-      p.reject(2048);
-      return p.promise;
+      return 2048;
     }
   } else if (guildSettings.style === "embed") {
     embed.fields = generateCalendarEmbed(guild);
@@ -428,23 +425,22 @@ function generateCalendar(guild, channel) {
   if (guildSettings.tzDisplay === "1") { // display timezone
     embed.addField("Timezone", guildSettings.timezone, false);
   }
-  p.resolve(embed);
-  return p.promise;
+  return embed;
 }
 
 /**
  * Start update timer for guild mentioned
  * @param {String} guildID - ID of guild to update
- * @param {Snowflake} channel - Channel to callback to
+ * @param {String} channelid - ID of channel to callback to
  */
-function startUpdateTimer(guildID, channel) {
+function startUpdateTimer(guildID, channelid) {
   if (updaterList.exists(guildID)) {
     log(`startUpdateTimer | ${guildID} | updater exists exists`);
     return helpers.log(`timer not started in guild: ${guildID}`);
   } else {
     log(`startUpdateTimer | ${guildID} | no current updater`);
     helpers.log(`Starting update timer in guild: ${guildID}`);
-    updaterList.append(guildID, channel);
+    updaterList.append(guildID, channelid);
   }
 }
 
@@ -463,12 +459,11 @@ function updateCalendar(guild, channel, human) {
     helpers.log(`calendar undefined in ${guild.id}. Killing update timer.`);
     return killUpdateTimer(guild.id);
   }
+  const embed = generateCalendar(guild, channel);
   channel.messages.fetch(guildCalendarMessageID).then((m) => {
-    generateCalendar(guild, channel).then((embed) => {
-      if (embed === 2048) return null;
-      m.edit({ embed });
-      if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel);
-    });
+    if (embed === 2048) return null;
+    m.edit({ embed });
+    if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel.id);
   }).catch((err) => {
     log(`updateCalendar | ${err}`);
     helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
@@ -504,9 +499,14 @@ function calendarUpdater(guild, channel, human) {
  * @param {String} channelid 
  */
 function workerUpdate(guildid, channelid) {
+  console.log("start cmd wu");
   const guild = new guilds.Guild(guildid);
-  log(`sidecarUpdater | ${guild.id} | ${channelid}`);
-  calendarUpdater(guild, channelid, false);
+  console.log(guild.id);
+  const channel = bot.client.channels.cache.get(channel);
+  console.log(channel.id);
+  console.log(`sidecarUpdater | ${guild.id} | ${channelid}`);
+  calendarUpdater(guild, channel, false);
+  console.log("end cmd wu");
 }
 
 /**
@@ -532,7 +532,7 @@ function postCalendar(guild, channel) {
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
     });
-  }).then(() => { startUpdateTimer(guild.id, channel);
+  }).then(() => { startUpdateTimer(guild.id, channel.id);
   }).catch((err) => {
     if (err===2048) helpers.log(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
     else helpers.log(`function postCalendar error in guild: ${guild.id} : ${err}`);

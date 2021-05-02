@@ -20,7 +20,11 @@ let shardID;
  * @param {String} gid - guildid to update from
  * @param {String} cid - channelid to update to
  */
-client.workerUpdate = (gid, cid) => commands.workerUpdate(gid, cid);
+client.workerUpdate = (gid, cid) => {
+  log("workerUpdater start");
+  console.log(`gid: ${gid}, cid ${cid}`);
+  commands.workerUpdate(gid, cid);
+};
 
 /**
  * Gets all known guilds

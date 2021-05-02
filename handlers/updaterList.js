@@ -1,19 +1,14 @@
 const { readFileSync, writeFileSync} = require("fs");
-const { join, basename } = require("path");
-const log = require("debug")("updater-list");
-// it ran by bot, do not go to upper directory
-const entry = basename(require.main.filename);
-console.log("===ENTRYPOINT===");
-console.log(entry);
-const filename = join("stores", "todo_list.json");
-
-//const filename = (entry === "commands.js") ? join("..", "stores", "todo_list.json") : join("stores", "todo_list.json");
+const { join } = require("path");
+const log = require("debug")("niles:updater-list");
+const filename = join(__dirname, "..", "stores", "todo_list.json");
 
 /**
  * Load json file
  * @returns {[{guild, channel}]} - Array with objects containing guild and chnanel
  */
 const load = () => JSON.parse(readFileSync(filename, "utf8")).list;
+
 
 /**
  * Append guild to list

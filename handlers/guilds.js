@@ -60,7 +60,7 @@ function deleteFolderRecursive(path) {
  * @param {String} file - file name to write to - calendar/settings 
  */
 function writeGuildSpecific(guildID, json, file) {
-  log(`writeGuildSpecific | ${guildID} | json: ${json} | file: ${file}`);
+  log(`writeGuildSpecific | ${guildID} | file: ${file}`);
   let fullPath = path.join(__dirname, "..", "stores", guildID, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
     if (err) return log("error writing guild specific database: " + err);
