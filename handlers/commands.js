@@ -265,22 +265,20 @@ function eventNameCreator(event, guildSettings) {
  * @returns {String}
  */
 function durationString(event, guild) {
+  // check for early exit condition
+  // middle of multi-day or no time, must be "All Day"
+  if (Object.keys(event.start).includes("date") || event.type === eventType.MULTIMID) return "All Day";
+  // event must have dateTime
   const guildSettings = guild.getSetting();
-  let duration;
-  if (Object.keys(event.start).includes("date")) duration = "All Day";
-  else if (Object.keys(event.start).includes("dateTime")) {
-    let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
-    let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
-    if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
-      tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
-    }
-    if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
-      tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
-    }
-    if (event.type === eventType.MULTIMID) duration = "All Day";
-    else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
+  let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
+  let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
+  if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
+    tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
   }
-  return duration;
+  if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
+    tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
+  }
+  return (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
 }
 
 /**
@@ -681,15 +679,14 @@ function searchEventName(summary, guild, channel) {
 function deleteEvent(args, guild, channel) {
   log(`deleteEvent | ${guild.id} | args: ${args}`);
   if (!args[0]) return send(channel, i18n.t("deleteevent.noarg", {lng: guild.lng }));
-  const text = args.join(" "); // join
-  const calendarID = guild.getSetting("calendarID");
-  const event = searchEventName(text, guild, channel);
+  const event = searchEventName(args.join(" "), guild, channel); // search for event
   if (!event) {
     send(channel, i18n.t("deleteevent.not_found", {lng: guild.lng }));
     return log(`deleteEvent | ${guild.id} | no event within range`);
   }
   let promptDate = (event.start.dateTime ? event.start.dateTime : event.start.date);
   send(channel, i18n.t("deleteevent.prompt", {lng: guild.lng, summary: event.summary, promptDate}), 30000);
+  const calendarID = guild.getSetting("calendarID");
   helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
     deleteEventById(event.id, calendarID, channel)
       .then(() => { send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: event.summary }));
