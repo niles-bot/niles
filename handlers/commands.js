@@ -1033,7 +1033,7 @@ function run(cmd, args, message) {
   } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id, "stop command");
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
-  } else if (["timers", "reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
+  } else if (["reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
   } else if (["calname"].includes(cmd)) { calName(args, guild, channel);
   } else if (["auth"].includes(cmd)) { setupAuth(args, guild, channel);
