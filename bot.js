@@ -1,14 +1,13 @@
 const discord = require("discord.js");
 const { readdirSync } = require("fs");
 const { join } = require("path");
-const log = require("debug")("niles:bot");
-const { discordLog } = require("./handlers/discordLog.js");
+const debug = require("debug")("niles:bot");
 const client = new discord.Client();
 exports.client = client;
 const TOKEN = require("./settings.js").secrets.bot_token;
 const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
-const { checkRole, permissionCheck } = require("./handlers/helpers.js");
+const { checkRole, permissionCheck, log } = require("./handlers/helpers.js");
 const { i18n } = require("./handlers/strings.js");
 
 // bot properties
@@ -18,7 +17,7 @@ let shardID;
 client.on("nilesCalendarUpdate", (gid, cid) => {
   const channel = client.channels.cache.get(cid);
   if (channel) { // only run updater if channel is on shard
-    log (`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
+    debug(`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
     commands.workerUpdate(gid, channel);
   }
 });
@@ -28,7 +27,7 @@ client.on("nilesCalendarUpdate", (gid, cid) => {
  * @returns {[String]} - Array of guildids
  */
 function getKnownGuilds() {
-  log("start getKnownGuilds");
+  debug("start getKnownGuilds");
   let fullPath = join(__dirname, "stores");
   return readdirSync(fullPath, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
@@ -44,7 +43,7 @@ function addMissingGuilds(availableGuilds) {
   const knownGuilds = getKnownGuilds();
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildID) => {
-    log(`creating new guild: ${guildID}`);
+    debug(`creating new guild: ${guildID}`);
     guilds.createGuild(guildID);
   });
 }
@@ -95,7 +94,7 @@ function runCmd(message) {
   if (missingPermissions.includes("SEND_MESSAGES")) {
     message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`${missingPermissions}\`\`\``);
   }
-  discordLog(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
+  log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
   commands.run(cmd, args, message); // all checks passed - run command
 }
 
@@ -103,7 +102,7 @@ client.login(TOKEN);
 
 client.on("ready", () => {
   shardID = client.shard.ids;
-  discordLog(`Bot is logged in. Shard: ${shardID}`);
+  log(`Bot is logged in. Shard: ${shardID}`);
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
     .then((results) => {
@@ -113,10 +112,10 @@ client.on("ready", () => {
         });
       });
       addMissingGuilds(shardGuilds); // start adding missing guilds
-      return discordLog("all shards spawned"); // all shards spawned
+      return log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
-      log(`guild cache error: ${err}`);
+      debug(`guild cache error: ${err}`);
       if (err.name === "Error [SHARDING_IN_PROCESS]") {
         console.log("spawning shards ..."); // send error to console - still sharding
       }
@@ -136,7 +135,7 @@ client.on("message", (message) => {
     if (message.channel.type === "dm" || message.author.bot) return; // ignore if dm or sent by bot
     runCmd(message); // run command through parser
   } catch (err) {
-    discordLog(`error running main message handler in guild: ${message.guild.id} : ${err}`);
+    log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
   }
 });
 
@@ -146,7 +145,7 @@ client.on("message", (message) => {
  * @param {String} msg - message prior to exit
  */
 function handle(msg) {
-  discordLog(msg);
+  log(msg);
   client.destroy();
   process.exit();
 }
@@ -154,11 +153,11 @@ function handle(msg) {
 process.on("SIGINT", handle);
 
 process.on("uncaughtException", (err) => {
-  console.log(err.stack);
+  console.error(err.stack);
   handle("uncaughtException error" + err);
 });
 
 process.on("unhandledRejection", (err) => {
-  discordLog("Promise Rejection: " + err);
+  log("Promise Rejection: " + err);
   if (err.code === "ECONNRESET") handle("ECONNRESET");
 });

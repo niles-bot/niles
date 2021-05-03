@@ -4,7 +4,7 @@ const { ShardingManager } = require("discord.js");
 const manager = new ShardingManager("./bot.js", { token: secrets.bot_token });
 const debug = require("debug");
 
-manager.spawn(4); // spawn auto
+manager.spawn(); // spawn auto
 manager.on("shardCreate", (shard) => {
   console.log(`Spawned shard ${shard.id}`);
 });
