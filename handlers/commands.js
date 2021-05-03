@@ -171,12 +171,11 @@ function getEvents(guild, channel) {
   };
   const gCal = gCalendar({version: "v3", auth});
   try {
-    let matches = [];
     gCal.events.list(params).then((res) => {
       log(`getEvents - list | ${guild.id}`);
       for (let day = 0; day < dayMap.length; day++) {
         let key = "day" + String(day);
-        matches = [];
+        let matches = [];
         res.data.items.map((event) => {
           let eStartDate;
           let eEndDate;
@@ -260,6 +259,31 @@ function eventNameCreator(event, guildSettings) {
 }
 
 /**
+ * Creates duration string
+ * @param {Event} event - Event to create for
+ * @param {Guild} guild - guild to pull settings from
+ * @returns {String}
+ */
+function durationString(event, guild) {
+  const guildSettings = guild.getSetting();
+  let duration;
+  if (Object.keys(event.start).includes("date")) duration = "All Day";
+  else if (Object.keys(event.start).includes("dateTime")) {
+    let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
+    let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
+    if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
+      tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
+    }
+    if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
+      tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
+    }
+    if (event.type === eventType.MULTIMID) duration = "All Day";
+    else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
+  }
+  return duration;
+}
+
+/**
  * Generate codeblock messsage for calendar display
  * @param {Guild} guild - guild to create for
  */
@@ -280,7 +304,7 @@ function generateCalendarCodeblock(guild) {
       sendString += "```\n";
       // Map events for each day
       guildCalendar[key].map((event) => {
-        let options = {
+        const options = {
           showHeaders: false,
           columnSplitter: " | ",
           columns: ["time", "events"],
@@ -295,26 +319,9 @@ function generateCalendarCodeblock(guild) {
           }
         };
         const eventTitle = (event.summary) ? helpers.trimEventName(event.summary, guildSettings.trim) : " ";
-        if (Object.keys(event.start).includes("date")) {
-          // no need for temp start/fin dates
-          const tempString = {"All Day": eventTitle};
-          sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
-        } else if (Object.keys(event.start).includes("dateTime")) {
-          // keep the - centered depending on format option
-          let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
-          let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
-          let duration = "";
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
-          }
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
-          }
-          if (event.type === eventType.MULTIMID) duration = "All Day";
-          else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
-          const tempString = {[duration]: eventTitle};
-          sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
-        }
+        const duration = durationString(event, guild);
+        const tempString = {[duration]: eventTitle};
+        sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
       });
       sendString += "```";
     }
@@ -322,6 +329,28 @@ function generateCalendarCodeblock(guild) {
   }
   log(`generateCalendarCodeblock | ${guild.id}| finalString ${finalString}`);
   return finalString; // return finalstring to generateCalendar
+}
+
+/**
+ * Create event strings for emebeds
+ * @param {Event} event - Event to create strings for
+ * @param {Guild} guild - guild with settings to pull from
+ * @Returns {String} - constructed event string
+ */
+function embedEventString(event, guild) {
+  const guildSettings = guild.getSetting();
+  const duration = durationString(event, guild);
+  const eventTitle = eventNameCreator(event, guildSettings); // add link if there is a location
+  let eventString = (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
+  // limit description length
+  const descLength = guildSettings.descLength;
+  const description = helpers.descriptionParser(event.description);
+  const trimmed = (descLength ? description.slice(0, descLength) : description);
+  // if we should add description
+  if ((description !== "undefined") && (guildSettings.description === "1")) {
+    eventString += `\`${trimmed}\`\n`;
+  }
+  return eventString;
 }
 
 /**
@@ -347,42 +376,14 @@ function generateCalendarEmbed(guild) {
     else {
       // Map events for each day
       guildCalendar[key].forEach((event) => {
-        let duration = "";
-        // no need for temp start/fin dates
-        if (Object.keys(event.start).includes("date")) duration = "All Day";
-        else if (Object.keys(event.start).includes("dateTime")) {
-          let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
-          let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
-          }
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
-          }
-          if (event.type === eventType.MULTIMID) duration = "All Day";
-          else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
-        }
-        // construct field object with summary + description
-        // add link if there is a location
-        const eventTitle = eventNameCreator(event, guildSettings);
-        tempValue += (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
-        // add title length to counter
-        msgLength += eventTitle.length;
-        // limitDescriptionLength
-        const descLength = guildSettings.descLength;
-        const description = helpers.descriptionParser(event.description);
-        const trimmed = (descLength ? description.slice(0, descLength) : description);
-        // if we should add description
-        if ((description !== "undefined") && (guildSettings.description === "1")) {
-          tempValue += `\`${trimmed}\`\n`;
-          // add description length to counter
-          msgLength += trimmed.length;
-        }
+        tempValue += embedEventString(event, guild);
       });
     }
     // finalize field object
     log(`generateCalendarEmbed | ${guild.id} | value ${tempValue}`);
     fieldObj.value = tempValue;
+    // add to msgLength
+    msgLength += tempValue.length();
     fields.push(fieldObj);
   }
   // check if too many characters
@@ -406,8 +407,8 @@ function generateCalendar(guild, channel) {
   const dayMap = guild.getDayMap();
   const guildSettings = guild.getSetting();
   // create embed
-  let embed = new discord.MessageEmbed()
-    .setTitle(guildSettings.calendarName)
+  let embed = new discord.MessageEmbed();
+  embed.setTitle(guildSettings.calendarName)
     .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
     .setColor("BLUE")
     .setFooter("Last update")
@@ -493,8 +494,8 @@ function updateCalendar(guild, channel, human) {
 function calendarUpdater(guild, channel, human) {
   log(`calendarUpdater | ${guild.id}`);
   try {
-    setTimeout(() => { getEvents(guild, channel); }, 2000);
-    setTimeout(() => { updateCalendar(guild, channel, human); }, 4000);
+    getEvents(guild, channel);
+    updateCalendar(guild, channel, human);
   } catch (err) {
     discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
     killUpdateTimer(guild.id, "error in autoupdater");
@@ -580,7 +581,7 @@ function deleteEventById(eventID, calendarID, channel) {
   const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   return gCal.events.delete(params).then(() => {
     getEvents(guild, channel);
-    setTimeout(() => { updateCalendar(guild, channel, true); }, 2000);
+    updateCalendar(guild, channel, true);
   }).catch((err) => {
     discordLog(`function deleteEventById error in guild: ${guild.id} : ${err}`);
   });
@@ -607,6 +608,19 @@ function listSingleEventsWithinDateRange(guild) {
 }
 
 /**
+ * Converts duration to human-readable string
+ * @param {Object} duration - duration to convert
+ * @returns {String} - String represenation of duration
+ */
+function durationToString(duration) {
+  let timeToString = "";
+  if (duration.days) timeToString += `${duration.days} days `;
+  if (duration.hours) timeToString += `${duration.hours} hours `;
+  if (duration.minutes) timeToString += `${duration.minutes} minutes`;
+  return timeToString;
+}
+
+/**
  * Displays the next upcoming event in the calendar file
  * @param {Snowflake} channel - Channel to respond to
  * @returns {Snowflake} response with confirmation or failiure
@@ -623,10 +637,7 @@ function nextEvent(guild, channel) {
         // description is passed in - option to be added
         // construct string
         const timeTo = luxonDate.diff(now).shiftTo("days", "hours", "minutes", "seconds").toObject();
-        let timeToString = "";
-        if (timeTo.days) timeToString += `${timeTo.days} days `;
-        if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
-        if (timeTo.minutes) timeToString += `${timeTo.minutes} minutes`;
+        const timeToString = durationToString(timeTo);
         return channel.send(i18n.t("next.next", { summary: eventObj.summary, timeToString, lng: guild.lng }));
       }
     }
@@ -635,6 +646,30 @@ function nextEvent(guild, channel) {
     return send(channel, i18n.t("next.no_upcoming", {lng: guild.lng }), 10000);
   }).catch((err) => { discordLog(err);
   });
+}
+
+/**
+ * Search and return for event with given name
+ * @param {String} summary - summary of event to search for 
+ * @param {Guild} guild - Guild with calendar settings
+ * @param {Snowflake} channel - channel to send errors to
+ * @returns {Event} - event matching summary if exists
+ */
+function searchEventName(summary, guild, channel) {
+  listSingleEventsWithinDateRange(guild)
+    .then((resp) => {
+      if (!resp.data) return; // return if no data
+      for (let curEvent of resp.data.items) {
+        if (curEvent.summary && summary.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
+          return curEvent;
+        }
+      }
+    }).catch((err) => {
+      log(`deleteEvent | ${guild.id} | error ${err}`);
+      discordLog(err);
+      send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
+    });
+  return false;
 }
 
 /**
@@ -648,28 +683,19 @@ function deleteEvent(args, guild, channel) {
   if (!args[0]) return send(channel, i18n.t("deleteevent.noarg", {lng: guild.lng }));
   const text = args.join(" "); // join
   const calendarID = guild.getSetting("calendarID");
-  listSingleEventsWithinDateRange(guild).then((resp) => {
-    if (!resp.data) return; // return if no data
-    for (const curEvent of resp.data.items) {
-      if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
-        let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
-        send(channel, i18n.t("deleteevent.prompt", {lng: guild.lng, summary: curEvent.summary, promptDate}), 30000);
-        helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
-          deleteEventById(curEvent.id, calendarID, channel)
-            .then(() => { return send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: curEvent.summary }));
-            }).then((res) => { return res.delete({ timeout: 10000 });
-            }).catch((err) => { discordLog(err);
-            });
-        });
-        return;
-      }
-    }
+  const event = searchEventName(text, guild, channel);
+  if (!event) {
     send(channel, i18n.t("deleteevent.not_found", {lng: guild.lng }));
-    log(`deleteEvent | ${guild.id} | no event within range`);
-  }).catch((err) => {
-    log(`deleteEvent | ${guild.id} | error ${err}`);
-    discordLog(err);
-    return send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
+    return log(`deleteEvent | ${guild.id} | no event within range`);
+  }
+  let promptDate = (event.start.dateTime ? event.start.dateTime : event.start.date);
+  send(channel, i18n.t("deleteevent.prompt", {lng: guild.lng, summary: event.summary, promptDate}), 30000);
+  helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
+    deleteEventById(event.id, calendarID, channel)
+      .then(() => { send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: event.summary }));
+      }).then((res) => { res.delete({ timeout: 10000 });
+      }).catch((err) => { discordLog(err);
+      });
   });
 }
 
@@ -678,9 +704,7 @@ function deleteEvent(args, guild, channel) {
  * @param {boolean} bool
  * @returns {String}
  */
-function passFail(bool) {
-  return (bool ? "Passed 🟢" : "Failed 🔴");
-}
+const passFail = (bool) => (bool ? "Passed 🟢" : "Failed 🔴");
 
 /**
  * Checks for any issues with guild configuration
@@ -1020,8 +1044,8 @@ function run(cmd, args, message) {
   } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel, guild.lng);
   } else if (["display"].includes(cmd)) {
     log(`display | ${guildID}`);
-    setTimeout(() => { getEvents(guild, guildChannel); }, 1000);
-    setTimeout(() => { postCalendar(guild, guildChannel); }, 2000);
+    getEvents(guild, guildChannel);
+    postCalendar(guild, guildChannel);
   } else if (["update", "sync"].includes(cmd)) { calendarUpdater(guild, guildChannel, true);
   } else if (["create", "scrim"].includes(cmd)) {
     log(`create | ${guildID}`);
