@@ -1,27 +1,28 @@
 {
   "name": "niles",
-  "version": "4.4.3",
+  "version": "4.5.0-beta",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "windowsDebug": "@powershell -Command $env:DEBUG='*';node index.js"
+    "windowsDebug": "@powershell -Command $env:DEBUG='niles:*';node index.js"
   },
   "author": "Sean Coffey",
   "license": "MIT",
   "dependencies": {
     "@googleapis/calendar": "^0.2.0",
+    "bree": "^6.2.0",
     "columnify": "^1.5.4",
     "debug": "^4.3.1",
     "discord.js": "^12.5.3",
-    "i18next": "^20.2.1",
+    "i18next": "^20.2.2",
     "i18next-fs-backend": "^1.1.1",
     "luxon": "^1.26.0",
     "promise-defer": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.24.0"
+    "eslint": "^7.25.0"
   },
   "repository": {
     "type": "git",

@@ -1,19 +1,18 @@
-const defer = require("promise-defer");
 const columnify = require("columnify");
-const os = require("os");
+const { totalmem } = require("os");
+const discord = require("discord.js");
 const { DateTime, Duration } = require("luxon");
 const log = require("debug")("niles:cmd");
 const { i18n } = require("./strings.js");
-let bot = require("../bot.js");
+const { client } = require("../bot.js");
 const settings = require("../settings.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
-let autoUpdater = [];
-let timerCount = [];
+const updaterList = require("./updaterList.js");
+const discordLog = helpers.log;
 const eventType = helpers.eventType;
 const { doHandler } = require("./displayoptions.js");
 const gCalendar = require("@googleapis/calendar").calendar;
-const { oauth2, sa } = require("../settings.js");
 
 //functions
 /**
@@ -37,8 +36,8 @@ function send(channel, content, timeout=5000) {
  */
 function getAccessToken(force, guild, channel) {
   log(`getAccessToken | ${guild.id}`);
-  if (!oauth2) { return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng })); }
-  const authUrl = oauth2.generateAuthUrl({
+  if (!settings.oauth2) { return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng })); }
+  const authUrl = settings.oauth2.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/calendar.events"]
   });
@@ -54,7 +53,7 @@ function getAccessToken(force, guild, channel) {
   send(channel, { embed: authEmbed }, 30000 );
   let collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
-    oauth2.getToken(m.content, (err, token) => {
+    settings.oauth2.getToken(m.content, (err, token) => {
       if (err) return send(channel, i18n.t("auth.oauth.err", { lng: guild.lng, err }));
       send(channel, i18n.t("auth.oauth.confirm", { lng: guild.lng }));
       guild.setSetting("auth", "oauth");
@@ -76,12 +75,12 @@ function getAccessToken(force, guild, channel) {
 function setupAuth(args, guild, channel) {
   log(`setupAuth | ${guild.id}`);
   if (args[0] === "oauth") {
-    if (!oauth2) {
+    if (!settings.oauth2) {
       return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
     }
     getAccessToken((args[1] === "force"), guild, channel);
   } else if (args[0] === "sa") {
-    if (!sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
+    if (!settings.sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
     guild.getSetting("auth", "sa");
     send(channel, i18n.t("auth.sa.invite", { lng: guild.lng, saId: settings.saId }), 10000);
   } else { send(channel, i18n.t("auth.noarg", { lng: guild.lng }), 10000);
@@ -91,13 +90,13 @@ function setupAuth(args, guild, channel) {
 /**
  * Safely deletes update timer
  * @param {String} guildID - guild to remove from timers
+ * @param {String} reason - reason for removal
  */
-function killUpdateTimer(guildID) {
-  log(`killUpdateTimer | ${guildID}`);
-  try { 
-    clearInterval(autoUpdater[guildID]);
-    delete timerCount[guildID];
-  } catch (err) { helpers.log(err, `Guild: ${guildID}`); }
+function killUpdateTimer (guildID, reason = "none") {
+  updaterList.remove(guildID);
+  const message = `removed ${guildID} | ${reason}`;
+  discordLog(message);
+  console.error(message);
 }
 
 /**
@@ -113,7 +112,7 @@ function clean(channel, numMsg, deleteCal) {
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (deleteCal) {
     guild.setCalendarID(""); // delete calendar id
-    killUpdateTimer(guild.id);
+    killUpdateTimer(guild.id, "clean");
     channel.bulkDelete(numMsg, true); // delete messages
   } else {
     channel.messages.fetch({ limit: numMsg })
@@ -143,7 +142,7 @@ function deleteMessages(args, channel, lng) {
     helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
       return clean(channel, argMessages, deleteCalendar);
     }).catch((err) => {
-      helpers.log(err);
+      discordLog(err);
     });
   }
 }
@@ -172,12 +171,11 @@ function getEvents(guild, channel) {
   };
   const gCal = gCalendar({version: "v3", auth});
   try {
-    let matches = [];
     gCal.events.list(params).then((res) => {
       log(`getEvents - list | ${guild.id}`);
       for (let day = 0; day < dayMap.length; day++) {
         let key = "day" + String(day);
-        matches = [];
+        let matches = [];
         res.data.items.map((event) => {
           let eStartDate;
           let eEndDate;
@@ -212,19 +210,19 @@ function getEvents(guild, channel) {
     }).catch((err) => {
       log(`getEvents | ${guild.id} | ${err}`);
       if (err.message.includes("notFound")) {
-        helpers.log(`function getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
+        discordLog(`function getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
         channel.send(i18n.t("no_cal", { lng: guild.lng }));
       } else if (err.message.includes("Invalid Credentials")) { // Catching periodic google rejections;
-        return helpers.log(`function getEvents error in guild: ${guild.id} : 401 invalid credentials`);
+        return discordLog(`function getEvents error in guild: ${guild.id} : 401 invalid credentials`);
       } else {
-        helpers.log(`Error in function getEvents in guild: ${guild.id} : ${err}`);
+        discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
       }
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-      killUpdateTimer(guild.id);
+      killUpdateTimer(guild.id, "getEvents");
     });
   } catch (err) {
     channel.send(err.code);
-    return helpers.log(`Error in function getEvents in guild: ${guild.id} : ${err}`);
+    return discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
   }
 }
 
@@ -261,6 +259,29 @@ function eventNameCreator(event, guildSettings) {
 }
 
 /**
+ * Creates duration string
+ * @param {Event} event - Event to create for
+ * @param {Guild} guild - guild to pull settings from
+ * @returns {String}
+ */
+function durationString(event, guild) {
+  // check for early exit condition
+  // middle of multi-day or no time, must be "All Day"
+  if (Object.keys(event.start).includes("date") || event.type === eventType.MULTIMID) return "All Day";
+  // event must have dateTime
+  const guildSettings = guild.getSetting();
+  let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
+  let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
+  if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
+    tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
+  }
+  if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
+    tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
+  }
+  return (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
+}
+
+/**
  * Generate codeblock messsage for calendar display
  * @param {Guild} guild - guild to create for
  */
@@ -281,7 +302,7 @@ function generateCalendarCodeblock(guild) {
       sendString += "```\n";
       // Map events for each day
       guildCalendar[key].map((event) => {
-        let options = {
+        const options = {
           showHeaders: false,
           columnSplitter: " | ",
           columns: ["time", "events"],
@@ -296,26 +317,9 @@ function generateCalendarCodeblock(guild) {
           }
         };
         const eventTitle = (event.summary) ? helpers.trimEventName(event.summary, guildSettings.trim) : " ";
-        if (Object.keys(event.start).includes("date")) {
-          // no need for temp start/fin dates
-          const tempString = {"All Day": eventTitle};
-          sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
-        } else if (Object.keys(event.start).includes("dateTime")) {
-          // keep the - centered depending on format option
-          let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
-          let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
-          let duration = "";
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
-          }
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
-          }
-          if (event.type === eventType.MULTIMID) duration = "All Day";
-          else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
-          const tempString = {[duration]: eventTitle};
-          sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
-        }
+        const duration = durationString(event, guild);
+        const tempString = {[duration]: eventTitle};
+        sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
       });
       sendString += "```";
     }
@@ -323,6 +327,28 @@ function generateCalendarCodeblock(guild) {
   }
   log(`generateCalendarCodeblock | ${guild.id}| finalString ${finalString}`);
   return finalString; // return finalstring to generateCalendar
+}
+
+/**
+ * Create event strings for emebeds
+ * @param {Event} event - Event to create strings for
+ * @param {Guild} guild - guild with settings to pull from
+ * @Returns {String} - constructed event string
+ */
+function embedEventString(event, guild) {
+  const guildSettings = guild.getSetting();
+  const duration = durationString(event, guild);
+  const eventTitle = eventNameCreator(event, guildSettings); // add link if there is a location
+  let eventString = (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
+  // limit description length
+  const descLength = guildSettings.descLength;
+  const description = helpers.descriptionParser(event.description);
+  const trimmed = (descLength ? description.slice(0, descLength) : description);
+  // if we should add description
+  if ((description !== "undefined") && (guildSettings.description === "1")) {
+    eventString += `\`${trimmed}\`\n`;
+  }
+  return eventString;
 }
 
 /**
@@ -348,42 +374,14 @@ function generateCalendarEmbed(guild) {
     else {
       // Map events for each day
       guildCalendar[key].forEach((event) => {
-        let duration = "";
-        // no need for temp start/fin dates
-        if (Object.keys(event.start).includes("date")) duration = "All Day";
-        else if (Object.keys(event.start).includes("dateTime")) {
-          let tempStartDate = ((guildSettings.format === 24) ? "....." : "........");
-          let tempFinDate = ((guildSettings.format === 24) ? "....." : "........");
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTISTART) {
-            tempStartDate = helpers.getStringTime(event.start.dateTime, guild);
-          }
-          if (event.type === eventType.SINGLE || event.type === eventType.MULTYEND) {
-            tempFinDate = helpers.getStringTime(event.end.dateTime, guild);
-          }
-          if (event.type === eventType.MULTIMID) duration = "All Day";
-          else duration = (guildSettings.startonly === "1" ? tempStartDate : tempStartDate + " - " + tempFinDate); // optionally only show start time
-        }
-        // construct field object with summary + description
-        // add link if there is a location
-        const eventTitle = eventNameCreator(event, guildSettings);
-        tempValue += (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
-        // add title length to counter
-        msgLength += eventTitle.length;
-        // limitDescriptionLength
-        const descLength = guildSettings.descLength;
-        const description = helpers.descriptionParser(event.description);
-        const trimmed = (descLength ? description.slice(0, descLength) : description);
-        // if we should add description
-        if ((description !== "undefined") && (guildSettings.description === "1")) {
-          tempValue += `\`${trimmed}\`\n`;
-          // add description length to counter
-          msgLength += trimmed.length;
-        }
+        tempValue += embedEventString(event, guild);
       });
     }
     // finalize field object
     log(`generateCalendarEmbed | ${guild.id} | value ${tempValue}`);
     fieldObj.value = tempValue;
+    // add to msgLength
+    msgLength += tempValue.length();
     fields.push(fieldObj);
   }
   // check if too many characters
@@ -406,10 +404,9 @@ function generateCalendar(guild, channel) {
   log(`generateCalendar | ${guild.id}`);
   const dayMap = guild.getDayMap();
   const guildSettings = guild.getSetting();
-  let p = defer();
   // create embed
-  let embed = new bot.discord.MessageEmbed()
-    .setTitle(guildSettings.calendarName)
+  let embed = new discord.MessageEmbed();
+  embed.setTitle(guildSettings.calendarName)
     .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
     .setColor("BLUE")
     .setFooter("Last update")
@@ -421,10 +418,8 @@ function generateCalendar(guild, channel) {
     embed.setDescription(generateCalendarCodeblock(guild));
     //Handle Calendars Greater Than 2048 Characters Long
     if (embed.length>2048) {
-      channel.send(i18n.t("calendar.too_long", { lng: guild.lng })
-      );
-      p.reject(2048);
-      return p.promise;
+      channel.send(i18n.t("calendar.too_long", { lng: guild.lng }));
+      return 2048;
     }
   } else if (guildSettings.style === "embed") {
     embed.fields = generateCalendarEmbed(guild);
@@ -436,45 +431,22 @@ function generateCalendar(guild, channel) {
   if (guildSettings.tzDisplay === "1") { // display timezone
     embed.addField("Timezone", guildSettings.timezone, false);
   }
-  p.resolve(embed);
-  return p.promise;
+  return embed;
 }
 
 /**
  * Start update timer for guild mentioned
  * @param {String} guildID - ID of guild to update
- * @param {Snowflake} channel - Channel to callback to
- * @param {Guild} guild - Guild object
+ * @param {String} channelid - ID of channel to callback to
  */
-function startUpdateTimer(guildID, channel, guild) {
-  log(`startUpdateTimer | ${guildID}`);
-  if (!timerCount[guildID]) {
-    timerCount[guildID] = 0;
-  }
-  //Pull updates on set interval
-  if (!autoUpdater[guildID]) {
-    log(`startUpdateTimer | ${guildID} | no current AU`);
-    timerCount[guildID] += 1;
-    helpers.log(`Starting update timer in guild: ${guildID}`);
-    return autoUpdater[guildID] = setInterval(function func() {
-      calendarUpdater(guild, channel, false);
-    }, settings.secrets.calendar_update_interval);
-  }
-  if (autoUpdater[guildID]._idleTimeout !== settings.secrets.calendar_update_interval) {
-    log(`startUpdateTimer | ${guildID} | restart invalid timeout`);
-    try {
-      timerCount[guildID] += 1;
-      helpers.log(`Starting update timer in guild: ${guildID}`);
-      return autoUpdater[guildID] = setInterval(function func() {
-        calendarUpdater(guild, channel, false);
-      }, settings.secrets.calendar_update_interval);
-    } catch (err) {
-      helpers.log(`error starting the autoupdater ${err}`);
-      killUpdateTimer(guildID);
-    }
+function startUpdateTimer(guildID, channelid) {
+  if (updaterList.exists(guildID)) {
+    log(`startUpdateTimer | ${guildID} | updater exists exists`);
+    return discordLog(`timer not started in guild: ${guildID}`);
   } else {
-    log(`startUpdateTimer | ${guildID} | not started`);
-    return helpers.log(`timer not started in guild: ${guildID}`);
+    log(`startUpdateTimer | ${guildID} | no current updater`);
+    discordLog(`Starting update timer in guild: ${guildID}`);
+    updaterList.append(guildID, channelid);
   }
 }
 
@@ -490,27 +462,25 @@ function updateCalendar(guild, channel, human) {
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID === "") {
     channel.send(i18n.t("update.undefined", { lng: guild.lng }));
-    helpers.log(`calendar undefined in ${guild.id}. Killing update timer.`);
-    return killUpdateTimer(guild.id);
+    discordLog(`calendar undefined in ${guild.id}. Killing update timer.`);
+    return killUpdateTimer(guild.id, "calendar undefined");
   }
-  channel.messages.fetch(guildCalendarMessageID).then((m) => {
-    generateCalendar(guild, channel).then((embed) => {
-      if (embed === 2048) return null;
-      m.edit({ embed });
-      if ((timerCount[guild.id] === 0 || !timerCount[guild.id]) && human) {
-        startUpdateTimer(guild.id, channel, guild);
-      }
+  const embed = generateCalendar(guild, channel);
+  if (embed === 2048) return null;
+  channel.messages.fetch(guildCalendarMessageID)
+    .then((m) => m.edit({ embed }))
+    .catch((err) => {
+      log(`updateCalendar | ${err}`);
+      discordLog(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
+      //If theres an updater running try and kill it.
+      channel.send(i18n.t("timerkilled", { lng: guild.lng }));
+      channel.send(i18n.t("update.not_found", { lng: guild.lng }));
+      killUpdateTimer(guild.id, "previous not found");
+      guild.setCalendarID("");
+      return;
     });
-  }).catch((err) => {
-    log(`startUpdateTimer | ${err}`);
-    helpers.log(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
-    //If theres an updater running try and kill it.
-    channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-    channel.send(i18n.t("update.not_found", { lng: guild.lng }));
-    killUpdateTimer(guild.id);
-    guild.setCalendarID("");
-    return;
-  });
+  // if no errors thrown and not on updaterlist, start timer
+  if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel.id);
 }
 
 /**
@@ -522,12 +492,23 @@ function updateCalendar(guild, channel, human) {
 function calendarUpdater(guild, channel, human) {
   log(`calendarUpdater | ${guild.id}`);
   try {
-    setTimeout(() => { getEvents(guild, channel); }, 2000);
-    setTimeout(() => { updateCalendar(guild, channel, human); }, 4000);
+    getEvents(guild, channel);
+    updateCalendar(guild, channel, human);
   } catch (err) {
-    helpers.log(`error in autoupdater in guild: ${guild.id} : ${err}`);
-    killUpdateTimer(guild.id);
+    discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
+    killUpdateTimer(guild.id, "error in autoupdater");
   }
+}
+
+/**
+ * starts workerUpdate from sidecar
+ * @param {String} guildid
+ * @param {Snowflake} channel
+ */
+function workerUpdate(guildid, channel) {
+  const guild = new guilds.Guild(guildid);
+  log(`workerUpdate | ${guild.id} | ${channel.id}`);
+  calendarUpdater(guild, channel, false);
 }
 
 /**
@@ -542,23 +523,22 @@ function postCalendar(guild, channel) {
     channel.messages.fetch(guildCalendarMessageID).then((message) => { message.delete();
     }).catch((err) => {
       if (err.code === 10008) guild.setCalendarID("");
-      return helpers.log(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
+      return discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
     });
   }
-  generateCalendar(guild, channel).then((embed) => {
+  try {
+    const embed = generateCalendar(guild, channel);
     if (embed === 2048) return null;
-    channel.send({ embed
-    }).then((sent) => {
-      log(`startUpdateTimer | ${guild.id} | calID ${sent.id}`);
+    channel.send({ embed }).then((sent) => {
+      log(`generateCalendar | ${guild.id} | calID ${sent.id}`);
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
     });
-  }).then(() => {
-    setTimeout(() => { startUpdateTimer(guild.id, channel, guild); }, 2000);
-  }).catch((err) => {
-    if (err===2048) helpers.log(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
-    else helpers.log(`function postCalendar error in guild: ${guild.id} : ${err}`);
-  });
+    startUpdateTimer(guild.id, channel.id);
+  } catch (err) {
+    if (err===2048) discordLog(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
+    else discordLog(`function postCalendar error in guild: ${guild.id} : ${err}`);
+  }
 }
 
 /**
@@ -568,7 +548,7 @@ function postCalendar(guild, channel) {
  * @param {Snowflake} channel - Channel to callback to
  */
 function quickAddEvent(args, guild, channel) {
-  log(`startUpdateTimer | ${guild.id} | args ${args}`);
+  log(`quickAddEvent | ${guild.id} | args ${args}`);
   if (!args[0]) return send(channel, i18n.t("quick_add.noarg", { lng: guild.lng }));
   const params = {
     calendarId: guild.getSetting("calendarID"),
@@ -578,7 +558,7 @@ function quickAddEvent(args, guild, channel) {
   gCal.events.quickAdd(params).then((res) => {
     const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
     return send(channel, i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate }));
-  }).catch((err) => { helpers.log(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
+  }).catch((err) => { discordLog(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
   });
 }
 
@@ -599,9 +579,9 @@ function deleteEventById(eventID, calendarID, channel) {
   const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   return gCal.events.delete(params).then(() => {
     getEvents(guild, channel);
-    setTimeout(() => { updateCalendar(guild, channel, true); }, 2000);
+    updateCalendar(guild, channel, true);
   }).catch((err) => {
-    helpers.log(`function deleteEventById error in guild: ${guild.id} : ${err}`);
+    discordLog(`function deleteEventById error in guild: ${guild.id} : ${err}`);
   });
 }
 
@@ -626,6 +606,19 @@ function listSingleEventsWithinDateRange(guild) {
 }
 
 /**
+ * Converts duration to human-readable string
+ * @param {Object} duration - duration to convert
+ * @returns {String} - String represenation of duration
+ */
+function durationToString(duration) {
+  let timeToString = "";
+  if (duration.days) timeToString += `${duration.days} days `;
+  if (duration.hours) timeToString += `${duration.hours} hours `;
+  if (duration.minutes) timeToString += `${duration.minutes} minutes`;
+  return timeToString;
+}
+
+/**
  * Displays the next upcoming event in the calendar file
  * @param {Snowflake} channel - Channel to respond to
  * @returns {Snowflake} response with confirmation or failiure
@@ -642,18 +635,39 @@ function nextEvent(guild, channel) {
         // description is passed in - option to be added
         // construct string
         const timeTo = luxonDate.diff(now).shiftTo("days", "hours", "minutes", "seconds").toObject();
-        let timeToString = "";
-        if (timeTo.days) timeToString += `${timeTo.days} days `;
-        if (timeTo.hours) timeToString += `${timeTo.hours} hours `;
-        if (timeTo.minutes) timeToString += `${timeTo.minutes} minutes`;
+        const timeToString = durationToString(timeTo);
         return channel.send(i18n.t("next.next", { summary: eventObj.summary, timeToString, lng: guild.lng }));
       }
     }
     // run if message not sent
     log(`deleteEventById | ${guild.id} | no upcoming`);
     return send(channel, i18n.t("next.no_upcoming", {lng: guild.lng }), 10000);
-  }).catch((err) => { helpers.log(err);
+  }).catch((err) => { discordLog(err);
   });
+}
+
+/**
+ * Search and return for event with given name
+ * @param {String} summary - summary of event to search for 
+ * @param {Guild} guild - Guild with calendar settings
+ * @param {Snowflake} channel - channel to send errors to
+ * @returns {Event} - event matching summary if exists
+ */
+function searchEventName(summary, guild, channel) {
+  listSingleEventsWithinDateRange(guild)
+    .then((resp) => {
+      if (!resp.data) return; // return if no data
+      for (let curEvent of resp.data.items) {
+        if (curEvent.summary && summary.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
+          return curEvent;
+        }
+      }
+    }).catch((err) => {
+      log(`deleteEvent | ${guild.id} | error ${err}`);
+      discordLog(err);
+      send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
+    });
+  return false;
 }
 
 /**
@@ -665,30 +679,20 @@ function nextEvent(guild, channel) {
 function deleteEvent(args, guild, channel) {
   log(`deleteEvent | ${guild.id} | args: ${args}`);
   if (!args[0]) return send(channel, i18n.t("deleteevent.noarg", {lng: guild.lng }));
-  const text = args.join(" "); // join
-  const calendarID = guild.getSetting("calendarID");
-  listSingleEventsWithinDateRange(guild).then((resp) => {
-    if (!resp.data) return; // return if no data
-    for (const curEvent of resp.data.items) {
-      if (curEvent.summary && text.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
-        let promptDate = (curEvent.start.dateTime ? curEvent.start.dateTime : curEvent.start.date);
-        send(channel, i18n.t("deleteevent.prompt", {lng: guild.lng, summary: curEvent.summary, promptDate}), 30000);
-        helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
-          deleteEventById(curEvent.id, calendarID, channel)
-            .then(() => { return send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: curEvent.summary }));
-            }).then((res) => { return res.delete({ timeout: 10000 });
-            }).catch((err) => { helpers.log(err);
-            });
-        });
-        return;
-      }
-    }
+  const event = searchEventName(args.join(" "), guild, channel); // search for event
+  if (!event) {
     send(channel, i18n.t("deleteevent.not_found", {lng: guild.lng }));
-    log(`deleteEvent | ${guild.id} | no event within range`);
-  }).catch((err) => {
-    log(`deleteEvent | ${guild.id} | error ${err}`);
-    helpers.log(err);
-    return send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
+    return log(`deleteEvent | ${guild.id} | no event within range`);
+  }
+  let promptDate = (event.start.dateTime ? event.start.dateTime : event.start.date);
+  send(channel, i18n.t("deleteevent.prompt", {lng: guild.lng, summary: event.summary, promptDate}), 30000);
+  const calendarID = guild.getSetting("calendarID");
+  helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
+    deleteEventById(event.id, calendarID, channel)
+      .then(() => { send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: event.summary }));
+      }).then((res) => { res.delete({ timeout: 10000 });
+      }).catch((err) => { discordLog(err);
+      });
   });
 }
 
@@ -697,9 +701,7 @@ function deleteEvent(args, guild, channel) {
  * @param {boolean} bool
  * @returns {String}
  */
-function passFail(bool) {
-  return (bool ? "Passed 🟢" : "Failed 🔴");
-}
+const passFail = (bool) => (bool ? "Passed 🟢" : "Failed 🔴");
 
 /**
  * Checks for any issues with guild configuration
@@ -734,8 +736,9 @@ function validate(guild, channel) {
     **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
     **Calendar Test:** ${passFail(calTest)}
     **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
+    **On Updater List:** ${passFail(updaterList.exists(guild.id))}
     **Guild ID:** \`${guild.id}\`
-    **Shard:** ${bot.client.shard.ids}
+    **Shard:** ${client.shard.ids}
   `);
 }
 
@@ -745,25 +748,25 @@ function validate(guild, channel) {
  */
 function displayStats(channel) {
   log(`displayStats | ${channel.guild.id}`);
-  bot.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
+  client.shard.fetchClientValues("guilds.cache.size").then((results) => {
     const { version } = require("../package.json");
     const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
-    const totalMem = (os.totalmem()>1073741824 ? (os.totalmem() / 1073741824).toFixed(1) + " GB" : (os.totalmem() / 1048576).toFixed() + " MB");
-    const embed = new bot.discord.MessageEmbed()
+    const totalMem = (totalmem()>1073741824 ? (totalmem() / 1073741824).toFixed(1) + " GB" : (totalmem() / 1048576).toFixed() + " MB");
+    const embed = new discord.MessageEmbed()
       .setColor("RED")
       .setTitle(`Niles Bot ${version}`)
       .setURL("https://github.com/niles-bot/niles")
       .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
       .addField("Uptime", Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"), true)
-      .addField("Ping", `${(bot.client.ws.ping).toFixed(0)} ms`, true)
+      .addField("Ping", `${(client.ws.ping).toFixed(0)} ms`, true)
       .addField("RAM Usage", `${usedMem}/${totalMem}`, true)
       .addField("System Info", `${process.platform} (${process.arch})\n${totalMem}`, true)
-      .addField("Libraries", `[Discord.js](https://discord.js.org) v${bot.discord.version}\nNode.js ${process.version}`, true)
-      .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
+      .addField("Libraries", `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
+      .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
       .setFooter("Created by the Niles Bot Team");
     return channel.send({ embed });
   }).catch((err) => {
-    helpers.log(err);
+    discordLog(err);
   });
 }
 
@@ -786,7 +789,7 @@ function calName(args, guild, channel) {
     guild.setSetting("calendarName", newCalName);
     log(`calName | ${guild.id} | changed to ${newCalName}`);    
     return send(channel, i18n.t("calname.confirm", { newCalName, lng: guild.lng }));
-  }).catch((err) => { helpers.log(err);
+  }).catch((err) => { discordLog(err);
   });
 }
 
@@ -801,7 +804,7 @@ function setChannel(args, guild, channel) {
   if (!args[0]) {
     const guildChannelId = guild.getSetting("channelid");
     if (guildChannelId) { // if existing channel
-      const guildChannel = bot.client.channels.cache.get(guildChannelId);
+      const guildChannel = client.channels.cache.get(guildChannelId);
       send(channel, i18n.t("setchannel.current", { name: guildChannel.name, lng: guild.lng }));
     // if no channel set
     } else { send(channel, i18n.t("setchannel.not_set", { lng: guild.lng })); }
@@ -816,7 +819,7 @@ function setChannel(args, guild, channel) {
     send(channel, i18n.t("setchannel.prompt", { channel: channel.name, lng: guild.lng }), 30000);
     // set after collecting yes
     helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("channelid", channel.id);
-    }).catch((err) => { helpers.log(err);
+    }).catch((err) => { discordLog(err);
     });
   }
 }
@@ -839,7 +842,7 @@ function setLocale(args, guild, channel) {
     helpers.yesThenCollector(channel, "en").then(() => {
       log(`setLocale | ${guild.id} | set to locale: ${locale}`);
       return guild.setSetting("lng", locale);
-    }).catch((err) => { helpers.log(err); });
+    }).catch((err) => { discordLog(err); });
   // fails validation
   } else {
     log(`setLocale | ${guild.id} | failed validation: ${locale}`);
@@ -873,7 +876,7 @@ function logID(channel, args, guild) {
     helpers.yesThenCollector(channel, guild.lng).then(() => {
       log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
       return guild.setSetting("calendarID", newCalendarID);
-    }).catch((err) => { helpers.log(err);
+    }).catch((err) => { discordLog(err);
     });
   // no set calendarid, passed validation
   } else {
@@ -905,7 +908,7 @@ function logTz(channel, args, guild) {
       helpers.yesThenCollector(channel, guild.lng).then(() => {
         log(`logID | ${guild.id} | set to newID: ${tz}`);
         return guild.setSetting("timezone", tz);
-      }).catch((err) => { helpers.log(err);
+      }).catch((err) => { discordLog(err);
       });
     // timezone is not set
     } else {
@@ -933,7 +936,7 @@ function setPrefix(channel, args, guild) {
       log(`setPrefix | ${guild.id} | set to: ${newPrefix}`);
       channel.send(`prefix set to ${newPrefix}`);
       return guild.setSetting("prefix", newPrefix);
-    }).catch((err) => { helpers.log(err); });
+    }).catch((err) => { discordLog(err); });
   }
 }
 
@@ -973,7 +976,7 @@ function setRoles(message, args, guild) {
     }
     // prompt for confirmation
     helpers.yesThenCollector(message.channel, guild.lng).then(() => { return guild.setSetting("allowedRoles", roleArray);
-    }).catch((err) => { helpers.log(err); });
+    }).catch((err) => { discordLog(err); });
   }
 }
 
@@ -985,16 +988,14 @@ function setRoles(message, args, guild) {
  */
 function adminCmd (cmd, args) {
   log(`adminCmd | cmd ${cmd} | args: ${args}`);
-  if (cmd === "timers") {
-    return (`There are ${Object.keys(timerCount).length} timers running on shard ${bot.client.shard.ids}.`);
-  } else if (cmd === "reset") {
+  if (cmd === "reset") {
     let response = "";
     const shardNo = Number(args[0]); // check for valid shard
     if (isNaN(shardNo)) { response = "Invalid shard number"; // check for valid number
     } else {
       response = `Restarting shard ${shardNo}`;
-      helpers.log(response);
-      bot.client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
+      discordLog(response);
+      client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
     }
     return response;
   }
@@ -1010,18 +1011,18 @@ function run(cmd, args, message) {
   const guildSettings = guild.getSetting();
   const channel = message.channel;
   const lng = guildSettings.lng;
-  const guildChannel = (guildSettings.channelid ? bot.client.channels.cache.get(guildSettings.channelid) : channel);
+  const guildChannel = (guildSettings.channelid ? client.channels.cache.get(guildSettings.channelid) : channel);
   const sentByAdmin = (settings.secrets.admins.includes(message.author.id)); // check if author is admin
   log(`run | ${guildID} | cmd: ${cmd} | args: ${args}`);
   // start commands
-  if (["ping"].includes(cmd)) { channel.send(`:ping_pong: !Pong! ${(bot.client.ws.ping).toFixed(0)}ms`);
+  if (["ping"].includes(cmd)) { channel.send(`:ping_pong: !Pong! ${(client.ws.ping).toFixed(0)}ms`);
   } else if (["init"].includes(cmd)) {
     log(`init | ${guildID}`);
     channel.send(i18n.t("reset", {lng: guild.lng}));
     guilds.recreateGuild(guildID);
   } else if (["invite"].includes(cmd)) {
     const inviteEmbed = {
-      description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${bot.client.user.id}) to invite me to your server`,
+      description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) to invite me to your server`,
       color: 0xFFFFF };
     channel.send({ embed: inviteEmbed });
   } else if (["admin"].includes(cmd)) { setRoles(message, args, guild);
@@ -1040,8 +1041,8 @@ function run(cmd, args, message) {
   } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel, guild.lng);
   } else if (["display"].includes(cmd)) {
     log(`display | ${guildID}`);
-    setTimeout(() => { getEvents(guild, guildChannel); }, 1000);
-    setTimeout(() => { postCalendar(guild, guildChannel); }, 2000);
+    getEvents(guild, guildChannel);
+    postCalendar(guild, guildChannel);
   } else if (["update", "sync"].includes(cmd)) { calendarUpdater(guild, guildChannel, true);
   } else if (["create", "scrim"].includes(cmd)) {
     log(`create | ${guildID}`);
@@ -1050,13 +1051,10 @@ function run(cmd, args, message) {
   } else if (["displayoptions"].includes(cmd)) { doHandler(args, guild, channel);
   } else if (["stats", "info"].includes(cmd)) { displayStats(channel);
   } else if (["get"].includes(cmd)) { getEvents(guild, channel);
-  } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id);
+  } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id, "stop command");
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
-  } else if (["count"].includes(cmd)) {
-    const theCount = (!timerCount[guildID] ? 0 : timerCount[guildID]);
-    channel.send(`There are ${theCount} timer threads running in this guild`);
-  } else if (["timers", "reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
+  } else if (["reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
   } else if (["calname"].includes(cmd)) { calName(args, guild, channel);
   } else if (["auth"].includes(cmd)) { setupAuth(args, guild, channel);
@@ -1068,5 +1066,6 @@ function run(cmd, args, message) {
 
 module.exports = {
   run,
-  killUpdateTimer
+  killUpdateTimer,
+  workerUpdate
 };

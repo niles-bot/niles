@@ -1,27 +1,34 @@
-let discord = require("discord.js");
+const discord = require("discord.js");
 const { readdirSync } = require("fs");
-const path = require("path");
-const log = require("debug")("niles:bot");
-let client = new discord.Client();
-exports.discord = discord;
+const { join } = require("path");
+const debug = require("debug")("niles:bot");
+const client = new discord.Client();
 exports.client = client;
-const settings = require("./settings.js");
+const TOKEN = require("./settings.js").secrets.bot_token;
 const commands = require("./handlers/commands.js");
 const guilds = require("./handlers/guilds.js");
-const helpers = require("./handlers/helpers.js");
-const {i18n} = require("./handlers/strings.js");
+const { checkRole, permissionCheck, log } = require("./handlers/helpers.js");
+const { i18n } = require("./handlers/strings.js");
 
 // bot properties
 let shardGuilds = [];
 let shardID;
+
+client.on("nilesCalendarUpdate", (gid, cid) => {
+  const channel = client.channels.cache.get(cid);
+  if (channel) { // only run updater if channel is on shard
+    debug(`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
+    commands.workerUpdate(gid, channel);
+  }
+});
 
 /**
  * Gets all known guilds
  * @returns {[String]} - Array of guildids
  */
 function getKnownGuilds() {
-  log("start getKnownGuilds");
-  let fullPath = path.join(__dirname, "stores");
+  debug("start getKnownGuilds");
+  let fullPath = join(__dirname, "stores");
   return readdirSync(fullPath, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
@@ -36,7 +43,7 @@ function addMissingGuilds(availableGuilds) {
   const knownGuilds = getKnownGuilds();
   const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
   unknownGuilds.forEach((guildID) => {
-    log(`creating new guild: ${guildID}`);
+    debug(`creating new guild: ${guildID}`);
     guilds.createGuild(guildID);
   });
 }
@@ -52,11 +59,11 @@ const validCmd = [
   // display options
   "displayoptions", "channel", "calname", 
   // channel maintenance
-  "clean", "purge", "validate", "count",
+  "clean", "purge", "validate",
   // bot help
   "stats", "info", "invite", "ping", 
   // admin cmd
-  "timers", "reset"
+  "reset"
 ];
 
 /**
@@ -78,24 +85,24 @@ function runCmd(message) {
   // ignore non-whitelisted commands
   if (!validCmd.includes(cmd)) return;
   // check if user is allowed to interact with Niles
-  if (!helpers.checkRole(message, guildSettings)) { // if no permissions, warn
+  if (!checkRole(message, guildSettings)) { // if no permissions, warn
     return message.channel.send(i18n.t("norole", { lng: guild.lng, allowedrole: guildSettings.allowedRoles[0] }))
       .then((message) => message.delete({ timeout: 10000 }));
   }
   // check missing permisions
-  const missingPermissions = helpers.permissionCheck(message.channel);
+  const missingPermissions = permissionCheck(message.channel);
   if (missingPermissions.includes("SEND_MESSAGES")) {
     message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`${missingPermissions}\`\`\``);
   }
-  helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
+  log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
   commands.run(cmd, args, message); // all checks passed - run command
 }
 
-client.login(settings.secrets.bot_token);
+client.login(TOKEN);
 
 client.on("ready", () => {
   shardID = client.shard.ids;
-  helpers.log(`Bot is logged in. Shard: ${shardID}`);
+  log(`Bot is logged in. Shard: ${shardID}`);
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
     .then((results) => {
@@ -105,10 +112,10 @@ client.on("ready", () => {
         });
       });
       addMissingGuilds(shardGuilds); // start adding missing guilds
-      return helpers.log("all shards spawned"); // all shards spawned
+      return log("all shards spawned"); // all shards spawned
     })
     .catch((err) => {
-      log(`guild cache error: ${err}`);
+      debug(`guild cache error: ${err}`);
       if (err.name === "Error [SHARDING_IN_PROCESS]") {
         console.log("spawning shards ..."); // send error to console - still sharding
       }
@@ -128,7 +135,7 @@ client.on("message", (message) => {
     if (message.channel.type === "dm" || message.author.bot) return; // ignore if dm or sent by bot
     runCmd(message); // run command through parser
   } catch (err) {
-    helpers.log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
+    log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
   }
 });
 
@@ -138,7 +145,7 @@ client.on("message", (message) => {
  * @param {String} msg - message prior to exit
  */
 function handle(msg) {
-  helpers.log(`Exiting - ${msg}`);
+  log(msg);
   client.destroy();
   process.exit();
 }
@@ -146,12 +153,11 @@ function handle(msg) {
 process.on("SIGINT", handle);
 
 process.on("uncaughtException", (err) => {
-  helpers.log("uncaughtException error" + err);
-  console.log(err.stack);
-  handle("uncaughtException");
+  console.error(err.stack);
+  handle("uncaughtException error" + err);
 });
 
 process.on("unhandledRejection", (err) => {
-  helpers.log("Promise Rejection: " + err);
+  log("Promise Rejection: " + err);
   if (err.code === "ECONNRESET") handle("ECONNRESET");
 });

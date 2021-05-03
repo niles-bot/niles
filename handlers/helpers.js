@@ -3,6 +3,7 @@ const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
 let bot = require("../bot.js");
 const debug = require("debug")("niles:helpers");
 const { i18n } = require("./strings.js");
+const { secrets } = require("../settings.js"); 
 
 // event types
 const eventType = {
@@ -14,21 +15,11 @@ const eventType = {
 };
 
 /**
- * Gets settings file
- * @returns {Object} - Settings object
- */
-function getSettings() {
-  return require("../settings.js");
-}
-
-/**
  * Format log messages with DateTime string
  * [Sun, 10 Sep 2001 00:00:00 GMT]
  * @param {Snowflake} message 
  */
-function formatLogMessage(message) {
-  return `[${new Date().toUTCString()}] ${message}`;
-}
+const formatLogMessage = (message) => `[${new Date().toUTCString()}] ${message}`;
 
 /**
  * Log Messages to discord channel and console
@@ -38,13 +29,12 @@ function log(...logItems) {
   const logMessage = logItems.join(" ");
   const tripleGrave = "```";
   const logString = formatLogMessage(logMessage);
-  const logChannelId = getSettings().secrets.log_discord_channel;
-  const superAdmin = getSettings().secrets.admins[0];
+  const logChannelId = secrets.log_discord_channel;
+  const superAdmin = secrets.admins[0];
+  // if no log channel just log to console
+  if (!logChannelId) return console.log(logString);
   // send to all shards
   bot.client.shard.broadcastEval(`
-    if (!'${logChannelId}') {
-      console.log("no log channel defined");
-    }
     // fetch log channel
     const channel = this.channels.cache.get('${logChannelId}');
     if (channel) { // check for channel on shard
@@ -52,12 +42,9 @@ function log(...logItems) {
       if ('${logString}'.includes("all shards spawned")) {
         channel.send("<@${superAdmin}>");
       }
-      console.log('${logString}'); // send to console only once to avoid multiple lines
+      console.log('${logString}');
     }
-  `)
-    .catch((err) => {
-      console.log(err);
-    });
+  `).catch((err) => console.log(err));
 }
 
 /**
@@ -65,9 +52,7 @@ function log(...logItems) {
  * @param {String} tz 
  * @returns {Boolean}
  */
-function validateTz(tz) {
-  return (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
-}
+const validateTz = (tz) => (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
 
 /**
  * Make a guild setting formatted time string from timezone adjusted date object

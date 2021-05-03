@@ -1,8 +1,7 @@
 const fs = require("fs");
-const path = require("path");
+const { join } = require("path");
 const { DateTime } = require("luxon");
 const { oauth2, sa } = require("../settings.js");
-const helpers = require("./helpers.js");
 const log = require("debug")("niles:guilds");
 
 const emptyCal = {
@@ -61,10 +60,10 @@ function deleteFolderRecursive(path) {
  * @param {String} file - file name to write to - calendar/settings 
  */
 function writeGuildSpecific(guildID, json, file) {
-  log(`writeGuildSpecific | ${guildID} | json: ${json} | file: ${file}`);
-  let fullPath = path.join(__dirname, "..", "stores", guildID, file + ".json");
+  log(`writeGuildSpecific | ${guildID} | file: ${file}`);
+  let fullPath = join(__dirname, "..", "stores", guildID, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-    if (err) return helpers.log("error writing guild specific database: " + err);
+    if (err) return log("error writing guild specific database: " + err);
   });
 }
 
@@ -73,12 +72,12 @@ function writeGuildSpecific(guildID, json, file) {
  * @param {String} guildID - Guild to create files for
  */
 function createGuild(guildID) {
-  const guildPath = path.join(__dirname, "..", "stores", guildID);
+  const guildPath = join(__dirname, "..", "stores", guildID);
   if (!fs.existsSync(guildPath)) { // create directory and new files
     fs.mkdirSync(guildPath); 
     writeGuildSpecific(guildID, emptyCal, "calendar");
-    writeGuildSpecific(guildID, helpers.defaultSettings, "settings");
-    helpers.log(`Guild ${guildID} has been created`);
+    writeGuildSpecific(guildID, defaultSettings, "settings");
+    log(`Guild ${guildID} has been created`);
   }
 }
 
@@ -87,9 +86,9 @@ function createGuild(guildID) {
  * @param {String} guildID - guild to delete configuration for
  */
 function deleteGuild(guildID) {
-  const guildPath = path.join(__dirname, "..", "stores", guildID);
+  const guildPath = join(__dirname, "..", "stores", guildID);
   deleteFolderRecursive(guildPath);
-  helpers.log(`Guild ${guildID} has been deleted`);
+  log(`Guild ${guildID} has been deleted`);
 }
 
 /**
@@ -108,7 +107,7 @@ function recreateGuild(guildID) {
 function readFile(path) {
   try { return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
-    helpers.log("error reading file " + err);
+    log("error reading file " + err);
     return {}; // return valid JSON to trigger update
   }
 }
@@ -120,7 +119,7 @@ function readFile(path) {
  */
 function getGuildSpecific(guildID, file) {
   log(`writeGuildSpecific | ${guildID} | file: ${file}`);
-  let filePath = path.join(__dirname, "..", "stores", guildID, file);
+  let filePath = join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
   // if settings - merge defaults and stored
