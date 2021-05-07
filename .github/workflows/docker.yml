@@ -1,14 +1,8 @@
 name: docker-ci
 
 on:
-  push:
-    paths-ignore:
-      - 'docs/**'
-    branches:
-      - main
-    tags:
-      - v*
-  workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   docker:
@@ -16,18 +10,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Prepare
+      - name: Prepare parameters
         id: prep
         run: |
           DOCKER_IMAGE=nilesbot/niles
           VERSION=latest
           SHORTREF=${GITHUB_SHA::8}
-
-          # If this is git tag, use the tag name as a docker tag
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
-          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${SHORTREF}"
 
           # If the VERSION looks like a version number, assume that
           # this is the most recent version of the image and also
@@ -40,12 +28,12 @@ jobs:
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=docker_image::${DOCKER_IMAGE}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
         with:
-          platforms: all
+          platforms: arm,arm64
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -57,6 +45,6 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: true
           tags: ${{ steps.prep.outputs.tags }}

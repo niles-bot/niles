@@ -1,0 +1,13 @@
+# ignore secrets
+config/*.json
+# ignore . files
+.gitignore
+.codebeatignore
+.github
+.eslintrc.json
+.dockerignore
+# ignore docker
+Dockerfile
+docker-compose.yml
+# ignore docs
+docs

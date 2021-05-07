@@ -9,6 +9,7 @@ config/secrets.json.examples
 .codebeatignore
 .github
 .eslintrc.json
+.npmignore
 # ignore docs
 docs
 readme.md
