@@ -381,7 +381,7 @@ function generateCalendarEmbed(guild) {
     log(`generateCalendarEmbed | ${guild.id} | value ${tempValue}`);
     fieldObj.value = tempValue;
     // add to msgLength
-    msgLength += tempValue.length();
+    msgLength += tempValue.length;
     fields.push(fieldObj);
   }
   // check if too many characters
