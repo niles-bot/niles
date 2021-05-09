@@ -492,8 +492,8 @@ function updateCalendar(guild, channel, human) {
 function calendarUpdater(guild, channel, human) {
   log(`calendarUpdater | ${guild.id}`);
   try {
-    getEvents(guild, channel);
-    updateCalendar(guild, channel, human);
+    setTimeout(() => { getEvents(guild, channel); }, 1000);
+    setTimeout(() => { updateCalendar(guild, channel, human); }, 2000);
   } catch (err) {
     discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
     killUpdateTimer(guild.id, "error in autoupdater");
@@ -523,7 +523,7 @@ function postCalendar(guild, channel) {
     channel.messages.fetch(guildCalendarMessageID).then((message) => { message.delete();
     }).catch((err) => {
       if (err.code === 10008) guild.setCalendarID("");
-      return discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
+      discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
     });
   }
   try {
@@ -578,8 +578,8 @@ function deleteEventById(eventID, calendarID, channel) {
   };
   const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   return gCal.events.delete(params).then(() => {
-    getEvents(guild, channel);
-    updateCalendar(guild, channel, true);
+    setTimeout(() => { getEvents(guild, channel); }, 1000);
+    setTimeout(() => { updateCalendar(guild, channel, true); }, 2000);
   }).catch((err) => {
     discordLog(`function deleteEventById error in guild: ${guild.id} : ${err}`);
   });
@@ -1041,8 +1041,8 @@ function run(cmd, args, message) {
   } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel, guild.lng);
   } else if (["display"].includes(cmd)) {
     log(`display | ${guildID}`);
-    getEvents(guild, guildChannel);
-    postCalendar(guild, guildChannel);
+    setTimeout(() => { getEvents(guild, guildChannel); }, 1000);
+    setTimeout(() => { postCalendar(guild, guildChannel); }, 2000);
   } else if (["update", "sync"].includes(cmd)) { calendarUpdater(guild, guildChannel, true);
   } else if (["create", "scrim"].includes(cmd)) {
     log(`create | ${guildID}`);
