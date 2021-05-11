@@ -180,13 +180,25 @@ function Guild(guildID) {
    * @param {String} [key] - Optionally get specific key 
    */
   this.getCalendar = (key) => (key ? calendar[key] : calendar);
+  // Write current calendar file
+  this.writeCalendar = () => writeGuildSpecific(guildID, calendar, "calendar");
   /**
-   * Set Calendar to value
-   * @param {Object} [argCalendar] - If provided, set to given calendar, else write current calendar
+   * Set calendar last update
+   * @param {String} date 
    */
-  this.setCalendar = (argCalendar = calendar) => {
-    writeGuildSpecific(guildID, argCalendar, "calendar");
-    calendar = argCalendar;
+  this.setCalendarLastUpdate = (date) => {
+    calendar.lastUpdate = date;
+    this.writeCalendar();
+  };
+  /**
+   * Set Calendar day to value
+   * @param {Integer} day - Key to change
+   * @param {[Object]} events - events to set 
+   */
+  this.setCalendarDay = (day, events) => {
+    let key = "day" + String(day);
+    calendar[key] = events;
+    this.writeCalendar();
   };
   // calendarID
   /**
@@ -195,7 +207,7 @@ function Guild(guildID) {
    */
   this.setCalendarID = (calendarID) => {
     calendar.calendarMessageId = calendarID;
-    this.setCalendar();
+    this.writeCalendar();
   };
   // generate daymap
   this.getDayMap = () => generateDayMap(settings);

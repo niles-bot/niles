@@ -158,9 +158,7 @@ function getEvents(guild, channel) {
   const dayMap = guild.getDayMap();
   const auth = guild.getAuth();
   const tz = guild.tz;
-  const oldCalendar = guild.getCalendar();
   // construct calendar with old calendar file
-  let calendar = (({ lastUpdate, calendarMessageId }) => ({ lastUpdate, calendarMessageId }))(oldCalendar);
   const params = {
     calendarId: guild.getSetting("calendarID"),
     timeMin: dayMap[0].toISO(),
@@ -174,7 +172,6 @@ function getEvents(guild, channel) {
     gCal.events.list(params).then((res) => {
       log(`getEvents - list | ${guild.id}`);
       for (let day = 0; day < dayMap.length; day++) {
-        let key = "day" + String(day);
         let matches = [];
         res.data.items.map((event) => {
           let eStartDate;
@@ -202,11 +199,10 @@ function getEvents(guild, channel) {
               type: eType
             });
           }
-          calendar[key] = matches;
+          guild.setCalendarDay(day, matches);
         });
       }
-      calendar.lastUpdate = new Date();
-      guild.setCalendar(calendar);
+      guild.setCalendarLastUpdate(new Date());
     }).catch((err) => {
       log(`getEvents | ${guild.id} | ${err}`);
       if (err.message.includes("notFound")) {
