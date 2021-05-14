@@ -400,6 +400,13 @@ function generateCalendar(guild, channel) {
   log(`generateCalendar | ${guild.id}`);
   const dayMap = guild.getDayMap();
   const guildSettings = guild.getSetting();
+  // announcement channels are not supported https://git.io/JsGcy
+  if (channel.type === "news") {
+    channel.send(i18n.t("announcement", { lng: guild.lng }));
+    return killUpdateTimer(guild.id, "news channel");
+  }
+  log(channel.type);
+  // end debug logging
   // create embed
   let embed = new discord.MessageEmbed();
   embed.setTitle(guildSettings.calendarName)
@@ -488,8 +495,8 @@ function updateCalendar(guild, channel, human) {
 function calendarUpdater(guild, channel, human) {
   log(`calendarUpdater | ${guild.id}`);
   try {
-    setTimeout(() => { getEvents(guild, channel); }, 1000);
-    setTimeout(() => { updateCalendar(guild, channel, human); }, 2000);
+    getEvents(guild, channel);
+    updateCalendar(guild, channel, human);
   } catch (err) {
     discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
     killUpdateTimer(guild.id, "error in autoupdater");
@@ -574,8 +581,8 @@ function deleteEventById(eventID, calendarID, channel) {
   };
   const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
   return gCal.events.delete(params).then(() => {
-    setTimeout(() => { getEvents(guild, channel); }, 1000);
-    setTimeout(() => { updateCalendar(guild, channel, true); }, 2000);
+    getEvents(guild, channel);
+    updateCalendar(guild, channel, true);
   }).catch((err) => {
     discordLog(`function deleteEventById error in guild: ${guild.id} : ${err}`);
   });
@@ -1037,8 +1044,8 @@ function run(cmd, args, message) {
   } else if (["clean", "purge"].includes(cmd)) { deleteMessages(args, channel, guild.lng);
   } else if (["display"].includes(cmd)) {
     log(`display | ${guildID}`);
-    setTimeout(() => { getEvents(guild, guildChannel); }, 1000);
-    setTimeout(() => { postCalendar(guild, guildChannel); }, 2000);
+    getEvents(guild, guildChannel);
+    postCalendar(guild, guildChannel);
   } else if (["update", "sync"].includes(cmd)) { calendarUpdater(guild, guildChannel, true);
   } else if (["create", "scrim"].includes(cmd)) {
     log(`create | ${guildID}`);
