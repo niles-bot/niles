@@ -1,4 +1,4 @@
-const { readFileSync, writeFileSync} = require("fs");
+const { readFileSync, writeFileSync, existsSync} = require("fs");
 const { join } = require("path");
 const log = require("debug")("niles:updater-list");
 const filename = join(__dirname, "..", "stores", "todo_list.json");
@@ -7,7 +7,7 @@ const filename = join(__dirname, "..", "stores", "todo_list.json");
  * Load json file
  * @returns {[{guild, channel}]} - Array with objects containing guild and chnanel
  */
-const load = () => JSON.parse(readFileSync(filename, "utf8")).list;
+const load = () => !existsSync(filename) ? [] : JSON.parse(readFileSync(filename, "utf8")).list;
 
 /**
  * Append guild to list
