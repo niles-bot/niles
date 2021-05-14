@@ -1,6 +1,6 @@
 {
   "name": "@niles-bot/niles",
-  "version": "4.5.3",
+  "version": "4.5.4",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -18,11 +18,11 @@
     "discord.js": "^12.5.3",
     "i18next": "^20.2.2",
     "i18next-fs-backend": "^1.1.1",
-    "luxon": "^1.26.0",
+    "luxon": "^1.27.0",
     "promise-defer": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.25.0"
+    "eslint": "^7.26.0"
   },
   "repository": {
     "type": "git",

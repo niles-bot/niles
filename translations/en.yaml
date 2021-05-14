@@ -199,3 +199,5 @@ validate:
   calendar_error: "Error Fetching Calendar: {{err}}"
 
 reset: Resetting Niles to default
+
+announcement: Announcement channels are not compatible due to Discord ratelimits on updates (https://git.io/JsGcy).
