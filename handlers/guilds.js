@@ -153,41 +153,41 @@ function generateDayMap(settings) {
  */
 function Guild(guildID) {
   // Load Settings
-  let settings = getGuildSpecific(guildID, "settings.json"); 
+  this.settings = getGuildSpecific(guildID, "settings.json"); 
   /**
    * Get specific or all settings
    * @param {String} [key] - Optional key to fetch 
    */
-  this.getSetting = (key) => (key ? settings[key] : settings);
+  this.getSetting = (key) => (key ? this.settings[key] : this.settings);
   /**
    * Sets specific setting to value
    * @param {String} key - key of setting to change
    * @param {String} value - value to set key to
    */
   this.setSetting = (key, value) => {
-    settings[key] = value;
-    writeGuildSpecific(guildID, settings, "settings");
+    this.settings[key] = value;
+    writeGuildSpecific(guildID, this.settings, "settings");
   };
   // common properties
-  this.prefix = settings.prefix;
+  this.prefix = this.settings.prefix;
   this.id = guildID;
-  this.tz = settings.timezone;
-  this.lng = settings.lng;
+  this.tz = this.settings.timezone;
+  this.lng = this.settings.lng;
   // calendar
-  let calendar = getGuildSpecific(guildID, "calendar.json");
+  this.calendar = getGuildSpecific(guildID, "calendar.json");
   /**
    * Get calendar file
    * @param {String} [key] - Optionally get specific key 
    */
-  this.getCalendar = (key) => (key ? calendar[key] : calendar);
+  this.getCalendar = (key) => (key ? this.calendar[key] : this.calendar);
   // Write current calendar file
-  this.writeCalendar = () => writeGuildSpecific(guildID, calendar, "calendar");
+  this.writeCalendar = () => writeGuildSpecific(guildID, this.calendar, "calendar");
   /**
    * Set calendar last update
    * @param {String} date 
    */
   this.setCalendarLastUpdate = (date) => {
-    calendar.lastUpdate = date;
+    this.calendar.lastUpdate = date;
     this.writeCalendar();
   };
   /**
@@ -197,7 +197,7 @@ function Guild(guildID) {
    */
   this.setCalendarDay = (day, events) => {
     let key = "day" + String(day);
-    calendar[key] = events;
+    this.calendar[key] = events;
     this.writeCalendar();
   };
   // calendarID
@@ -206,11 +206,11 @@ function Guild(guildID) {
    * @param {String} calendarID - ID of calendar message 
    */
   this.setCalendarID = (calendarID) => {
-    calendar.calendarMessageId = calendarID;
+    this.calendar.calendarMessageId = calendarID;
     this.writeCalendar();
   };
   // generate daymap
-  this.getDayMap = () => generateDayMap(settings);
+  this.getDayMap = () => generateDayMap(this.settings);
   // get OAuth2 Token
   this.getToken = () => getGuildSpecific(guildID, "token.json");
   /**
@@ -223,7 +223,7 @@ function Guild(guildID) {
    * @returns return googleAuth object
    */
   this.getAuth = () => {
-    if (settings.auth === "oauth") {
+    if (this.settings.auth === "oauth") {
       oauth2.setCredentials(this.getToken());
       return oauth2;
     // default to SA if oauth2 failed too
@@ -235,8 +235,8 @@ function Guild(guildID) {
    */
   this.update = () => {
     log(`Guild.update | ${guildID}`);
-    settings = getGuildSpecific(guildID, "settings.json");
-    calendar = getGuildSpecific(guildID, "calendar.json");
+    this.settings = getGuildSpecific(guildID, "settings.json");
+    this.calendar = getGuildSpecific(guildID, "calendar.json");
   };
 }
 

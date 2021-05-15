@@ -951,7 +951,7 @@ function setPrefix(channel, args, guild) {
  */
 function setRoles(message, args, guild) {
   log(`setRoles | ${guild.id}`);
-  const adminRole = args[0];
+  const adminRole = args.join(" ");
   const allowedRoles = guild.getSetting("allowedRoles");
   const userRoles = message.member.roles.cache.map((role) => role.name);
   const lng = guild.lng;

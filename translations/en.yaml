@@ -36,7 +36,7 @@ admin:
     The person assigning the restriction must have the role being assigned.
     You can allow everyone to use Niles again by entering `!admin everyone`
     i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)
-  prompt: Do you want to restrict the use of the calendar to people with the `{[adminRole}}`? **(y/n)**
+  prompt: Do you want to restrict the use of the calendar to people with the `{{adminRole}}`? **(y/n)**
   no_role: You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive
   prompt_everyone: Do you want to allow everyone in this channel/server to use Niles? **(y/n)**
 
