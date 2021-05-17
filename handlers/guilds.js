@@ -3,6 +3,7 @@ const { join } = require("path");
 const { DateTime } = require("luxon");
 const { oauth2, sa } = require("../settings.js");
 const log = require("debug")("niles:guilds");
+const util = require("util");
 
 const emptyCal = {
   "day0": [],
@@ -118,16 +119,19 @@ function readFile(path) {
  * @param {String} file 
  */
 function getGuildSpecific(guildID, file) {
-  log(`writeGuildSpecific | ${guildID} | file: ${file}`);
+  log(`getGuildSpecific | ${guildID} | file: ${file}`);
   let filePath = join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
   // if settings - merge defaults and stored
   // if calendar - send default if empty
   // otherwise return normal
-  return (file === "settings.json") ? {...defaultSettings, ...storedData}
-    : (file === "calendar.json" && !Object.entries(storedData).length) ? emptyCal
-      : storedData;
+  if (file === "settings.json") return {...defaultSettings, ...storedData};
+  if (!Object.entries(storedData).length) {
+    log(`empty file for guild ${guildID} - check logs`);
+    console.error(`empty file for ${guildID} - ${util.inspect(storedData)}`);
+  }
+  return storedData;
 }
 
 /**

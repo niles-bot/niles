@@ -194,7 +194,7 @@ function getEvents(guild, channel) {
               summary: event.summary,
               start: event.start,
               end: event.end,
-              description: event.description,
+              description: helpers.descriptionParser(event.description),
               location: event.location || event.hangoutLink,
               type: eType
             });
@@ -338,7 +338,7 @@ function embedEventString(event, guild) {
   let eventString = (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
   // limit description length
   const descLength = guildSettings.descLength;
-  const description = helpers.descriptionParser(event.description);
+  const description = event.description;
   const trimmed = (descLength ? description.slice(0, descLength) : description);
   // if we should add description
   if ((description !== "undefined") && (guildSettings.description === "1")) {
