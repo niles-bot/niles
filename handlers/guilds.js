@@ -3,7 +3,6 @@ const { join } = require("path");
 const { DateTime } = require("luxon");
 const { oauth2, sa } = require("../settings.js");
 const log = require("debug")("niles:guilds");
-const util = require("util");
 
 const emptyCal = {
   "day0": [],
@@ -126,12 +125,9 @@ function getGuildSpecific(guildID, file) {
   // if settings - merge defaults and stored
   // if calendar - send default if empty
   // otherwise return normal
-  if (file === "settings.json") return {...defaultSettings, ...storedData};
-  if (!Object.entries(storedData).length) {
-    log(`empty file for guild ${guildID} - check logs`);
-    console.error(`empty file for ${guildID} - ${util.inspect(storedData)}`);
-  }
-  return storedData;
+  return (file === "settings.json") ? {...defaultSettings, ...storedData}
+    : (file === "calendar.json" && !Object.entries(storedData).length) ? emptyCal
+      : storedData;
 }
 
 /**
