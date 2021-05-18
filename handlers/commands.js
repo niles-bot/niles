@@ -202,7 +202,6 @@ function getEvents(guild, channel) {
           guild.setCalendarDay(day, matches);
         });
       }
-      guild.setCalendarLastUpdate(new Date());
     }).catch((err) => {
       log(`getEvents | ${guild.id} | ${err}`);
       if (err.message.includes("notFound")) {
@@ -463,7 +462,7 @@ function updateCalendar(guild, channel, human) {
   log(`updateCalendar | ${guild.id}`);
   guild.update(); // update guild
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
-  if (guildCalendarMessageID === "") {
+  if (!guildCalendarMessageID) {
     channel.send(i18n.t("update.undefined", { lng: guild.lng }));
     discordLog(`calendar undefined in ${guild.id}. Killing update timer.`);
     return killUpdateTimer(guild.id, "calendar undefined");
@@ -482,6 +481,8 @@ function updateCalendar(guild, channel, human) {
       guild.setCalendarID("");
       return;
     });
+  // if everything went well, set lastUpdate
+  guild.setCalendarLastUpdate(new Date());
   // if no errors thrown and not on updaterlist, start timer
   if (!updaterList.exists(guild.id) && human) startUpdateTimer(guild.id, channel.id);
 }
