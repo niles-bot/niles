@@ -5,13 +5,15 @@ const { oauth2, sa } = require("../settings.js");
 const log = require("debug")("niles:guilds");
 
 const emptyCal = {
-  "day0": [],
-  "day1": [],
-  "day2": [],
-  "day3": [],
-  "day4": [],
-  "day5": [],
-  "day6": [],
+  "events": {
+    "day0": [],
+    "day1": [],
+    "day2": [],
+    "day3": [],
+    "day4": [],
+    "day5": [],
+    "day6": []
+  },
   "lastUpdate": "",
   "calendarMessageId": ""
 };
@@ -179,7 +181,7 @@ function Guild(guildID) {
    * Get calendar file
    * @param {String} [key] - Optionally get specific key 
    */
-  this.getCalendar = (key) => (key ? this.calendar[key] : this.calendar);
+  this.getCalendar = (key) => this.calendar[key];
   // Write current calendar file
   this.writeCalendar = () => writeGuildSpecific(guildID, this.calendar, "calendar");
   /**
@@ -195,9 +197,8 @@ function Guild(guildID) {
    * @param {Integer} day - Key to change
    * @param {[Object]} events - events to set 
    */
-  this.setCalendarDay = (day, events) => {
-    let key = "day" + String(day);
-    this.calendar[key] = events;
+  this.setEvents = (events) => {
+    this.calendar["events"] = events;
     this.writeCalendar();
   };
   // calendarID

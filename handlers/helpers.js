@@ -147,7 +147,7 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
       eventMatchType = eventType.MULTIMID;
     } 
   }
-  debug(`classifyEventMatch | type ${eventMatchType}`);
+  // debug(`classifyEventMatch | type ${eventMatchType}`);
   return eventMatchType;
 }
 

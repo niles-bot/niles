@@ -158,6 +158,7 @@ function getEvents(guild, channel) {
   const dayMap = guild.getDayMap();
   const auth = guild.getAuth();
   const tz = guild.tz;
+  let events = {};
   // construct calendar with old calendar file
   const params = {
     calendarId: guild.getSetting("calendarID"),
@@ -172,6 +173,7 @@ function getEvents(guild, channel) {
     gCal.events.list(params).then((res) => {
       log(`getEvents - list | ${guild.id}`);
       for (let day = 0; day < dayMap.length; day++) {
+        let key = "day" + String(day);
         let matches = [];
         res.data.items.map((event) => {
           let eStartDate;
@@ -199,9 +201,10 @@ function getEvents(guild, channel) {
               type: eType
             });
           }
-          guild.setCalendarDay(day, matches);
+          events[key] = matches;
         });
       }
+      guild.setEvents(events);
     }).catch((err) => {
       log(`getEvents | ${guild.id} | ${err}`);
       if (err.message.includes("notFound")) {
@@ -229,7 +232,7 @@ function getEvents(guild, channel) {
 function isEmptyCalendar(guild, dayMap) {
   log(`isEmptyCalendar | ${guild.id}`);
   let isEmpty = true;
-  const guildCalendar = guild.getCalendar();
+  const guildCalendar = guild.getCalendar("events");
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
     // if key exists & has length in days
@@ -282,7 +285,7 @@ function durationString(event, guild) {
  */
 function generateCalendarCodeblock(guild) {
   log(`generateCalendarCodeblock | ${guild.id}`);
-  const guildCalendar = guild.getCalendar();
+  const guildCalendar = guild.getCalendar("events");
   const guildSettings = guild.getSetting();
   const dayMap = guild.getDayMap();
   let finalString = "";
@@ -320,7 +323,7 @@ function generateCalendarCodeblock(guild) {
     }
     finalString += sendString;
   }
-  log(`generateCalendarCodeblock | ${guild.id}| finalString ${finalString}`);
+  // log(`generateCalendarCodeblock | ${guild.id}| finalString ${finalString}`);
   return finalString; // return finalstring to generateCalendar
 }
 
@@ -352,7 +355,7 @@ function embedEventString(event, guild) {
  */
 function generateCalendarEmbed(guild) {
   log(`generateCalendarEmbed | ${guild.id}`);
-  let guildCalendar = guild.getCalendar();
+  let guildCalendar = guild.getCalendar("events");
   let guildSettings = guild.getSetting();
   const dayMap = guild.getDayMap();
   let msgLength = 0;
@@ -373,7 +376,7 @@ function generateCalendarEmbed(guild) {
       });
     }
     // finalize field object
-    log(`generateCalendarEmbed | ${guild.id} | value ${tempValue}`);
+    // log(`generateCalendarEmbed | ${guild.id} | value ${tempValue}`);
     fieldObj.value = tempValue;
     // add to msgLength
     msgLength += tempValue.length;
