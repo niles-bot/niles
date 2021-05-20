@@ -159,17 +159,25 @@ function doHandler(args, guild, channel) {
   if (!( setting in doHelpArray)) return send(channel, i18n.t("displayoptions.help", { lng: guild.lng }));
   const settingObj = doHelpArray[setting];
   const settingName = settingObj.name;
-  if (settingObj.type === "binaryNumber") {
-    send(channel, doBinary(value, guild, settingName));
-  } else if (settingObj.type === "binaryChoice") {
-    send(channel, doChoice(value, guild, settingObj));
-  } else if (settingObj.type === "binaryChoiceInt") {
-    send(channel, doChoice(parseInt(value), guild, settingObj));
-  } else if (settingObj.type === "binaryEmbed") {
-    send(channel, doBinaryEmbed(value, guild, settingName));
-  } else if (settingObj.type ===  "int") {
-    send(channel, doInt(value, guild, settingObj));
+  let prompt;
+  switch (settingObj.type) {
+  case "binaryNumber":
+    prompt = doBinary(value, guild, settingName);
+    break;
+  case "binaryChoice":
+    prompt = doChoice(value, guild, settingObj);
+    break;
+  case "binaryChoiceInt":
+    prompt = doChoice(parseInt(value), guild, settingObj);
+    break;
+  case "binaryEmbed":
+    prompt = doBinaryEmbed(value, guild, settingName);
+    break;
+  case "int":
+    prompt = doInt(value, guild, settingObj);
+    break;
   }
+  send (channel, prompt);
 }
 
 module.exports = {

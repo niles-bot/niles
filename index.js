@@ -28,7 +28,7 @@ const bree = new Bree({
   jobs: [{
     name: "updater",
     interval: secrets.calendar_update_interval,
-    timeout: "10s"
+    timeout: "20s"
   }],
   workerMessageHandler,
   logger

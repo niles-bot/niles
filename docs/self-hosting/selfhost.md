@@ -20,7 +20,7 @@ Please visit the [Discord support server](https://discord.gg/jNyntBn) for furthe
 
 3. Create your `secrets.json` file (discussed below) inside `/config`.
 
-4. Run `node index.js` and you should be running!
+4. Run `npm start` and you should be running!
 
 
 ### secrets.json
@@ -43,7 +43,7 @@ The following variables are present in the secrets.json and will require an entr
 
 4. `calendar_update_interval` - the time in milliseconds between automatic updates.  Default is 300000 (5 minutes).
 
-5. `admins` is an array for discord admin IDs. The first ID will be the "super admin" and will be notified when the bot starts. Admins will have the ability to restart shards and show how many update timers are running across all discord servers.
+5. `admins` is an array for discord admin IDs. The first ID will be the "super admin" and will be notified when the bot starts. Admins will have the ability to restart shards.
 
 6. `log_discord_channel` is the CHANNEL ID where the bot logs commands, errors etc. to.  This is required or the bot will not function.  You should create a channel that Niles has write access to, copy the ID and use this.
 

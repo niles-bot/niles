@@ -20,7 +20,7 @@ All commands must have valid prefix or mention Niles, i.e. `!command` or `@niles
 | [update](#update)                   | `!update`                                | Update the calendar                                      |
 | [create](#create)                   | `!create <event name at time on day>`    | Create new events                                        |
 | [delete](#delete)                   | `!delete <event name>`                   | Delete existing events                                   |
-| [clean](#clean)                     | `!clean `<number of messages to delete>` | Delete Discord messages in channel                       |
+| [clean](#clean)                     | `!clean <number of messages to delete>` | Delete Discord messages in channel                       |
 | [id](#id)                           | `!id <calendar_id>`                      | Set Google Calendar ID                                   |
 | [tz](#tz)                           | `!tz <timezone>`                         | Set timezone                                             |
 | [setup](#setup)                     | `!setup`                                 | Get setup instructions                                   |
@@ -89,7 +89,7 @@ We recommend deleting events in the Google Calendar Web UI, where possible.
 
 ### next
 
-Use `!delete` or `@niles next` to display the next upcoming event within the set days to display.
+Use `!next` or `@niles next` to display the next upcoming event within the set days to display.
 
 ---
 
@@ -189,7 +189,7 @@ You can also use `@niles prefix` to find out what the prefix has been changed to
 
 ### displayoptions
 
-For details on display options, refer to Configuration/Display Options.
+For details on display options, refer to [Customization/Display Options](customisation/#display-options).
 
 ---
 

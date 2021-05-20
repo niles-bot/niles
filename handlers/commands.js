@@ -23,9 +23,7 @@ const gCalendar = require("@googleapis/calendar").calendar;
  */
 function send(channel, content, timeout=5000) {
   channel.send(content)
-    .then((message) => {
-      message.delete({ timeout });
-    });
+    .then((message) => message.delete({ timeout }));
 }
 
 /**
@@ -75,9 +73,7 @@ function getAccessToken(force, guild, channel) {
 function setupAuth(args, guild, channel) {
   log(`setupAuth | ${guild.id}`);
   if (args[0] === "oauth") {
-    if (!settings.oauth2) {
-      return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
-    }
+    if (!settings.oauth2) return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
     getAccessToken((args[1] === "force"), guild, channel);
   } else if (args[0] === "sa") {
     if (!settings.sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
@@ -135,15 +131,13 @@ function deleteMessages(args, channel, lng) {
   const argMessages = Number(args[0]);
   const deleteCalendar = Boolean(args[1]);
   const guild = new guilds.Guild(channel.guild.id);
-  if (!args[0] || isNaN(argMessages)) {
+  if (!argMessages || isNaN(argMessages)) {
     return channel.send(i18n.t("delete.noarg", { lng }));
   } else {
     channel.send(i18n.t("delete.confirm", { lng, argMessages }));
-    helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
-      return clean(channel, argMessages, deleteCalendar);
-    }).catch((err) => {
-      discordLog(err);
-    });
+    helpers.yesThenCollector(channel, guild.lng)
+      .then(() => clean(channel, argMessages, deleteCalendar))
+      .catch((err) => discordLog(err));
   }
 }
 
@@ -477,12 +471,11 @@ function updateCalendar(guild, channel, human) {
     .catch((err) => {
       log(`updateCalendar | ${err}`);
       discordLog(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
-      //If theres an updater running try and kill it.
+      // If theres an updater running try and kill it.
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
       channel.send(i18n.t("update.not_found", { lng: guild.lng }));
       killUpdateTimer(guild.id, "previous not found");
-      guild.setCalendarID("");
-      return;
+      return guild.setCalendarID("");
     });
   // if everything went well, set lastUpdate
   guild.setCalendarLastUpdate(new Date());
@@ -527,11 +520,9 @@ function postCalendar(guild, channel) {
   log(`postCalendar | ${guild.id}`);
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID) {
-    channel.messages.fetch(guildCalendarMessageID).then((message) => { message.delete();
-    }).catch((err) => {
-      if (err.code === 10008) guild.setCalendarID("");
-      discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`);
-    });
+    channel.messages.fetch(guildCalendarMessageID)
+      .then((message) => message.delete())
+      .catch((err) => discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`));
   }
   try {
     const embed = generateCalendar(guild, channel);
@@ -1005,6 +996,17 @@ function adminCmd (cmd, args) {
       client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
     }
     return response;
+  } else if (cmd === "debug") {
+    return {
+      content: `debug for guild ${args[0]}`,
+      files: [{
+        attachment: `stores/${args[0]}/calendar.json`,
+        name: "calendar.json"
+      }, {
+        attachment: `stores/${args[0]}/settings.json`,
+        name: "settings.json"
+      }]
+    };
   }
 }
 
@@ -1061,7 +1063,7 @@ function run(cmd, args, message) {
   } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id, "stop command");
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
-  } else if (["reset"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
+  } else if (["reset", "debug"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
   } else if (["calname"].includes(cmd)) { calName(args, guild, channel);
   } else if (["auth"].includes(cmd)) { setupAuth(args, guild, channel);

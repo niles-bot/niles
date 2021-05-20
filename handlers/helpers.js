@@ -174,7 +174,7 @@ function trimEventName(eventName, trimLength){
  * @return {string} strippedString - string stripped of html
  */
 function descriptionParser(inputString) {
-  if (!inputString) return;
+  if (!inputString) return "undefined";
   debug(`descriptionParser | pre: ${inputString}`);
   const brRegex = /(<br>)+/gi; // match <br>
   const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags

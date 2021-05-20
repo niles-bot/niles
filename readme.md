@@ -43,10 +43,7 @@ To run and connect your bot
 
 ```
 npm install
-```
-
-```
-node index.js
+npm run
 ```
 
 ## Built With

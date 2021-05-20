@@ -12,7 +12,7 @@ nav_order: 4
 
 ## Display Options
 
-Use display options (!displayoptions) to customise the way the calendar appears in your Discord server.
+Use display options (`!displayoptions`) to customise the way the calendar appears in your Discord server.
 
 | Display Option                                       | Usage                               | Description                                              |
 |:-----------------------------------------------------|-------------------------------------|----------------------------------------------------------|
