@@ -13,6 +13,7 @@ const discordLog = helpers.log;
 const eventType = helpers.eventType;
 const { doHandler } = require("./displayoptions.js");
 const gCalendar = require("@googleapis/calendar").calendar;
+const soft = require("timezone-soft");
 
 //functions
 /**
@@ -406,8 +407,6 @@ function generateCalendar(guild, channel) {
     channel.send(i18n.t("announcement", { lng: guild.lng }));
     return killUpdateTimer(guild.id, "news channel");
   }
-  log(channel.type);
-  // end debug logging
   // create embed
   let embed = new discord.MessageEmbed();
   embed.setTitle(guildSettings.calendarName)
@@ -533,7 +532,7 @@ function postCalendar(guild, channel) {
     const embed = generateCalendar(guild, channel);
     if (embed === 2048) return null;
     channel.send({ embed }).then((sent) => {
-      log(`generateCalendar | ${guild.id} | calID ${sent.id}`);
+      log(`postCalendar | ${guild.id} | calID ${sent.id}`);
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
     });
@@ -643,7 +642,7 @@ function nextEvent(guild, channel) {
       }
     }
     // run if message not sent
-    log(`deleteEventById | ${guild.id} | no upcoming`);
+    log(`nextEvent | ${guild.id} | no upcoming`);
     return send(channel, i18n.t("next.no_upcoming", {lng: guild.lng }), 10000);
   }).catch((err) => { discordLog(err);
   });
@@ -666,7 +665,7 @@ function searchEventName(summary, guild, channel) {
         }
       }
     }).catch((err) => {
-      log(`deleteEvent | ${guild.id} | error ${err}`);
+      log(`searchEventName | ${guild.id} | error ${err}`);
       discordLog(err);
       send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
     });
@@ -803,7 +802,7 @@ function calName(args, guild, channel) {
  * @param {Snowflake} channel - Channel to respond to
  */
 function setChannel(args, guild, channel) {
-  log(`calName | ${guild.id}`);
+  log(`setChannel | ${guild.id}`);
   if (!args[0]) {
     const guildChannelId = guild.getSetting("channelid");
     if (guildChannelId) { // if existing channel
@@ -814,11 +813,11 @@ function setChannel(args, guild, channel) {
     // no arguments
     send(channel, i18n.t("setchannel.help", { lng: guild.lng }));
   } else if (args[0] === "delete") { // remove channel
-    log(`calName | ${guild.id} | delete`);
+    log(`setChannel | ${guild.id} | delete`);
     guild.setSetting("channelid", "");
     send(channel, i18n.t("setchannel.delete", { lng: guild.lng }));
   } else if (args[0] === "set") {
-    log(`calName | ${guild.id} | set: ${channel.name}`);
+    log(`setChannel | ${guild.id} | set: ${channel.name}`);
     send(channel, i18n.t("setchannel.prompt", { channel: channel.name, lng: guild.lng }), 30000);
     // set after collecting yes
     helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("channelid", channel.id);
@@ -897,25 +896,26 @@ function logID(channel, args, guild) {
 function logTz(channel, args, guild) {
   log(`logTz | ${guild.id}`);
   const currentTz = guild.getSetting("timezone");
-  const tz = args[0];
-  if (!tz) { // no input
+  const input = args[0];
+  const tz = soft(input)[0];
+  if (!input) { // no input
     // no current tz
     if (!currentTz) channel.send(i18n.t("collector.noarg", { name: "$t(timezone)", lng: guild.lng, example: "`!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting."}));
     // timezone define
     else channel.send(i18n.t("collector.exist", { name: "$t(timezone)", lng: guild.lng, old: currentTz }));
   }
   // valid input
-  else if (helpers.validateTz(tz)) { // passes validation
+  else if (tz) { // tz parserd
     if (currentTz) { // timezone set
       channel.send(i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: tz }));
       helpers.yesThenCollector(channel, guild.lng).then(() => {
-        log(`logID | ${guild.id} | set to newID: ${tz}`);
+        log(`logTz | ${guild.id} | set to new tz: ${tz}`);
         return guild.setSetting("timezone", tz);
       }).catch((err) => { discordLog(err);
       });
     // timezone is not set
     } else {
-      log(`logID | ${guild.id} | set to newID: ${tz}`);
+      log(`logTz | ${guild.id} | set to new tz: ${tz}`);
       guild.setSetting("timezone", tz); }
   // fails validation
   } else {
