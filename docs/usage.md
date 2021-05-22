@@ -117,11 +117,17 @@ Use `!tz <timezone>` or `@niles tz <timezone>` to add or change the timezone ass
 
 This can be done using `!tz` i.e.
 
-`!tz America/New_York`
-`!tz UTC+5`
-`!tz EST`
+```
+!tz America/New_York
+!tz canada/eastern
+!tz Montreal
+!tz eastern
+!tz UTC+5
+!tz EST
+```
+Thanks to [timezone-soft](https://github.com/spencermountain/timezone-soft)
 
-[Full list of TZ database names on Wikipedia](https://cutt.ly/tz)
+[Full list of TZ database names on Wikipedia](https://w.wiki/B9t)
 
 ---
 

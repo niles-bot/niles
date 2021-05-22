@@ -1,6 +1,6 @@
 {
   "name": "@niles-bot/niles",
-  "version": "4.5.9",
+  "version": "4.6.0",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "timezone-soft": "^1.2.0"
   },
   "devDependencies": {
-    "eslint": "^7.26.0"
+    "eslint": "^7.27.0"
   },
   "repository": {
     "type": "git",
