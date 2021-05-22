@@ -1,5 +1,5 @@
 const defer = require("promise-defer");
-const { DateTime, IANAZone, FixedOffsetZone } = require("luxon");
+const { DateTime, IANAZone } = require("luxon");
 let bot = require("../bot.js");
 const debug = require("debug")("niles:helpers");
 const { i18n } = require("./strings.js");
@@ -52,7 +52,7 @@ function log(...logItems) {
  * @param {String} tz 
  * @returns {Boolean}
  */
-const validateTz = (tz) => (IANAZone.isValidZone(tz) || (FixedOffsetZone.parseSpecifier(tz) !== null && FixedOffsetZone.parseSpecifier(tz).isValid));
+const validateTz = (tz) => IANAZone.isValidZone(tz);
 
 /**
  * Make a guild setting formatted time string from timezone adjusted date object
