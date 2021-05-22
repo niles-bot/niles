@@ -66,6 +66,11 @@ const doHelpArray = {
     type: "int",
     default: 7,
     max: 25
+  }, moredays: {
+    type: "moredays",
+    name: "days",
+    default: 7,
+    max: 60
   }
 };
 
@@ -146,6 +151,21 @@ function doInt(value, guild, settingObj) {
 }
 
 /**
+ * Displayoption helper for more than 25 days
+ * @param {Integer} value - value passed in 
+ * @param {Guild} guild - Guild object
+ * @param {Object} settingObj - settingsObj object
+ * @param {Snowflake} channel - channel to send warning to
+ * @returns {String} response to user
+ */
+function doMoreDays(value, guild, settingObj, channel) {
+  log(`doMoreDays | ${guild.id} | setting: moredays | value: ${value}`);
+  channel.send({
+    "content": "Having more than 25 days ***can & will*** cause issues.\n- Any operations with the calendar can take ***seconds*** longer\n- If there are more than 2048/6000 character or 25 days with events, Niles ***will fail to display***\n- If 60 is not enough, ask your admin to raise the limit"  });
+  return doInt(value, guild, settingObj);
+}
+
+/**
  * Handle all displayoptions and pass to respective handlers
  * @param {[String]} args - arguemnts passed in
  * @param {Guild} guild - Guild object that called command
@@ -161,6 +181,9 @@ function doHandler(args, guild, channel) {
   const settingName = settingObj.name;
   let prompt;
   switch (settingObj.type) {
+  case "moredays": 
+    prompt = doMoreDays(value, guild, settingObj, channel);
+    break;
   case "binaryNumber":
     prompt = doBinary(value, guild, settingName);
     break;

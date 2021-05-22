@@ -383,6 +383,11 @@ function generateCalendarEmbed(guild) {
       "name": i18n.t("calendar.too_long", { lng: guild.lng}),
       "value": i18n.t("calendar.too_long_help", { lng: guild.lng, msgLength })
     }];
+  } else if (fields.length > 25) {
+    fields = [{
+      "name": i18n.t("calendar.too_many", { lng: guild.lng}),
+      "value": i18n.t("calendar.too_many_help", { lng: guild.lng, days: fields.length })
+    }];
   }
   return fields; // return field array
 }
