@@ -176,7 +176,7 @@ function doHandler(args, guild, channel) {
   const setting = args[0];
   const value = args[1];
   // if not found return help
-  if (!( setting in doHelpArray)) return send(channel, i18n.t("displayoptions.help", { lng: guild.lng }));
+  if (!( setting in doHelpArray)) return send(channel, i18n.t("displayoptions.help", { lng: guild.lng }), 10000);
   const settingObj = doHelpArray[setting];
   const settingName = settingObj.name;
   let prompt;

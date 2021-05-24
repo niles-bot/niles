@@ -211,6 +211,7 @@ function getEvents(guild, channel) {
         discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
       }
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
+      channel.send(i18n.t(`error fetching calendar: ${err.message}`));
       killUpdateTimer(guild.id, "getEvents");
     });
   } catch (err) {
@@ -907,10 +908,10 @@ function logTz(channel, args, guild) {
   // valid input
   else if (tz) { // tz parserd
     if (currentTz) { // timezone set
-      channel.send(i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: tz }));
+      channel.send(i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: tz.iana }));
       helpers.yesThenCollector(channel, guild.lng).then(() => {
-        log(`logTz | ${guild.id} | set to new tz: ${tz}`);
-        return guild.setSetting("timezone", tz);
+        log(`logTz | ${guild.id} | set to new tz: ${tz.iana}`);
+        return guild.setSetting("timezone", tz.iana);
       }).catch((err) => { discordLog(err);
       });
     // timezone is not set
