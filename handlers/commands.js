@@ -143,6 +143,49 @@ function deleteMessages(args, channel, lng) {
 }
 
 /**
+ * Parses and corrects events for classification
+ * @param {Date} day - Day to classify events agians
+ * @param {Event} event - event to classify
+ * @param {IANAZone} tz - timezone to align dates to 
+ * @returns 
+ */
+function eventTimeCorrector(day, event, tz) {
+  let eStartDate;
+  let eEndDate;
+  //Handle dateTime-based Events
+  if (event.start.dateTime) {
+    eStartDate = DateTime.fromISO(event.start.dateTime, {setZone: true});
+    eEndDate = DateTime.fromISO(event.end.dateTime, {setZone: true});
+  }
+  //Handle All Day Events
+  else if (event.start.date) {
+    eStartDate = DateTime.fromISO(event.start.date, {zone: tz});
+    // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
+    eEndDate = DateTime.fromISO(event.end.date, {zone: tz}).minus({days: 1});
+  }
+  // log(`Event to CEM: ${event.summary}`);
+  return helpers.classifyEventMatch(day, eStartDate, eEndDate);
+}
+
+/**
+ * handles errors from getEvents
+ * @param {Error} err - Error with information
+ * @param {Guild} guild - Guild to get language and ID from
+ * @param {Snowflake} channel - Channel to respond to
+ */
+function getEventsErrorHandler(err, guild, channel) {
+  log(`getEvents | ${guild.id} | ${err}`);
+  if (err.code === 404) {
+    discordLog(`getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
+    channel.send(i18n.t("no_cal", { lng: guild.lng }));
+  } else if (err.code === 401) { discordLog(`getEvents error in guild: ${guild.id} : 401 invalid credentials`);
+  } else { discordLog(`getEvents error in guild: ${guild.id} : ${err}`);
+  }
+  channel.send(i18n.t("timerkilled", { lng: guild.lng }));
+  killUpdateTimer(guild.id, "getEvents");
+}
+
+/**
  * Get Events from Google Calendar
  * @param {Guild} guild - Guild to pull settings from
  * @param {Snowflake} channel - channel to respond to
@@ -171,21 +214,7 @@ function getEvents(guild, channel) {
         let key = "day" + String(day);
         let matches = [];
         res.data.items.map((event) => {
-          let eStartDate;
-          let eEndDate;
-          //Handle dateTime-based Events
-          if (event.start.dateTime) {
-            eStartDate = DateTime.fromISO(event.start.dateTime, {setZone: true});
-            eEndDate = DateTime.fromISO(event.end.dateTime, {setZone: true});
-          }
-          //Handle All Day Events
-          else if (event.start.date) {
-            eStartDate = DateTime.fromISO(event.start.date, {zone: tz});
-            // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
-            eEndDate = DateTime.fromISO(event.end.date, {zone: tz}).minus({days: 1});
-          }
-          // log(`Event to CEM: ${event.summary}`);
-          let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
+          let eType = eventTimeCorrector(dayMap[day], event, tz);
           if (eType !== eventType.NOMATCH) {
             matches.push({
               id: event.id,
@@ -202,18 +231,7 @@ function getEvents(guild, channel) {
       }
       guild.setEvents(events);
     }).catch((err) => {
-      log(`getEvents | ${guild.id} | ${err}`);
-      if (err.message.includes("notFound")) {
-        discordLog(`function getEvents error in guild: ${guild.id} : 404 error can't find calendar`);
-        channel.send(i18n.t("no_cal", { lng: guild.lng }));
-      } else if (err.message.includes("Invalid Credentials")) { // Catching periodic google rejections;
-        return discordLog(`function getEvents error in guild: ${guild.id} : 401 invalid credentials`);
-      } else {
-        discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
-      }
-      channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-      channel.send(i18n.t(`error fetching calendar: ${err.message}`));
-      killUpdateTimer(guild.id, "getEvents");
+      getEventsErrorHandler(err, guild, channel);
     });
   } catch (err) {
     channel.send(err.code);
@@ -701,6 +719,34 @@ function deleteEvent(args, guild, channel) {
 }
 
 /**
+ * Get next event for validation
+ * @param {Guild} guild - Guild to pull calendar ID from
+ * @param {Snowflake} channel - callback for error messages
+ */
+function validateNextEvent(guild, channel) {
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
+  const params = {
+    calendarId: guild.getSetting("calendarID"),
+    timeMin: DateTime.local().toISO(),
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 1
+  };
+  gCal.events.list(params).then((res) => {
+    const event = res.data.items[0];
+    channel.send(`**Next Event:**
+      **Summary:** \`${event.summary}\`
+      **Start:** \`${event.start.dateTime || event.start.date }\`
+      **Calendar ID:** \`${event.organizer.email}\`
+    `);
+    return true;
+  }).catch((err) => { 
+    channel.send(i18n.t("validate.calendar_error", {lng: guild.lng, err}));
+    return false;
+  });
+}
+
+/**
  * Returns pass or fail instead of boolean
  * @param {boolean} bool
  * @returns {String}
@@ -716,29 +762,11 @@ const passFail = (bool) => (bool ? "Passed 🟢" : "Failed 🔴");
 function validate(guild, channel) {
   log(`validate | ${guild.id}`);
   const guildSettings = guild.getSetting();
-  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
-  const params = {
-    calendarId: guildSettings.calendarID,
-    timeMin: DateTime.local().toISO(),
-    singleEvents: true,
-    orderBy: "startTime",
-    maxResults: 1
-  };
-  let calTest = gCal.events.list(params).then((res) => {
-    const event = res.data.items[0];
-    channel.send(`**Next Event:**
-      **Summary:** \`${event.summary}\`
-      **Start:** \`${event.start.dateTime || event.start.date }\`
-      **Calendar ID:** \`${event.organizer.email}\`
-    `);
-    return true;
-  }).catch((err) => { channel.send(i18n.t("validate.calendar_error", {lng: guild.lng, err})); });
-  // basic check
   const missingPermissions = helpers.permissionCheck(channel);
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
     **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
-    **Calendar Test:** ${passFail(calTest)}
+    **Calendar Test:** ${passFail(validateNextEvent(guild, channel))}
     **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
     **On Updater List:** ${passFail(updaterList.exists(guild.id))}
     **Guild ID:** \`${guild.id}\`
@@ -756,19 +784,44 @@ function displayStats(channel) {
     const { version } = require("../package.json");
     const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
     const totalMem = (totalmem()>1073741824 ? (totalmem() / 1073741824).toFixed(1) + " GB" : (totalmem() / 1048576).toFixed() + " MB");
-    const embed = new discord.MessageEmbed()
-      .setColor("RED")
-      .setTitle(`Niles Bot ${version}`)
-      .setURL("https://github.com/niles-bot/niles")
-      .addField("Servers", `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`, true)
-      .addField("Uptime", Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"), true)
-      .addField("Ping", `${(client.ws.ping).toFixed(0)} ms`, true)
-      .addField("RAM Usage", `${usedMem}/${totalMem}`, true)
-      .addField("System Info", `${process.platform} (${process.arch})\n${totalMem}`, true)
-      .addField("Libraries", `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`, true)
-      .addField("Links", `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`, true)
-      .setFooter("Created by the Niles Bot Team");
-    return channel.send({ embed });
+    const embedObj = {
+      color: "RED",
+      title: `Niles Bot ${version}`,
+      url: "https://github.com/niles-bot/niles",
+      fields: [
+        {
+          name: "Servers",
+          value: `${results.reduce((acc, guildCount) => acc + guildCount, 0)}`,
+          inline: true
+        }, {
+          name: "Uptime",
+          value: Duration.fromObject({ seconds: process.uptime()}).toFormat("d:hh:mm:ss"),
+          inline: true
+        }, {
+          name: "Ping",
+          value: `${(client.ws.ping).toFixed(0)} ms`,
+          inline: true
+        }, {
+          name: "RAM Usage",
+          value: `${usedMem}/${totalMem}`,
+          inline: true
+        }, {
+          name: "System Info",
+          value: `${process.platform} (${process.arch})\n${totalMem}`,
+          inline: true
+        }, {
+          name: "Libraries",
+          value: `[Discord.js](https://discord.js.org) v${discord.version}\nNode.js ${process.version}`,
+          inline: true
+        }, {
+          name: "Links",
+          value: `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`,
+          inline: true
+        }
+      ],
+      footer: { text: "Created by the Niles Bot Team" }
+    };
+    return channel.send({ embed: embedObj });
   }).catch((err) => {
     discordLog(err);
   });
@@ -782,7 +835,6 @@ function displayStats(channel) {
  */
 function calName(args, guild, channel) {
   let newCalName = args[0];
-  log(`calName | ${guild.id}`);
   // no name passed in
   if (!newCalName) return send(channel, i18n.t("collector.exist", {name: "$t(calendarname)", old: guild.getSetting("calendarName"), lng: guild.lng }));
   // chain togeter args
@@ -898,7 +950,7 @@ function logID(channel, args, guild) {
 function logTz(channel, args, guild) {
   log(`logTz | ${guild.id}`);
   const currentTz = guild.getSetting("timezone");
-  const input = args[0];
+  const input = args.join(" "); // join arguments for parsing
   const tz = soft(input)[0];
   if (!input) { // no input
     // no current tz
