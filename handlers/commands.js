@@ -184,6 +184,7 @@ function getEvents(guild, channel) {
             // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
             eEndDate = DateTime.fromISO(event.end.date, {zone: tz}).minus({days: 1});
           }
+          // log(`Event to CEM: ${event.summary}`);
           let eType = helpers.classifyEventMatch(dayMap[day], eStartDate, eEndDate);
           if (eType !== eventType.NOMATCH) {
             matches.push({

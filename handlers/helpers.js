@@ -133,9 +133,6 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
     // special case, Event ends as 12 AM spot on
     if (checkDate.hasSame(eventStartDate, "day") && eventEndDate.diff(eventStartDate.endOf("day"),"minutes") <= 1){
       eventMatchType = eventType.SINGLE;
-    } else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
-      // this removes the entry for the next day of a 12AM ending event
-      eventMatchType = eventType.NOMATCH;
     } else if (checkDate.hasSame(eventStartDate, "day")) {
       eventMatchType = eventType.MULTISTART;
     } else if (checkDate.hasSame(eventEndDate, "day")){
