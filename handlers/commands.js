@@ -970,7 +970,7 @@ function logTz(channel, args, guild) {
     // timezone is not set
     } else {
       log(`logTz | ${guild.id} | set to new tz: ${tz}`);
-      guild.setSetting("timezone", tz); }
+      guild.setSetting("timezone", tz.iana); }
   // fails validation
   } else {
     log(`logID | ${guild.id} | failed validation: ${tz}`);
