@@ -1,6 +1,6 @@
 {
   "name": "@niles-bot/niles",
-  "version": "4.6.2",
+  "version": "4.6.3",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "columnify": "^1.5.4",
     "debug": "^4.3.1",
     "discord.js": "^12.5.3",
-    "i18next": "^20.3.0",
+    "i18next": "^20.3.1",
     "i18next-fs-backend": "^1.1.1",
     "luxon": "^1.27.0",
     "promise-defer": "^1.0.0",

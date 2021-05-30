@@ -20,6 +20,7 @@ const emptyCal = {
 
 // default guild settings
 const defaultSettings = {
+  "version": 1,
   "prefix": "!",
   "calendarID": "",
   "calendarChannel": "",
