@@ -22,6 +22,9 @@ nav_order: 2
 
 ---
 ## Google Calendar Authentication
+### Public Calendars
+Public Calendars do not need to be added to the calendar, they can be directly added to Niles with `!id` but events cannot be added or deleted without permission to make changes to events.
+
 ### Differences between Service Account and OAuth2
 Summary:
 
