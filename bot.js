@@ -1,5 +1,6 @@
 const discord = require("discord.js");
 const { readdirSync } = require("fs");
+const fs = require("fs");
 const { join } = require("path");
 const debug = require("debug")("niles:bot");
 const client = new discord.Client();
@@ -13,6 +14,16 @@ const { i18n } = require("./handlers/strings.js");
 // bot properties
 let shardGuilds = [];
 let shardID;
+
+client.commands = new discord.Collection();
+const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
+
+for (const file of commandFiles) {
+  const command = require(`./commands/${file}`);
+  // set a new item in the Collection
+  // with the key as the command name and the value as the exported module
+  client.commands.set(command.name, command);
+}
 
 client.on("nilesCalendarUpdate", (gid, cid) => {
   const channel = client.channels.cache.get(cid);
@@ -130,6 +141,7 @@ client.on("guildDelete", (guild) => {
   guilds.deleteGuild(guild.id);
 });
 
+/*
 client.on("message", (message) => {
   try {
     if (message.channel.type === "dm" || message.author.bot) return; // ignore if dm or sent by bot
@@ -138,6 +150,33 @@ client.on("message", (message) => {
     log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
   }
 });
+*/
+
+client.on("message", (message) => {
+  const args = message.content.slice("!".length).trim().split(/ +/);
+  const commandName = args.shift().toLowerCase();
+    
+  const command = client.commands.get(commandName)
+		|| client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(commandName));
+
+  if (!command) return;
+  if (command.args && !args.length) {
+    let reply = `You didn't provide any arguments, ${message.author}!`;
+  
+    if (command.usage) {
+      reply += `\nThe proper usage would be: \`${"!"}${command.name} ${command.usage}\``;
+    }
+  
+    return message.channel.send(reply);
+  }
+  try {
+    command.execute(message, args);
+  } catch (error) {
+    console.error(error);
+    message.reply("there was an error trying to execute that command!");
+  }
+});
+
 
 // ProcessListeners
 /**
