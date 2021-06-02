@@ -65,26 +65,6 @@ function getAccessToken(force, guild, channel) {
 }
 
 /**
- * Guide user through authentication setup
- * @param {[String]} args - Arguments passed in
- * @param {Guild} guild - Guild to pull settings form
- * @param {Snowflake} channel - Channel to respond to
- * @returns {Snowflake} - message response
- */
-function setupAuth(args, guild, channel) {
-  log(`setupAuth | ${guild.id}`);
-  if (args[0] === "oauth") {
-    if (!settings.oauth2) return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
-    getAccessToken((args[1] === "force"), guild, channel);
-  } else if (args[0] === "sa") {
-    if (!settings.sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
-    guild.getSetting("auth", "sa");
-    send(channel, i18n.t("auth.sa.invite", { lng: guild.lng, saId: settings.saId }), 10000);
-  } else { send(channel, i18n.t("auth.noarg", { lng: guild.lng }), 10000);
-  }
-}
-
-/**
  * Safely deletes update timer
  * @param {String} guildID - guild to remove from timers
  * @param {String} reason - reason for removal
@@ -720,62 +700,6 @@ function deleteEvent(args, guild, channel) {
       .catch((err) => { discordLog(err);
       });
   });
-}
-
-/**
- * Get next event for validation
- * @param {Guild} guild - Guild to pull calendar ID from
- * @param {Snowflake} channel - callback for error messages
- */
-function validateNextEvent(guild, channel) {
-  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
-  const params = {
-    calendarId: guild.getSetting("calendarID"),
-    timeMin: DateTime.local().toISO(),
-    singleEvents: true,
-    orderBy: "startTime",
-    maxResults: 1
-  };
-  gCal.events.list(params).then((res) => {
-    const event = res.data.items[0];
-    channel.send(`**Next Event:**
-      **Summary:** \`${event.summary}\`
-      **Start:** \`${event.start.dateTime || event.start.date }\`
-      **Calendar ID:** \`${event.organizer.email}\`
-    `);
-    return true;
-  }).catch((err) => { 
-    channel.send(i18n.t("validate.calendar_error", {lng: guild.lng, err}));
-    return false;
-  });
-}
-
-/**
- * Returns pass or fail instead of boolean
- * @param {boolean} bool
- * @returns {String}
- */
-const passFail = (bool) => (bool ? "Passed 🟢" : "Failed 🔴");
-
-/**
- * Checks for any issues with guild configuration
- * @param {Guild} guild - Guild to check agianst
- * @param {Snowflake} channel - Channel to respond to
- * @returns {bool} - if calendar fetches successfully
- */
-function validate(guild, channel) {
-  log(`validate | ${guild.id}`);
-  const guildSettings = guild.getSetting();
-  const missingPermissions = helpers.permissionCheck(channel);
-  channel.send(`**Checks**:
-    **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
-    **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
-    **Calendar Test:** ${passFail(validateNextEvent(guild, channel))}
-    **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
-    **On Updater List:** ${passFail(updaterList.exists(guild.id))}
-    **Guild ID:** \`${guild.id}\`
-    **Shard:** ${client.shard.ids}
-  `);
 }
 
 /**

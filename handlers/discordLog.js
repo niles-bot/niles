@@ -9,7 +9,7 @@ const formatLogMessage = (message) => `[${new Date().toUTCString()}] ${message}`
 
 /**
  * Log Messages to discord channel and console
- * @param {DiscordClient}
+ * @param {DiscordClient} client - client to send message to
  * @param {...any} logItems - items to log
  */
 function discordLog(client, ...logItems) {

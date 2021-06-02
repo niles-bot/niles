@@ -166,14 +166,13 @@ client.on("message", (message) => {
     if (command.usage) {
       reply += `\nThe proper usage would be: \`${"!"}${command.name} ${command.usage}\``;
     }
-  
     return message.channel.send(reply);
   }
   try {
     command.execute(message, args);
   } catch (error) {
     console.error(error);
-    message.reply("there was an error trying to execute that command!");
+    message.channel.send("there was an error trying to execute that command!");
   }
 });
 

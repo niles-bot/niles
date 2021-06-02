@@ -5,14 +5,6 @@ const debug = require("debug")("niles:helpers");
 const { i18n } = require("./strings.js");
 const { secrets } = require("../settings.js"); 
 
-// event types
-const eventType = {
-  NOMATCH: "nm",
-  SINGLE: "se",
-  MULTISTART: "ms",
-  MULTIMID: "mm",
-  MULTYEND: "me"
-};
 
 /**
  * Format log messages with DateTime string
@@ -163,22 +155,6 @@ function trimEventName(eventName, trimLength){
   // trim down to length
   if (eventName.length > trimLength) eventName = eventName.trim().substring(0, trimLength-3) + "...";
   return eventName;
-}
-
-/**
- * this helper function strips all html formatting from the description.
- * @param {string} inputString - the unclean string
- * @return {string} strippedString - string stripped of html
- */
-function descriptionParser(inputString) {
-  if (!inputString) return "undefined";
-  debug(`descriptionParser | pre: ${inputString}`);
-  const brRegex = /(<br>)+/gi; // match <br>
-  const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags
-  let cleanString;
-  try { cleanString = decodeURI(inputString); } // decode URI
-  catch(e) { cleanString = inputString; }
-  return cleanString.replace(brRegex, "\n").replace(htmlRegex, "").trim(); // replace <br> with \n and stripped html tags
 }
 
 /**
