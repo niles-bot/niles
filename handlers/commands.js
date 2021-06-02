@@ -395,6 +395,10 @@ function generateCalendarEmbed(guild) {
     fieldObj.value = tempValue;
     // add to msgLength
     msgLength += tempValue.length;
+    // if length over 1024, replace with error.
+    if (tempValue.length >= 1024) {
+      fieldObj.value = i18n.t("calendar.too_long_day", { lng: guild.lng});
+    }
     fields.push(fieldObj);
   }
   // check if too many characters
