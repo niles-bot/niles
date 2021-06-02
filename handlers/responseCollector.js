@@ -1,5 +1,7 @@
+// package imports
 const defer = require("promise-defer");
 const debug = require("debug")("niles:helpers");
+// module imports
 const { i18n } = require("./strings.js");
 
 /**

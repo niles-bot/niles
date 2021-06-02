@@ -1,8 +1,11 @@
-const gCalendar = require("@googleapis/calendar").calendar;
+// package imports
 const debug = require("debug")("niles:cmd");
-const { i18n } = require("~/handlers/strings.js");
+const gCalendar = require("@googleapis/calendar").calendar;
+// module imports
 const { discordLog } = require("~/handlers/discordLog.js");
 const eventHelper = require("~/handlers/eventHelper.js");
+const { i18n } = require("~/handlers/strings.js");
+const { killUpdateTimer } = require("~/handlers/updaterList.js");
 
 /**
  * List events within date range

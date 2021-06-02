@@ -1,4 +1,6 @@
+// package imports
 const debug = require("debug")("niles:cmd");
+// module imports
 const { discordLog } = require("~/handlers/discordLog.js");
 const { Guild } = require("~/handlers/guilds.js");
 const { i18n } = require("~/handlers/strings.js");

@@ -1,8 +1,9 @@
+// package imports
 const debug = require("debug")("niles:cmd");
+// module imports
 const { Guild } = require("~/handlers/guilds.js");
 const { i18n } = require("~/handler/strings.js");
 const settings = require("~/settings.js");
-
 
 module.exports = {
   name: "auth",
@@ -23,7 +24,6 @@ function send(channel, content, timeout=5000) {
   channel.send(content)
     .then((message) => message.delete({ timeout }));
 }
-
 
 /**
  * Get and store access token after promptiong for user authorization

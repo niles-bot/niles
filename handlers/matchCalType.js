@@ -1,4 +1,6 @@
+// package imports
 const debug = require("debug")("niles:helpers");
+// module imports
 const { i18n } = require("~/handlers/strings.js");
 
 /**

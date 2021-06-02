@@ -1,10 +1,13 @@
+// package imports
 const debug = require("debug")("niles:cmd");
+const gCalendar = require("@googleapis/calendar").calendar;
+// module imports
+const calendar = require("~/handlers/calendar.js");
 const { discordLog } = require("~/handlers/discordLog.js");
 const { Guild } = require("~/handlers/guilds.js");
 const { i18n } = require("~/handlers/strings.js");
 const { responseCollector } = require("~/handlers/responseCollector.js");
-const calendar = require("~/handlers/calendar.js");
-const gCalendar = require("@googleapis/calendar").calendar;
+const { updateCalendar } = require("~/handlers/display.js");
 
 module.exports = {
   name: "delete",

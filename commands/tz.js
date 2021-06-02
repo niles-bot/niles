@@ -1,9 +1,11 @@
-const soft = require("timezone-soft");
-const { i18n } = require("~/handlers/strings.js");
+// package imports
 const debug = require("debug")("niles:cmd");
+const soft = require("timezone-soft");
+// module imports
 const { discordLog } = require("~/handlers/discordLog.js");
-const { responseCollector } = require("~/handlers/responseCollector.js");
 const { Guild } = require("~/handlers/guilds.js");
+const { i18n } = require("~/handlers/strings.js");
+const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
   name: "tz",

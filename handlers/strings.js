@@ -1,3 +1,4 @@
+// package imports
 const { join } = require("path");
 const i18next = require("i18next");
 const SyncBackend = require("i18next-fs-backend");

@@ -1,4 +1,6 @@
-const log = require("debug")("niles:do");
+// package imports
+const debug = require("debug")("niles:do");
+// module imports
 const { i18n } = require("./strings.js");
 
 /**
@@ -82,7 +84,7 @@ const doHelpArray = {
  * @returns {String} response to user
  */
 function doBinary(value, guild, setting) {
-  log(`doBinary | ${guild.id} | setting: ${setting} | value: ${value}`);
+  debug(`doBinary | ${guild.id} | setting: ${setting} | value: ${value}`);
   const help = i18n.t(`displayoptions.binary.${setting}`);
   if (value === "1" || value === "0") {
     guild.setSetting(setting, value); // set value
@@ -101,7 +103,7 @@ function doBinary(value, guild, setting) {
  */
 function doBinaryEmbed(value, guild, setting) {
   const curStyle = guild.getSetting("style");
-  log(`doBinaryEmbed | ${guild.id} | setting: ${setting} | value: ${value} | style: ${curStyle}`);
+  debug(`doBinaryEmbed | ${guild.id} | setting: ${setting} | value: ${value} | style: ${curStyle}`);
   // if set to code, do not allow
   if (curStyle === "embed") return doBinary(value, guild, setting);
   else return i18n.t("displayoptions.embedonly", { lng: guild.lng });
@@ -116,7 +118,7 @@ function doBinaryEmbed(value, guild, setting) {
  */
 function doChoice(value, guild, settingObj) {
   const setting = settingObj.name;
-  log(`doChoice | ${guild.id} | setting: ${setting} | value: ${value}`);
+  debug(`doChoice | ${guild.id} | setting: ${setting} | value: ${value}`);
   if (settingObj.choices.includes(value)) {
     const help = i18n.t(`displayoptions.choice.${setting}`);
     guild.setSetting(setting, value);
@@ -135,7 +137,7 @@ function doChoice(value, guild, settingObj) {
  */
 function doInt(value, guild, settingObj) {
   const name = settingObj.name;
-  log(`doInt | ${guild.id} | setting: ${name} | value: ${value}`);
+  debug(`doInt | ${guild.id} | setting: ${name} | value: ${value}`);
   if (value) {
     const valueInt = parseInt(value);
     const help = i18n.t(`displayoptions.choice.${name}`);
@@ -159,7 +161,7 @@ function doInt(value, guild, settingObj) {
  * @returns {String} response to user
  */
 function doMoreDays(value, guild, settingObj, channel) {
-  log(`doMoreDays | ${guild.id} | setting: moredays | value: ${value}`);
+  debug(`doMoreDays | ${guild.id} | setting: moredays | value: ${value}`);
   channel.send({
     "content": "Having more than 25 days ***can & will*** cause issues.\n- Any operations with the calendar can take ***seconds*** longer\n- If there are more than 2048/6000 character or 25 days with events, Niles ***will fail to display***\n- If 60 is not enough, ask your admin to raise the limit"  });
   return doInt(value, guild, settingObj);

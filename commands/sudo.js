@@ -1,5 +1,7 @@
+// package imports
 const debug = require("debug")("niles:cmd");
 const { access, constants } = require("fs");
+// module imports
 const { secrets } = require("~/settings.js");
 
 module.exports = {

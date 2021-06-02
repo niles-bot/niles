@@ -141,23 +141,6 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
 }
 
 /**
- * This helper function limits the amount of chars in a string to max trimLength and adds "..." if shortened.
- * @param {string} eventName - The name/summary of an event
- * @param {int} trimLength - the number of chars to trim the title to
- * @return {string} eventName - A string wit max 23 chars length
- */
-function trimEventName(eventName, trimLength){
-  debug(`trimEventName | eventname: ${eventName}`);
-  // remove json invalids
-  eventName = eventName.replace("[\\.$|`|']/g", "\"");
-  // if no trim length, just return
-  if (trimLength === null || trimLength === 0) return eventName;
-  // trim down to length
-  if (eventName.length > trimLength) eventName = eventName.trim().substring(0, trimLength-3) + "...";
-  return eventName;
-}
-
-/**
  * This function makes sure that the calendar matches a specified type
  * @param {String} calendarID - calendar ID to classify
  * @param {Snowflake} channel - Channel to send callback to

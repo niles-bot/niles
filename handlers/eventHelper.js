@@ -1,3 +1,4 @@
+// package imports
 const { DateTime } = require("luxon");
 const debug = require("debug")("niles:event");
 
@@ -88,5 +89,4 @@ module.exports = {
   classifyEventMatch,
   eventTimeCorrector,
   descriptionParser
-
 };

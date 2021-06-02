@@ -1,20 +1,24 @@
+// package imports
 const { readFileSync, writeFileSync, existsSync} = require("fs");
 const { join } = require("path");
-const log = require("debug")("niles:updater-list");
-const filename = join(__dirname, "..", "stores", "todo_list.json");
+const debug = require("debug")("niles:updater-list");
+// module imports
+const { discordLog } = require("~/handlers/discordLog.js");
+// const
+const FILENAME = join(__dirname, "..", "stores", "todo_list.json");
 
 /**
  * Load json file
  * @returns {[{guild, channel}]} - Array with objects containing guild and chnanel
  */
-const load = () => !existsSync(filename) ? [] : JSON.parse(readFileSync(filename, "utf8")).list;
+const load = () => !existsSync(FILENAME) ? [] : JSON.parse(readFileSync(FILENAME, "utf8")).list;
 
 /**
  * Append guild to list
  * @param {String} list 
  */
 function write(list) {
-  writeFileSync(filename, JSON.stringify({list}, null, 4), (err) => { if (err) console.log(err); });
+  writeFileSync(FILENAME, JSON.stringify({list}, null, 4), (err) => { if (err) console.log(err); });
 }
 
 /**
@@ -26,7 +30,7 @@ function append(guild, channel) {
   let list = load();
   list.push({guild, channel});
   write(list);
-  log(`append ${guild}`);
+  debug(`append ${guild}`);
 }
 
 /**
@@ -37,7 +41,7 @@ function remove(guild) {
   let list = load();
   list = list.filter((item) => item.guild !== guild); // recreate list without target
   write(list);
-  log(`remove ${guild}`);
+  debug(`remove ${guild}`);
 }
 
 /**
@@ -52,9 +56,37 @@ const exists = (guild) => load().some((obj) => obj.guild === guild);
  */
 const getIterator = () => load()[Symbol.iterator]();
 
+/**
+ * Safely deletes update timer
+ * @param {String} guildID - guild to remove from timers
+ * @param {String} reason - reason for removal
+ */
+function killUpdateTimer (guildID, reason = "none") {
+  remove(guildID);
+  const message = `removed ${guildID} | ${reason}`;
+  discordLog(message);
+  console.error(message);
+}
+
+/**
+ * Start update timer for guild mentioned
+ * @param {String} guildID - ID of guild to update
+ * @param {String} channelid - ID of channel to callback to
+ */
+function startUpdateTimer(guildID, channelid) {
+  if (exists(guildID)) {
+    debug(`startUpdateTimer | ${guildID} | updater exists exists`);
+    return discordLog(`timer not started in guild: ${guildID}`);
+  } else {
+    debug(`startUpdateTimer | ${guildID} | no current updater`);
+    discordLog(`Starting update timer in guild: ${guildID}`);
+    append(guildID, channelid);
+  }
+}
+
 module.exports = {
-  append,
-  remove,
   exists,
-  getIterator
+  getIterator,
+  killUpdateTimer,
+  startUpdateTimer
 };

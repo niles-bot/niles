@@ -1,0 +1,30 @@
+{
+	"version": 2,
+  "prefix": ".",
+	"calendarName": "CALENDAR",
+	"timezone": "",
+	"helpmenu": "1",
+	"format": 12,
+	"tzDisplay": "0",
+	"allowedRoles": [],
+	"emptydays": "1",
+	"showpast": "0",
+	"trim": 0,
+	"days": 7,
+	"style": "code",
+	"inline": "0",
+	"description": "0",
+  "calendars": {
+    "default": [
+      "default@calendar"
+    ],
+    "channel1id": [
+      "xyz@calendar",
+      "abc@calendar"
+    ],
+    "channel2id": [
+      "def@calendar",
+      "ghi@calendar"
+    ]
+  }
+}

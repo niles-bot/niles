@@ -1,10 +1,12 @@
-const gCalendar = require("@googleapis/calendar").calendar;
+// package imports
 const { DateTime, IANAZone } = require("luxon");
 const debug = require("debug")("niles:cmd");
-const { i18n } = require("~/handlers/strings.js");
-const updaterList = require("~/handlers/updaterList.js");
-const { matchCalType } = require("~/handlers/matchCalType.js");
+const gCalendar = require("@googleapis/calendar").calendar;
+// module imports
 const { Guild } = require("~/handlers/guilds.js");
+const { i18n } = require("~/handlers/strings.js");
+const { matchCalType } = require("~/handlers/matchCalType.js");
+const updaterList = require("~/handlers/updaterList.js");
 
 module.exports = {
   name: "validate",

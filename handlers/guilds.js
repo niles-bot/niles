@@ -1,8 +1,10 @@
+// package imports
+const { DateTime } = require("luxon");
+const debug = require("debug")("niles:guilds");
 const fs = require("fs");
 const { join } = require("path");
-const { DateTime } = require("luxon");
+// module imports
 const { oauth2, sa } = require("../settings.js");
-const log = require("debug")("niles:guilds");
 
 const emptyCal = {
   "events": {
@@ -62,10 +64,10 @@ function deleteFolderRecursive(path) {
  * @param {String} file - file name to write to - calendar/settings 
  */
 function writeGuildSpecific(guildID, json, file) {
-  log(`writeGuildSpecific | ${guildID} | file: ${file}`);
+  debug(`writeGuildSpecific | ${guildID} | file: ${file}`);
   let fullPath = join(__dirname, "..", "stores", guildID, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-    if (err) return log("error writing guild specific database: " + err);
+    if (err) return debug("error writing guild specific database: " + err);
   });
 }
 
@@ -79,7 +81,7 @@ function createGuild(guildID) {
     fs.mkdirSync(guildPath); 
     writeGuildSpecific(guildID, emptyCal, "calendar");
     writeGuildSpecific(guildID, defaultSettings, "settings");
-    log(`Guild ${guildID} has been created`);
+    debug(`Guild ${guildID} has been created`);
   }
 }
 
@@ -90,7 +92,7 @@ function createGuild(guildID) {
 function deleteGuild(guildID) {
   const guildPath = join(__dirname, "..", "stores", guildID);
   deleteFolderRecursive(guildPath);
-  log(`Guild ${guildID} has been deleted`);
+  debug(`Guild ${guildID} has been deleted`);
 }
 
 /**
@@ -109,7 +111,7 @@ function recreateGuild(guildID) {
 function readFile(path) {
   try { return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
-    log("error reading file " + err);
+    debug("error reading file " + err);
     return {}; // return valid JSON to trigger update
   }
 }
@@ -120,7 +122,7 @@ function readFile(path) {
  * @param {String} file 
  */
 function getGuildSpecific(guildID, file) {
-  log(`getGuildSpecific | ${guildID} | file: ${file}`);
+  debug(`getGuildSpecific | ${guildID} | file: ${file}`);
   let filePath = join(__dirname, "..", "stores", guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
@@ -235,7 +237,7 @@ function Guild(guildID) {
    * Update settings and calendar
    */
   this.update = () => {
-    log(`Guild.update | ${guildID}`);
+    debug(`Guild.update | ${guildID}`);
     this.settings = getGuildSpecific(guildID, "settings.json");
     this.calendar = getGuildSpecific(guildID, "calendar.json");
   };

@@ -1,9 +1,11 @@
-const debug = require("debug")("niles:cmd");
+// package imports
 const { totalmem } = require("os");
 const { Duration } = require("luxon");
 const { version } = require("discord.js");
+// module imports
 const { discordLog } = require("~/handlers/discordLog.js");
-const pkg = require("~/package.json");
+// const
+const NILESVERSION = require("~/package.json").version;
 
 module.exports = {
   name: "stats",
@@ -20,13 +22,12 @@ module.exports = {
  * @param {Snowflake} channel - Channel to reply to 
  */
 function displayStats(message) {
-  debug(`displayStats | ${message.channel.guild.id}`);
   message.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
     const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
     const totalMem = (totalmem()>1073741824 ? (totalmem() / 1073741824).toFixed(1) + " GB" : (totalmem() / 1048576).toFixed() + " MB");
     const embedObj = {
       color: "RED",
-      title: `Niles Bot ${pkg.version}`,
+      title: `Niles Bot ${NILESVERSION}`,
       url: "https://github.com/niles-bot/niles",
       fields: [
         {

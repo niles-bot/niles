@@ -1,9 +1,11 @@
+// package imports
 const debug = require("debug")("niles:cmd");
 const { DateTime } = require("luxon");
+// module imports
+const calendar = require("~/handlers/calendar.js");
+const { discordLog } = require("~/handlers/discordLog.js");
 const { Guild } = require("~/handlers/guilds.js");
 const { i18n } = require("~/handlers/strings.js");
-const { discordLog } = require("~/handlers/discordLog.js");
-const calendar = require("~/handlers/calendar.js");
 
 module.exports = {
   name: "next",
