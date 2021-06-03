@@ -76,51 +76,7 @@ function killUpdateTimer (guildID, reason = "none") {
   console.error(message);
 }
 
-/**
- * Cleans messages from the channel
- * @param {Snowflake} channel - channel to delete the messages in
- * @param {Integer} numberMessages - number of messages to delete
- * @param {bool} deleteCal - delete calendar message
- */
-function cleanChannel(channel, numMsg, deleteCal) {
-  log(`cleanChannel | ${channel.guild.id}`);
-  numMsg = ((numMsg <= 97) ? numMsg+= 3 : 100); // add 3 messages from collector
-  const guild = new guilds.Guild(channel.guild.id);
-  const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
-  if (deleteCal) {
-    guild.setCalendarID(""); // delete calendar id
-    killUpdateTimer(guild.id, "clean");
-    channel.bulkDelete(numMsg, true); // delete messages
-  } else {
-    channel.messages.fetch({ limit: numMsg })
-      .then((messages) => { //If the current calendar is deleted
-        messages.forEach(function(message) {
-          if (guildCalendarMessageID && message.id === guildCalendarMessageID) messages.delete(message.id); // skip calendar message
-        });
-        return channel.bulkDelete(messages, true);
-      });
-  }
-}
 
-/**
- * Interface to warn users before deleting messages
- * @param {[String]} args - arguments passed in 
- * @param {Snowflake} channel - Channel to clean
- * @param {String} lng - Locale of guild
- */
-function cleanChannelWarn(args, channel, lng) {
-  const argMessages = Number(args[0]);
-  const deleteCalendar = Boolean(args[1]);
-  const guild = new guilds.Guild(channel.guild.id);
-  if (!argMessages || isNaN(argMessages)) {
-    return channel.send(i18n.t("delete.noarg", { lng }));
-  } else {
-    channel.send(i18n.t("delete.confirm", { lng, argMessages }));
-    helpers.yesThenCollector(channel, guild.lng)
-      .then(() => cleanChannel(channel, argMessages, deleteCalendar))
-      .catch((err) => discordLog(err));
-  }
-}
 
 /**
  * Parses and corrects events for classification

@@ -7,8 +7,8 @@ const { i18n } = require("~/handlers/strings.js");
 const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
-  name: "locale",
-  description: "Set locale",
+  name: "channel",
+  description: "Set channel",
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setChannel(message.channel, args, guild);

@@ -8,6 +8,17 @@ const { i18n } = require("~/handlers/strings.js");
 const { killUpdateTimer } = require("~/handlers/updaterList.js");
 
 /**
+ * Send message with deletion timeout
+ * @param {Snowflake} channel - channel to send message in
+ * @param {String} content - content of message
+ * @param {Number} [timeout=5000] - time in milliseconds before message is deleted
+ */
+function send(channel, content, timeout=5000) {
+  channel.send(content)
+    .then((message) => message.delete({ timeout }));
+}
+
+/**
  * List events within date range
  * @param {Guild} guild - Guild to pull from
  */
@@ -99,7 +110,30 @@ function getEvents(guild, channel) {
   }
 }
 
+/**
+ * Adds an event to google calendar via quickAddEvent
+ * @param {[String]} args - Arguments passed in 
+ * @param {Guild} guild - Guild to work agianst
+ * @param {Snowflake} channel - Channel to callback to
+ */
+function quickAddEvent(args, guild, channel) {
+  debug(`quickAddEvent | ${guild.id} | args ${args}`);
+  if (!args[0]) return send(channel, i18n.t("quick_add.noarg", { lng: guild.lng }));
+  const params = {
+    calendarId: guild.getSetting("calendarID"),
+    text: args.join(" ") // join
+  };
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
+  gCal.events.quickAdd(params).then((res) => {
+    const promptDate = (res.data.start.dateTime ? res.data.start.dateTime : res.data.start.date);
+    return send(channel, i18n.t("quick_add.confirm", { lng: guild.lng, summary: res.data.summary, promptDate }));
+  }).catch((err) => { discordLog(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
+  });
+}
+
+
 module.exports = {
   listEvents,
-  getEvents
+  getEvents,
+  quickAddEvent
 };
