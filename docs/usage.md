@@ -195,7 +195,7 @@ You can also use `@niles prefix` to find out what the prefix has been changed to
 
 ### displayoptions
 
-For details on display options, refer to [Customization/Display Options](customisation/#display-options).
+For details on display options, refer to [Customization/Display Options](../customisation/#display-options).
 
 ---
 
