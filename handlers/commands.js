@@ -160,8 +160,8 @@ function eventTimeCorrector(day, event, tz) {
   //Handle All Day Events
   else if (event.start.date) {
     eStartDate = DateTime.fromISO(event.start.date, {zone: tz});
-    // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
-    eEndDate = DateTime.fromISO(event.end.date, {zone: tz}).minus({days: 1});
+    // do not remove a day, since it is mitigated in classifyEventMatch
+    eEndDate = DateTime.fromISO(event.end.date, {zone: tz});
   }
   // log(`Event to CEM: ${event.summary}`);
   return helpers.classifyEventMatch(day, eStartDate, eEndDate);
@@ -680,10 +680,14 @@ function nextEvent(guild, channel) {
  * @returns {Event} - event matching summary if exists
  */
 function searchEventName(summary, guild, channel) {
+  // console log
+  console.log(`delete |${summary}|`);
   listSingleEventsWithinDateRange(guild)
     .then((resp) => {
-      if (!resp.data) return; // return if no data
+      console.log(typeof(resp.data));
+      if (!resp.data) return;
       for (let curEvent of resp.data.items) {
+        console.log(`Summary |${curEvent.summary}|`);
         if (curEvent.summary && summary.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
           return curEvent;
         }
@@ -693,7 +697,7 @@ function searchEventName(summary, guild, channel) {
       discordLog(err);
       send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
     });
-  return false;
+  //return false;
 }
 
 /**
@@ -706,6 +710,7 @@ function deleteEvent(args, guild, channel) {
   log(`deleteEvent | ${guild.id} | args: ${args}`);
   if (!args[0]) return send(channel, i18n.t("deleteevent.noarg", {lng: guild.lng }));
   const event = searchEventName(args.join(" "), guild, channel); // search for event
+  console.log(event);
   if (!event) {
     send(channel, i18n.t("deleteevent.not_found", {lng: guild.lng }));
     return log(`deleteEvent | ${guild.id} | no event within range`);
