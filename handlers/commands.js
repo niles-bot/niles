@@ -748,10 +748,8 @@ function validateNextEvent(guild, channel) {
       **Start:** \`${event.start.dateTime || event.start.date }\`
       **Calendar ID:** \`${event.organizer.email}\`
     `);
-    return true;
   }).catch((err) => { 
     channel.send(i18n.t("validate.calendar_error", {lng: guild.lng, err}));
-    return false;
   });
 }
 
@@ -772,10 +770,10 @@ function validate(guild, channel) {
   log(`validate | ${guild.id}`);
   const guildSettings = guild.getSetting();
   const missingPermissions = helpers.permissionCheck(channel);
+  validateNextEvent(guild, channel); // print calendar test results
   channel.send(`**Checks**:
     **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
     **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
-    **Calendar Test:** ${passFail(validateNextEvent(guild, channel))}
     **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
     **On Updater List:** ${passFail(updaterList.exists(guild.id))}
     **Guild ID:** \`${guild.id}\`
