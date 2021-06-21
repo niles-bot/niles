@@ -96,8 +96,8 @@ function eventTimeCorrector(day, event, tz) {
   //Handle All Day Events
   else if (event.start.date) {
     eStartDate = DateTime.fromISO(event.start.date, {zone: tz});
-    // remove a day, since all-day end is start+1, we want to keep compatible with multi-day events though
-    eEndDate = DateTime.fromISO(event.end.date, {zone: tz}).minus({days: 1});
+    // do not remove a day, since it is mitigated in classifyEventMatch
+    eEndDate = DateTime.fromISO(event.end.date, {zone: tz});
   }
   // log(`Event to CEM: ${event.summary}`);
   return helpers.classifyEventMatch(day, eStartDate, eEndDate);
@@ -334,6 +334,10 @@ function generateCalendarEmbed(guild) {
     fieldObj.value = tempValue;
     // add to msgLength
     msgLength += tempValue.length;
+    // if length over 1024, replace with error.
+    if (tempValue.length >= 1024) {
+      fieldObj.value = i18n.t("calendar.too_long_day", { lng: guild.lng});
+    }
     fields.push(fieldObj);
   }
   // check if too many characters
@@ -616,10 +620,14 @@ function nextEvent(guild, channel) {
  * @returns {Event} - event matching summary if exists
  */
 function searchEventName(summary, guild, channel) {
-  listEvents(guild)
+  // console log
+  console.log(`delete |${summary}|`);
+  listSingleEventsWithinDateRange(guild)
     .then((resp) => {
-      if (!resp.data) return; // return if no data
+      console.log(typeof(resp.data));
+      if (!resp.data) return;
       for (let curEvent of resp.data.items) {
+        console.log(`Summary |${curEvent.summary}|`);
         if (curEvent.summary && summary.toLowerCase().trim() === curEvent.summary.toLowerCase().trim()) {
           return curEvent;
         }
@@ -629,7 +637,7 @@ function searchEventName(summary, guild, channel) {
       discordLog(err);
       send(channel, i18n.t("deleteevent.error", {lng: guild.lng }));
     });
-  return false;
+  //return false;
 }
 
 /**
@@ -642,6 +650,7 @@ function deleteEvent(args, guild, channel) {
   log(`deleteEvent | ${guild.id} | args: ${args}`);
   if (!args[0]) return send(channel, i18n.t("deleteevent.noarg", {lng: guild.lng }));
   const event = searchEventName(args.join(" "), guild, channel); // search for event
+  console.log(event);
   if (!event) {
     send(channel, i18n.t("deleteevent.not_found", {lng: guild.lng }));
     return log(`deleteEvent | ${guild.id} | no event within range`);
@@ -656,6 +665,60 @@ function deleteEvent(args, guild, channel) {
       .catch((err) => { discordLog(err);
       });
   });
+}
+
+/**
+ * Get next event for validation
+ * @param {Guild} guild - Guild to pull calendar ID from
+ * @param {Snowflake} channel - callback for error messages
+ */
+function validateNextEvent(guild, channel) {
+  const gCal = gCalendar({version: "v3", auth: guild.getAuth()});
+  const params = {
+    calendarId: guild.getSetting("calendarID"),
+    timeMin: DateTime.local().toISO(),
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 1
+  };
+  gCal.events.list(params).then((res) => {
+    const event = res.data.items[0];
+    channel.send(`**Next Event:**
+      **Summary:** \`${event.summary}\`
+      **Start:** \`${event.start.dateTime || event.start.date }\`
+      **Calendar ID:** \`${event.organizer.email}\`
+    `);
+  }).catch((err) => { 
+    channel.send(i18n.t("validate.calendar_error", {lng: guild.lng, err}));
+  });
+}
+
+/**
+ * Returns pass or fail instead of boolean
+ * @param {boolean} bool
+ * @returns {String}
+ */
+const passFail = (bool) => (bool ? "Passed 🟢" : "Failed 🔴");
+
+/**
+ * Checks for any issues with guild configuration
+ * @param {Guild} guild - Guild to check agianst
+ * @param {Snowflake} channel - Channel to respond to
+ * @returns {bool} - if calendar fetches successfully
+ */
+function validate(guild, channel) {
+  log(`validate | ${guild.id}`);
+  const guildSettings = guild.getSetting();
+  const missingPermissions = helpers.permissionCheck(channel);
+  validateNextEvent(guild, channel); // print calendar test results
+  channel.send(`**Checks**:
+    **Timezone:** ${passFail(helpers.validateTz(guildSettings.timezone))}
+    **Calendar ID:** ${passFail(helpers.matchCalType(guildSettings.calendarID, channel, guild))}
+    **Missing Permissions:** ${missingPermissions ? missingPermissions : "🟢 None"}
+    **On Updater List:** ${passFail(updaterList.exists(guild.id))}
+    **Guild ID:** \`${guild.id}\`
+    **Shard:** ${client.shard.ids}
+  `);
 }
 
 /**
@@ -838,7 +901,7 @@ function logTz(channel, args, guild) {
   const tz = soft(input)[0];
   if (!input) { // no input
     // no current tz
-    if (!currentTz) channel.send(i18n.t("collector.noarg", { name: "$t(timezone)", lng: guild.lng, example: "`!tz America/New_York` or `!tz UTC+4` or `!tz EST` No spaces in formatting."}));
+    if (!currentTz) channel.send(i18n.t("collector.noarg", { name: "$t(timezone)", lng: guild.lng, example: "`!tz America/New_York` or `!tz UTC+4` or `!tz EST`"}));
     // timezone define
     else channel.send(i18n.t("collector.exist", { name: "$t(timezone)", lng: guild.lng, old: currentTz }));
   }

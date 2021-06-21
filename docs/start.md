@@ -22,6 +22,9 @@ nav_order: 2
 
 ---
 ## Google Calendar Authentication
+### Public Calendars
+Public Calendars do not need to be added to the calendar, they can be directly added to Niles with `!id` but events cannot be added or deleted without permission to make changes to events.
+
 ### Differences between Service Account and OAuth2
 Summary:
 
@@ -92,15 +95,20 @@ Now in your Discord server (in a channel where Niles will have permissions, i.e.
 We could pull this from your Google calendar or Discord server, but since your members might be in different timezones, you must add your own.
 
 This can be done using `!tz` i.e.
-
-`!tz America/New_York`
-`!tz UTC+5`
-`!tz EST`
+```
+America/New_York
+canada/eastern
+Montreal
+eastern
+UTC+5
+EST
+```
 
 ![discord-tz-example](../../assets/images/discord-tz.gif)
 {: .text-center}
 
-[Full list of TZ database names on Wikipedia](https://cutt.ly/tz)
+This is done with [timezone-soft](https://github.com/spencermountain/timezone-soft)  
+[Demo](https://observablehq.com/@spencermountain/current-time-in)
 
 ---
 

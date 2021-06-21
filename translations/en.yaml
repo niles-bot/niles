@@ -160,6 +160,7 @@ timerkilled: update timer has been killed.
 
 calendar:
   allday: All Day
+  too_long_day: Your day has over 1024 characters - this is a Discord limitation - reduce the length of your event names or hide descriptions
   too_long_help: "Your calendar has over {{msgLength}} characters. This must be under 6000, as mandated by Discord. Try `displayoptions desclength` to limit description length or `displayoptions descriptions` to toggle descriptions."
   too_long: Your total calendar length exceeds 2048 characters - this is a Discord limitation - Try reducing the length of your event names or total number of events
   too_many_help: "Your calendar has over {{days}} days. This must be under 25, as mandated by Discord. Try `displayoptions days` to limit the number of days or `displayoptions emptdays` to toggle displaying empty days."

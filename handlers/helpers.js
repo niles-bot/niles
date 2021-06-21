@@ -125,6 +125,7 @@ function yesThenCollector(channel, lng) {
  * @return {string} eventType - A string of ENUM(eventType) representing the relation
  */
 function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
+  // debug(`check: ${checkDate} | start: ${eventStartDate} | end: ${eventEndDate}`);
   let eventMatchType = eventType.NOMATCH;
   // simple single day event
   if (checkDate.hasSame(eventStartDate, "day") && eventStartDate.hasSame(eventEndDate, "day")){
@@ -133,6 +134,10 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
     // special case, Event ends as 12 AM spot on
     if (checkDate.hasSame(eventStartDate, "day") && eventEndDate.diff(eventStartDate.endOf("day"),"minutes") <= 1){
       eventMatchType = eventType.SINGLE;
+    // check if event has a starting date not on the same day to avoid single events being shifted
+    } else if (eventEndDate.diff(checkDate.startOf("day"),"minutes") <= 1){
+      // this removes the entry for the next day of a 12AM ending event
+      eventMatchType = eventType.NOMATCH;
     } else if (checkDate.hasSame(eventStartDate, "day")) {
       eventMatchType = eventType.MULTISTART;
     } else if (checkDate.hasSame(eventEndDate, "day")){
