@@ -9,9 +9,10 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 module.exports = {
   name: "admin",
   description: "Restrict the usage of Niles to a specific server role",
+  preSetup: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
-    setRoles(message.channel, args, guild);
+    setRoles(message, args, guild);
   }
 };
 
@@ -42,7 +43,7 @@ function setRoles(message, args, guild) {
     // no role selected
     } else if (!userRoles.includes(adminRole)) {
       debug(`setRoles | ${guild.id} | do not have role`);
-      message.channel.send(i18n.t("admin.no_role", {lng}));
+      return message.channel.send(i18n.t("admin.no_role", {lng}));
     } else {
       // restricting succeeded
       debug(`setRoles | ${guild.id} | prompt role: ${adminRole}`);

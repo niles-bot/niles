@@ -2,12 +2,13 @@
 const debug = require("debug")("niles:cmd");
 // module imports
 const { Guild } = require("~/handlers/guilds.js");
-const { i18n } = require("~/handler/strings.js");
+const { i18n } = require("~/handlers/strings.js");
 const settings = require("~/settings.js");
 
 module.exports = {
   name: "auth",
   description: "Authenticate",
+  preSetup: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setAuth(args, guild, message.channel);

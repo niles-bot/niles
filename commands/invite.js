@@ -1,6 +1,7 @@
 module.exports = {
   name: "invite",
   description: "Generate Niles bot invite link",
+  preSetup: true,
   execute(message, args) {
     args;
     const inviteEmbed = {

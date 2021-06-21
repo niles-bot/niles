@@ -10,6 +10,7 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 module.exports = {
   name: "id",
   description: "Set Calendar ID",
+  preSetup: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setId(message.channel, args, guild);

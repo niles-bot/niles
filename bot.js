@@ -153,18 +153,27 @@ client.on("message", (message) => {
 */
 
 client.on("message", (message) => {
-  const args = message.content.slice("!".length).trim().split(/ +/);
+  // skip bot
+  if (message.author.bot) return;
+  // fetch prefix
+  const guild = new guilds.Guild(message.guild.id);
+  const guildSettings = guild.getSetting();
+  const args = message.content.slice(guild.prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
-    
+
   const command = client.commands.get(commandName)
 		|| client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(commandName));
 
+  // command not found
   if (!command) return;
+  // setup only
+  if (!command.preSetup && !guildSettings.calendarID && !guildSettings.timezone)
+    message.channel.send(i18n.t("setup.error", {lng: guildSettings.lng}));
+  // args required
   if (command.args && !args.length) {
     let reply = `You didn't provide any arguments, ${message.author}!`;
-  
     if (command.usage) {
-      reply += `\nThe proper usage would be: \`${"!"}${command.name} ${command.usage}\``;
+      reply += `\nThe proper usage would be: \`${guild.prefix}${command.name} ${command.usage}\``;
     }
     return message.channel.send(reply);
   }
@@ -175,7 +184,6 @@ client.on("message", (message) => {
     message.channel.send("there was an error trying to execute that command!");
   }
 });
-
 
 // ProcessListeners
 /**

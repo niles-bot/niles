@@ -9,6 +9,7 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 module.exports = {
   name: "prefix",
   description: "Set prefix",
+  preSetup: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setPrefix(message.channel, args, guild);

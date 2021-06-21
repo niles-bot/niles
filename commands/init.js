@@ -2,11 +2,12 @@
 const debug = require("debug")("niles:cmd");
 // module imports
 const guilds = require("~/handlers/guilds.js");
-const { i18n } = require("~/handler/strings.js");
+const { i18n } = require("~/handlers/strings.js");
 
 module.exports = {
   name: "init",
   description: "Reinitialize Guild",
+  preSetup: true,
   execute(message, args) {
     args;
     const guild = new guilds.Guild(message.channel.guild.id);
