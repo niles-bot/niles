@@ -5,6 +5,14 @@ const debug = require("debug")("niles:helpers");
 const { i18n } = require("./strings.js");
 const { secrets } = require("../settings.js"); 
 
+// event types
+const eventType = {
+  NOMATCH: "nm",
+  SINGLE: "se",
+  MULTISTART: "ms",
+  MULTIMID: "mm",
+  MULTYEND: "me"
+};
 
 /**
  * Format log messages with DateTime string
@@ -170,6 +178,39 @@ function matchCalType(calendarID, channel, guild) {
   } else { return false; // break and return false
   }
   return true; // if did not reach false
+}
+
+/**
+ * This helper function limits the amount of chars in a string to max trimLength and adds "..." if shortened.
+ * @param {string} eventName - The name/summary of an event
+ * @param {int} trimLength - the number of chars to trim the title to
+ * @return {string} eventName - A string wit max 23 chars length
+ */
+function trimEventName(eventName, trimLength){
+  debug(`trimEventName | eventname: ${eventName}`);
+  // remove json invalids
+  eventName = eventName.replace("[\\.$|`|']/g", "\"");
+  // if no trim length, just return
+  if (trimLength === null || trimLength === 0) return eventName;
+  // trim down to length
+  if (eventName.length > trimLength) eventName = eventName.trim().substring(0, trimLength-3) + "...";
+  return eventName;
+}
+
+/**
+ * this helper function strips all html formatting from the description.
+ * @param {string} inputString - the unclean string
+ * @return {string} strippedString - string stripped of html
+ */
+function descriptionParser(inputString) {
+  if (!inputString) return "undefined";
+  debug(`descriptionParser | pre: ${inputString}`);
+  const brRegex = /(<br>)+/gi; // match <br>
+  const htmlRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi; // html tags
+  let cleanString;
+  try { cleanString = decodeURI(inputString); } // decode URI
+  catch(e) { cleanString = inputString; }
+  return cleanString.replace(brRegex, "\n").replace(htmlRegex, "").trim(); // replace <br> with \n and stripped html tags
 }
 
 module.exports = {
