@@ -1,38 +1,19 @@
 const discord = require("discord.js");
 const { readdirSync } = require("fs");
-const fs = require("fs");
 const { join } = require("path");
 const debug = require("debug")("niles:bot");
 const client = new discord.Client();
 exports.client = client;
-const TOKEN = require("./settings.js").secrets.bot_token;
-const commands = require("./handlers/commands.js");
-const guilds = require("./handlers/guilds.js");
-const { checkRole, permissionCheck, log } = require("./handlers/helpers.js");
-const { i18n } = require("./handlers/strings.js");
+const TOKEN = require("~/settings.js").secrets.bot_token;
+const commands = require("~/handlers/commands.js");
+const guilds = require("~/handlers/guilds.js");
+const { checkRole, permissionCheck, log } = require("~/handlers/helpers.js");
+const { i18n } = require("~/handlers/strings.js");
 
 // bot properties
-let shardGuilds = [];
 let shardID;
 
-client.commands = new discord.Collection();
-const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
-
-for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  // set a new item in the Collection
-  // with the key as the command name and the value as the exported module
-  client.commands.set(command.name, command);
-}
-
-client.on("nilesCalendarUpdate", (gid, cid) => {
-  const channel = client.channels.cache.get(cid);
-  if (channel) { // only run updater if channel is on shard
-    debug(`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
-    commands.workerUpdate(gid, channel);
-  }
-});
-
+// functions
 /**
  * Gets all known guilds
  * @returns {[String]} - Array of guildids
@@ -59,61 +40,45 @@ function addMissingGuilds(availableGuilds) {
   });
 }
 
-// valid commands
-const validCmd = [
-  // init
-  "id", "tz", "setup", "help", "locale",
-  "init", "prefix", "admin", "auth", 
-  // calendar
-  "display", "create", "scrim", "delete",
-  "update", "sync", "next", "get", "stop",
-  // display options
-  "displayoptions", "channel", "calname", 
-  // channel maintenance
-  "clean", "purge", "validate",
-  // bot help
-  "stats", "info", "invite", "ping", 
-  // admin cmd
-  "reset", "debug"
-];
-
 /**
- * command runner
- * @param {Snowflake} message - message to run command from
+ * Check validity of commands and return command name and parameters
+ * @param {Snowflake} message 
+ * @returns {[String]} Array of arguments
  */
-function runCmd(message) {
-  // load settings
+function commandParser(message) {
+  // skip bot or DM
+  if (message.channel.type === "dm" || message.author.bot) return;
+  // fetch prefix
   const guild = new guilds.Guild(message.guild.id);
-  const guildSettings = guild.getSetting();
   // ignore messages without prefix or mention
   if (!message.content.startsWith(guild.prefix) && !message.mentions.has(client.user.id)) return;
   // parse command and arguments
-  let args = message.content.slice(guildSettings.prefix.length).trim().split(" ");
-  // if mentioned return second object as command, if not - return first object as command
-  let cmd = message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift();
-  args = args ? args : []; // return empty array if no args
-  cmd = cmd.toLowerCase();
-  // ignore non-whitelisted commands
-  if (!validCmd.includes(cmd)) return;
-  // check if user is allowed to interact with Niles
-  if (!checkRole(message, guildSettings)) { // if no permissions, warn
-    return message.channel.send(i18n.t("norole", { lng: guild.lng, allowedrole: guildSettings.allowedRoles[0] }))
-      .then((message) => message.delete({ timeout: 10000 }));
-  }
-  // check missing permisions
-  const missingPermissions = permissionCheck(message.channel);
-  if (missingPermissions.includes("SEND_MESSAGES")) {
-    message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`${missingPermissions}\`\`\``);
-  }
-  log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
-  commands.run(cmd, args, message); // all checks passed - run command
+  let args = message.content.slice(guild.prefix.length).trim().split(" ");
+  // if mentioned return shift once to remove mention
+  if (message.mentions.has(client.user.id)) args.shift();
+  // return false if no args
+  return args ? args : false; // return empty array if no args
 }
+
+// command setup
+client.commands = new discord.Collection();
+const commandFiles = readdirSync("./commands").filter((file) => file.endsWith(".js"));
+
+for (const file of commandFiles) {
+  const command = require(`./commands/${file}`);
+  // set a new item in the Collection
+  // with the key as the command name and the value as the exported module
+  client.commands.set(command.name, command);
+}
+
+// client listeners
 
 client.login(TOKEN);
 
 client.on("ready", () => {
   shardID = client.shard.ids;
   log(`Bot is logged in. Shard: ${shardID}`);
+  let shardGuilds = [];
   // fetch all guild cache objects
   client.shard.fetchClientValues("guilds.cache")
     .then((results) => {
@@ -133,42 +98,51 @@ client.on("ready", () => {
     });
 });
 
-client.on("guildCreate", (guild) => {
-  guilds.createGuild(guild.id);
-});
+client.on("guildCreate", (guild) => guilds.createGuild(guild.id));
+client.on("guildDelete", (guild) => guilds.deleteGuild(guild.id));
 
-client.on("guildDelete", (guild) => {
-  guilds.deleteGuild(guild.id);
-});
-
-/*
-client.on("message", (message) => {
-  try {
-    if (message.channel.type === "dm" || message.author.bot) return; // ignore if dm or sent by bot
-    runCmd(message); // run command through parser
-  } catch (err) {
-    log(`error running main message handler in guild: ${message.guild.id} : ${err}`);
+client.on("nilesCalendarUpdate", (gid, cid) => {
+  const channel = client.channels.cache.get(cid);
+  if (channel) { // only run updater if channel is on shard
+    debug(`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
+    commands.workerUpdate(gid, channel);
   }
 });
-*/
 
 client.on("message", (message) => {
-  // skip bot
-  if (message.author.bot) return;
   // fetch prefix
   const guild = new guilds.Guild(message.guild.id);
   const guildSettings = guild.getSetting();
-  const args = message.content.slice(guild.prefix.length).trim().split(/ +/);
-  const commandName = args.shift().toLowerCase();
+  // extract command from command parser
+  let args = commandParser(message);
+  // if no args return
+  if (!args) return;
+  const cmd = args.shift().toLowerCase;
+  args = args ? args : []; // return empty array if no args
 
-  const command = client.commands.get(commandName)
-		|| client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(commandName));
+  // check if user has needed roles
+  if (!checkRole(message, guildSettings)) { // if no permissions, warn
+    return message.channel.send(i18n.t("norole", { lng: guild.lng, allowedrole: guildSettings.allowedRoles[0] }))
+      .then((message) => message.delete({ timeout: 10000 }));
+  }
+
+  // check for any missing permissions
+  const missingPermissions = permissionCheck(message.channel);
+  if (missingPermissions.includes("SEND_MESSAGES")) {
+    return message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`${missingPermissions}\`\`\``);
+  }
+  
+  log(`${message.author.tag}:${message.content} || guild:${message.guild.id} || shard:${client.shard.ids}`); // log message
+
+  // run command
+  const command = client.commands.get(cmd)
+		|| client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(cmd));
 
   // command not found
   if (!command) return;
   // setup only
   if (!command.preSetup && !guildSettings.calendarID && !guildSettings.timezone)
-    message.channel.send(i18n.t("setup.error", {lng: guildSettings.lng}));
+    return message.channel.send(i18n.t("setup.error", {lng: guildSettings.lng}));
   // args required
   if (command.args && !args.length) {
     let reply = `You didn't provide any arguments, ${message.author}!`;
