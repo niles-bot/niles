@@ -5,7 +5,7 @@ const debug = require("debug")("niles:bot");
 const client = new discord.Client();
 exports.client = client;
 const TOKEN = require("~/settings.js").secrets.bot_token;
-const commands = require("~/handlers/commands.js");
+const { workerUpdate } = require("~/handlers/workerUpdate.js");
 const guilds = require("~/handlers/guilds.js");
 const { checkRole, permissionCheck, log } = require("~/handlers/helpers.js");
 const { i18n } = require("~/handlers/strings.js");
@@ -72,7 +72,6 @@ for (const file of commandFiles) {
 }
 
 // client listeners
-
 client.login(TOKEN);
 
 client.on("ready", () => {
@@ -105,7 +104,7 @@ client.on("nilesCalendarUpdate", (gid, cid) => {
   const channel = client.channels.cache.get(cid);
   if (channel) { // only run updater if channel is on shard
     debug(`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
-    commands.workerUpdate(gid, channel);
+    workerUpdate(gid, channel);
   }
 });
 
