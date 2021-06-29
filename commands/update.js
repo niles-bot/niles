@@ -4,7 +4,7 @@ const { Guild } = require("~/handlers/guilds.js");
 
 module.exports = {
   name: "update",
-  description: "Update displayed calendar",
+  description: true,
   aliases: ["sync"],
   execute(message, args) {
     args;

@@ -1,4 +1,6 @@
 const prefix = "!";
+const { i18n } = require("~/handlers/strings.js");
+const { Guild } = require("~/handlers/guilds.js");
 
 module.exports = {
   name: "help",
@@ -6,6 +8,7 @@ module.exports = {
   aliases: ["commands"],
   usage: "[command name]",
   execute(message, args) {
+    const guild = Guild(message.guild);
     const data = [];
     const { commands } = message.client;
 
@@ -34,8 +37,8 @@ module.exports = {
     data.push(`**Name:** ${command.name}`);
 
     if (command.aliases) data.push(`**Aliases:** ${command.aliases.join(", ")}`);
-    if (command.description) data.push(`**Description:** ${command.description}`);
-    if (command.usage) data.push(`**Usage:** ${prefix}${command.name} ${command.usage}`);
+    if (command.description) data.push("`**Description:**" + i18n.t(`help.admin.${command.name}.description`, { lng: guild.lng }));
+    if (command.usage) data.push(`**Usage:** ${prefix}${command.name} ${i18n.t(`help.${command.name}.usage`)}`);
 
     message.channel.send(data, { split: true });
   }

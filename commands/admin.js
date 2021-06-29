@@ -8,7 +8,7 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
   name: "admin",
-  description: "Restrict the usage of Niles to a specific server role",
+  description: true,
   preSetup: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);

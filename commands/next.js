@@ -9,7 +9,7 @@ const { i18n } = require("~/handlers/strings.js");
 
 module.exports = {
   name: "next",
-  description: "Display next event",
+  description: true,
   execute(message, args) {
     args;
     const guild = new Guild(message.channel.guild.id);

@@ -9,7 +9,8 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
   name: "clean",
-  description: "Clean messages",
+  description: true,
+  usage: true,
   aliases: ["purge"],
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
@@ -53,7 +54,7 @@ function cleanChannelWarn(args, channel, guild) {
   const argMessages = Number(args[0]);
   const deleteCalendar = Boolean(args[1]);
   const lng = guild.lng;
-  if (!argMessages || isNaN(argMessages)) {
+  if (isNaN(argMessages)) {
     return channel.send(i18n.t("delete.noarg", { lng }));
   } else {
     channel.send(i18n.t("delete.confirm", { lng, argMessages }));

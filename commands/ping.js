@@ -1,6 +1,6 @@
 module.exports = {
   name: "ping",
-  description: "Pong!",
+  description: true,
   preSetup: true,
   execute(message, args) {
     args;

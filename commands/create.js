@@ -5,7 +5,8 @@ const { quickAddEvent } = require("~/handlers/calendar.js");
 
 module.exports = {
   name: "create",
-  description: "Create event on gCalendar",
+  description: true,
+  usage: true,
   aliases: ["scrim"],
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);

@@ -4,7 +4,7 @@ const { Guild } = require("~/handlers/guilds.js");
 
 module.exports = {
   name: "displayoptions",
-  description: "customize display",
+  description: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     doHandler(args, guild, message.channel);

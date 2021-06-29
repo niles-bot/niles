@@ -3,7 +3,7 @@ const { killUpdateTimer } = require("~/handlers/updaterList.js");
 
 module.exports = {
   name: "stop",
-  description: "Stop auto updater",
+  description: true,
   execute(message, args) {
     args;
     killUpdateTimer(message.channel.guild.id, "stop command");

@@ -9,7 +9,7 @@ const NILESVERSION = require("~/package.json").version;
 
 module.exports = {
   name: "stats",
-  description: "Display Niles bot statistics",
+  description: true,
   aliases: ["info", "stat"],
   execute(message, args) {
     args;

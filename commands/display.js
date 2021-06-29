@@ -5,7 +5,7 @@ const { Guild } = require("~/handlers/guilds.js");
 
 module.exports = {
   name: "display",
-  description: "Display calendar",
+  description: true,
   execute(message, args) {
     args;
     const guild = new Guild(message.channel.guild.id);

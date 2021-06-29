@@ -10,7 +10,7 @@ const updaterList = require("~/handlers/updaterList.js");
 
 module.exports = {
   name: "validate",
-  description: "Checks for any errors with settings",
+  description: true,
   execute(message, args) {
     args;
     const guild = new Guild(message.channel.guild.id);

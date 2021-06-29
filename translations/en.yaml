@@ -3,6 +3,57 @@ calendarid: Calendar ID
 calendarname: calendar name
 timezone: timezone
 adminrole: admin role
+help:
+  admin:
+    description: Restrict the usage of Niles to a specific role
+  auth:
+    description: Sets up and switches to OAuth2 or switch back to Service Accounts
+    usage: auth sa or auth oauth
+  calname:
+    description: Changes the calendar link name
+  channel:
+    description: Designate the channel for Niles to use
+  clean:
+    description: Deletes messages in current channel
+    usage: clean <number of messages>
+  create:
+    description: Create event on gCalendar
+    usage: create eventname June 5 8pm - 9pm
+  delete:
+    description: Delete event
+    usage: delete <event_title>
+  display:
+    description: Display the calendar
+  displayoptions:
+    description: Customize display
+  get:
+    description: Update cache with new events
+  id:
+    description: Set Google Calendar ID for the guild
+  init:
+    description: Reset all options for the guild
+  invite:
+    description: Generate Niles Bot invite link
+  locale:
+    description: Set locale for guild
+  next:
+    description: Display next event
+  ping:
+    description: Pong!
+  prefix:
+    description: Set prefix
+  stats:
+    description: Display Niles bot statistics
+  stop:
+    description: Stop auto updater
+  sudo:
+    description: Operator command runner - debug / reload
+  tz:
+    description: Set timezone
+  update:
+    description: Update displayed calendar
+  validate:
+    description: Checks for any errors with settings
 help: |-
   ```
   Niles Usage
@@ -134,7 +185,6 @@ collector:
   reject: Okay, I won't do that
 
 auth:
-  noarg: Set up authentication with `auth sa` or `auth oauth`. For details see https://nilesbot.com/start/#google-calendar-authentication
   oauth:
     notinstalled: OAuth2 credentials not installed
     reauth: Already using OAuth, use `!auth oauth force` to force reauthentication
@@ -150,7 +200,6 @@ delete:
   confirm: You are about to delete {{argMessages}} messages. Are you sure? **(y/n)**
 
 deleteevent:
-  noarg: You need to enter the exact event title for this command. i.e `!delete event name`
   prompt: Are you sure you want to delete the event **{{summary}}** on {{promptDate}}? **(y/n)**
   confirm: Event **{{summary}}** deleted
   not_found: Couldn't find event with that name - make sure you use exactly what the event is named!

@@ -11,7 +11,8 @@ const { updateCalendar } = require("~/handlers/display.js");
 
 module.exports = {
   name: "delete",
-  description: "Delete event",
+  description: true,
+  usage: true,
   args: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
@@ -84,7 +85,6 @@ function deleteEventById(eventID, calendarID, channel) {
  */
 function deleteEvent(args, guild, channel) {
   debug(`deleteEvent | ${guild.id} | args: ${args}`);
-  if (!args[0]) return send(channel, i18n.t("deleteevent.noarg", {lng: guild.lng }));
   const event = searchEventName(args.join(" "), guild, channel); // search for event
   if (!event) {
     send(channel, i18n.t("deleteevent.not_found", {lng: guild.lng }));

@@ -6,7 +6,7 @@ const { i18n } = require("~/handlers/strings.js");
 
 module.exports = {
   name: "init",
-  description: "Reinitialize Guild",
+  description: true,
   preSetup: true,
   execute(message, args) {
     args;

@@ -4,7 +4,7 @@ const { Guild } = require("~/handlers/guilds.js");
 
 module.exports = {
   name: "get",
-  description: "Update cache with new events",
+  description: true,
   execute(message, args) {
     args;
     const guild = new Guild(message.channel.guild.id);

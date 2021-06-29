@@ -8,7 +8,7 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
   name: "calname",
-  description: "Set calendar name",
+  description: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setCalName(message.channel, args, guild);

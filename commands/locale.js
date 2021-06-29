@@ -8,7 +8,7 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
   name: "locale",
-  description: "Set locale",
+  description: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setLocale(message.channel, args, guild);

@@ -7,8 +7,9 @@ const settings = require("~/settings.js");
 
 module.exports = {
   name: "auth",
-  description: "Authenticate",
+  description: true,
   preSetup: true,
+  usage: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setAuth(args, guild, message.channel);
@@ -83,7 +84,5 @@ function setAuth(args, guild, channel) {
     }
     guild.getSetting("auth", "sa");
     send(channel, i18n.t("auth.sa.invite", { lng: guild.lng, saId: settings.saId }), 10000);
-  } else { 
-    send(channel, i18n.t("auth.noarg", { lng: guild.lng }), 10000);
   }
 }

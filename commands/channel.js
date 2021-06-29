@@ -8,7 +8,7 @@ const { responseCollector } = require("~/handlers/responseCollector.js");
 
 module.exports = {
   name: "channel",
-  description: "Set channel",
+  description: true,
   execute(message, args) {
     const guild = new Guild(message.channel.guild.id);
     setChannel(message.channel, args, guild);

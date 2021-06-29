@@ -6,7 +6,7 @@ const { secrets } = require("~/settings.js");
 
 module.exports = {
   name: "sudo",
-  description: "Niles operator command runner",
+  description: true,
   args: true,
   execute(message, args) {
     // check if author is admin
