@@ -32,7 +32,9 @@ function classifyEventMatch(checkDate, eventStartDate, eventEndDate) {
       eventMatchType = eventType.MULTISTART;
     } else if (checkDate.hasSame(eventEndDate, "day")){
       eventMatchType = eventType.MULTYEND;
-    } else if (checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day") && eventEndDate.diff(checkDate.endOf("day"),"minutes") <= 1){
+    } else if (checkDate.startOf("day") > eventStartDate.startOf("day")
+      && checkDate.startOf("day") < eventEndDate.startOf("day")
+      && eventEndDate.diff(checkDate.endOf("day"),"minutes") <= 1){
       // this makes the 12AM ending multi-day events show as ""..... - 12:00 AM"
       eventMatchType = eventType.MULTYEND;
     } else if (checkDate.startOf("day") > eventStartDate.startOf("day") && checkDate.startOf("day") < eventEndDate.startOf("day")){
