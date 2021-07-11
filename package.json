@@ -1,6 +1,6 @@
 {
   "name": "@niles-bot/niles",
-  "version": "4.6.6",
+  "version": "4.6.7",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -14,16 +14,16 @@
     "@googleapis/calendar": "^0.2.0",
     "bree": "^6.2.0",
     "columnify": "^1.5.4",
-    "debug": "^4.3.1",
+    "debug": "^4.3.2",
     "discord.js": "^12.5.3",
-    "i18next": "^20.3.1",
+    "i18next": "^20.3.2",
     "i18next-fs-backend": "^1.1.1",
-    "luxon": "^1.27.0",
+    "luxon": "^2.0.1",
     "promise-defer": "^1.0.0",
     "timezone-soft": "^1.2.0"
   },
   "devDependencies": {
-    "eslint": "^7.28.0"
+    "eslint": "^7.30.0"
   },
   "repository": {
     "type": "git",
