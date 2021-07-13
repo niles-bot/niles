@@ -1,6 +1,6 @@
 {
   "name": "@niles-bot/niles",
-  "version": "4.6.7",
+  "version": "4.6.8",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "@googleapis/calendar": "^0.2.0",
+    "@mchangrh/tzdb-names": "*",
     "bree": "^6.2.1",
     "columnify": "^1.5.4",
     "debug": "^4.3.2",

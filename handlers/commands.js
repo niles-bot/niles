@@ -14,6 +14,7 @@ const eventType = helpers.eventType;
 const { doHandler } = require("./displayoptions.js");
 const gCalendar = require("@googleapis/calendar").calendar;
 const soft = require("timezone-soft");
+const { zoneNames } = require("@mchangrh/tzdb-names");
 
 //functions
 /**
@@ -956,9 +957,15 @@ function logID(channel, args, guild) {
  */
 function logTz(channel, args, guild) {
   log(`logTz | ${guild.id}`);
+  const zoneSet = new Set(zoneNames);
   const currentTz = guild.getSetting("timezone");
   const input = args.join(" "); // join arguments for parsing
   const tz = soft(input)[0];
+  console.log(input);
+  const newTz = zoneSet.has(input) ? input
+    : tz ? tz.iana
+      : false;
+
   if (!input) { // no input
     // no current tz
     if (!currentTz) channel.send(i18n.t("collector.noarg", { name: "$t(timezone)", lng: guild.lng, example: "`!tz America/New_York` or `!tz UTC+4` or `!tz EST`"}));
@@ -966,18 +973,18 @@ function logTz(channel, args, guild) {
     else channel.send(i18n.t("collector.exist", { name: "$t(timezone)", lng: guild.lng, old: currentTz }));
   }
   // valid input
-  else if (tz) { // tz parserd
+  else if (newTz) { // tz parserd
     if (currentTz) { // timezone set
-      channel.send(i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: tz.iana }));
+      channel.send(i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: newTz }));
       helpers.yesThenCollector(channel, guild.lng).then(() => {
-        log(`logTz | ${guild.id} | set to new tz: ${tz.iana}`);
-        return guild.setSetting("timezone", tz.iana);
+        log(`logTz | ${guild.id} | set to new tz: ${newTz}`);
+        return guild.setSetting("timezone", newTz);
       }).catch((err) => { discordLog(err);
       });
     // timezone is not set
     } else {
       log(`logTz | ${guild.id} | set to new tz: ${tz}`);
-      guild.setSetting("timezone", tz.iana); }
+      guild.setSetting("timezone", newTz); }
   // fails validation
   } else {
     log(`logID | ${guild.id} | failed validation: ${tz}`);
