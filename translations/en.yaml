@@ -1,3 +1,26 @@
+admin:
+  set: Set admin role to {{role}}
+auth:
+  sa:
+    notinstalled: SA credentials not installed
+    invite: Invite `{{saId}}` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
+  oauth:
+    notinstalled: OAuth2 credentials not installed
+    err: Error retrieving access token {{err}}
+    confirm: Successfuly Authenticated
+    get: "Authorize Niles by visiting this [url]({{authUrl}}) \n Send the code with /auth oauth2 set"
+id:
+  invalid: I don't think that's a valid calendar ID... try again
+  success: Set calendarID to `{{calendarID}}`
+init: Resetting Niles to default
+next:
+  no_upcoming: No upcoming events within date range
+  next: The next event is `{{summary}}` {{relativeTime}}
+calname:
+  confirm: Changed calendar name to `{{calname}}`
+  toolong: Calendar title cannot be more than 256 characters
+
+##############################
 language: English
 calendarid: Calendar ID
 calendarname: calendar name
@@ -79,18 +102,6 @@ help: |-
   !channel             -  Sets a channel to be the designated channel for calendar postings and updates
   ```
   Visit https://nilesbot.com for more info. 
-
-admin:
-  noarg: |-
-    You can restrict who can control Niles and the associated Google Calendar with roles.
-    Niles will only allow one role to be used, and it must have a unique name.
-    The person assigning the restriction must have the role being assigned.
-    You can allow everyone to use Niles again by entering `!admin everyone`
-    i.e. Create a role called *Scheduler*, and then tell Niles to only allow people with that role using `!admin Scheduler` (case sensitive)
-  prompt: Do you want to restrict the use of the calendar to people with the role `{{adminRole}}`? **(y/n)**
-  no_role: You do not have the role you're trying to assign. Remember that adding Roles is case-sensitive
-  confirm: Admin role set to `{{adminRole}}`
-  prompt_everyone: Do you want to allow everyone in this channel/server to use Niles? **(y/n)**
 
 setup:
   error: You haven't finished setting up! Try `!setup` for details on how to start.
@@ -184,17 +195,6 @@ collector:
   timeout: Command response timeout
   reject: Okay, I won't do that
 
-auth:
-  oauth:
-    notinstalled: OAuth2 credentials not installed
-    reauth: Already using OAuth, use `!auth oauth force` to force reauthentication
-    prompt: "Authorize Niles by visiting this [url]({{authUrl}}) \n Send the code from the page:"
-    err: Error retrieving access token {{err}}
-    confirm: Successfuly Authenticated
-  sa:
-    invite: Invite `{{saId}}` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles
-    notinstalled: SA credentials not installed
-
 delete:
   noarg: You can only use a number to delete messages. i.e. `!clean 10`
   confirm: You are about to delete {{argMessages}} messages. Are you sure? **(y/n)**
@@ -225,10 +225,6 @@ calendar:
       
       Enter `!help` for a full list of commands.
 
-next:
-  no_upcoming: No upcoming events within date range
-  next: The next event is `{{summary}}` in {{timeToString}}
-
 update:
   not_found: I can't find the last calendar I posted. Use `!display` and I'll post a new one.
   undefined: Cannot find calendar to update, maybe try a new calendar with `!display`
@@ -237,9 +233,6 @@ quick_add:
   noarg: You need to enter an argument for this command. i.e `!create xeno thursday 8pm - 9pm`
   confirm: Event `{{summary}}` on `{{promptDate}}` has been created
 
-calname:
-  prompt: Do you want to set the calendar name to `{{newCalName}}` ? **(y/n)**
-  confirm: Changed calendar name to `{{newCalName}}`
 
 setchannel:
   current: The current calendar channel is `{{name}}`
@@ -250,8 +243,6 @@ setchannel:
 
 validate:
   calendar_error: "Error Fetching Calendar: {{err}}"
-
-reset: Resetting Niles to default
 
 announcement: Announcement channels are not compatible due to Discord ratelimits on updates (https://git.io/JsGcy).
 

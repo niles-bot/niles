@@ -2,27 +2,25 @@
 const { totalmem } = require("os");
 const { Duration } = require("luxon");
 const { version } = require("discord.js");
-// module imports
-const { discordLog } = require("~/handlers/discordLog.js");
-// const
+const { errorLog } = require("~/src/handlers/errorLog.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 const NILESVERSION = require("~/package.json").version;
 
 module.exports = {
-  name: "stats",
-  description: true,
-  aliases: ["info", "stat"],
-  execute(message, args) {
-    args;
-    displayStats(message);
+  data: new SlashCommandBuilder()
+    .setName("stats")
+    .setDescription("Bot stats"),
+  execute(interaction) {
+    displayStats(interaction);
   }
 };
 
 /**
  * Display current bot stats
- * @param {Snowflake} channel - Channel to reply to 
+ * @param {Snowflake} interaction - interaction to reply to 
  */
-function displayStats(message) {
-  message.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
+function displayStats(interaction) {
+  interaction.client.shard.fetchClientValues("guilds.cache.size").then((results) => {
     const usedMem = `${(process.memoryUsage().rss/1048576).toFixed()} MB`;
     const totalMem = (totalmem()>1073741824 ? (totalmem() / 1073741824).toFixed(1) + " GB" : (totalmem() / 1048576).toFixed() + " MB");
     const embedObj = {
@@ -40,7 +38,7 @@ function displayStats(message) {
           inline: true
         }, {
           name: "Ping",
-          value: `${(message.client.ws.ping).toFixed(0)} ms`,
+          value: `${(interaction.client.ws.ping).toFixed(0)} ms`,
           inline: true
         }, {
           name: "RAM Usage",
@@ -56,14 +54,14 @@ function displayStats(message) {
           inline: true
         }, {
           name: "Links",
-          value: `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${message.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`,
+          value: `[Bot invite](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${interaction.client.user.id}) | [Support server invite](https://discord.gg/jNyntBn) | [GitHub](https://github.com/niles-bot/niles)`,
           inline: true
         }
       ],
       footer: { text: "Created by the Niles Bot Team" }
     };
-    return message.channel.send({ embed: embedObj });
+    return interaction.reply({ embeds: [embedObj] });
   }).catch((err) => {
-    discordLog(err);
+    errorLog(err);
   });
 }

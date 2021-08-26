@@ -1,13 +1,16 @@
-// module imports
-const { getEvents } = require("~/handlers/calendar.js");
-const { Guild } = require("~/handlers/guilds.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
+const { getEvents } = require("~/src/handlers/calendar.js");
+const { Guild } = require("~/src/handlers/guilds.js");
+let debug = require("~/src/handlers/logger");
 
 module.exports = {
-  name: "get",
-  description: true,
-  execute(message, args) {
-    args;
-    const guild = new Guild(message.channel.guild.id);
-    getEvents(guild, message.channel);
+  data: new SlashCommandBuilder()
+    .setName("get")
+    .setDescription("Update the local cache of events"),
+  execute(interaction) {
+    const guild = new Guild(interaction.guild_id);
+    debug = debug(guild.debug);
+    debug(`get | ${guild.id}`);
+    getEvents(guild, interaction);
   }
 };

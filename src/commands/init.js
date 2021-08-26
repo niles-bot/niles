@@ -1,18 +1,17 @@
-// package imports
-const debug = require("debug")("niles:cmd");
-// module imports
-const guilds = require("~/handlers/guilds.js");
-const { i18n } = require("~/handlers/strings.js");
+const debug = require("~/src/handlers/logger")(true);
+const { SlashCommandBuilder } = require("@discordjs/builders");
+const { Guild, recreateGuild } = require("~/src/handlers/guilds.js");
+const { i18n } = require("~/src/handlers/strings.js");
 
 module.exports = {
-  name: "init",
-  description: true,
-  preSetup: true,
-  execute(message, args) {
-    args;
-    const guild = new guilds.Guild(message.channel.guild.id);
-    debug(`init | ${guild.id}`);
-    message.channel.send(i18n.t("reset", {lng: guild.lng}));
-    guilds.recreateGuild(guild.id);
+  data: new SlashCommandBuilder()
+    .setName("init")
+    .setDescription("Reset Niles settings to default"),
+  execute(interaction) {
+    const id = interaction.guild_id;
+    const guild = new Guild(interaction.guild_id);
+    debug(`init | ${id}`);
+    interaction.reply(i18n.t("reset", {lng: guild.lng}));
+    return recreateGuild(id);
   }
 };
