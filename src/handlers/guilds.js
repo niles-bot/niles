@@ -6,6 +6,32 @@ const { join } = require("path");
 // module imports
 const { oauth2, sa } = require("../settings.js");
 
+/**
+ * Gets all known guilds
+ * @returns {[String]} - Array of guildids
+ */
+function getKnownGuilds() {
+  debug("start getKnownGuilds");
+  let fullPath = join(__dirname, "stores");
+  return fs.readdirSync(fullPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+}
+
+/**
+ * Add any missing guilds to guilds database
+ * @param {[String]} availableGuilds - array of available guilds
+ */
+function addMissingGuilds(availableGuilds) {
+  //Create databases for any missing guilds
+  const knownGuilds = getKnownGuilds();
+  const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
+  unknownGuilds.forEach((guildID) => {
+    debug(`creating new guild: ${guildID}`);
+    createGuild(guildID);
+  });
+}
+
 const emptyCal = {
   "events": {
     "day0": [],
@@ -248,5 +274,6 @@ module.exports = {
   Guild,
   createGuild,
   deleteGuild,
-  recreateGuild
+  recreateGuild,
+  addMissingGuilds
 };

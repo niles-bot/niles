@@ -1,8 +1,8 @@
-const discord = require("discord.js");
+const { Client, Collection, Intents } = require("discord.js");
 const { readdirSync } = require("fs");
 const { join } = require("path");
 const debug = require("debug")("niles:bot");
-const client = new discord.Client();
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 exports.client = client;
 const TOKEN = require("~/settings.js").secrets.bot_token;
 const { workerUpdate } = require("~/handlers/workerUpdate.js");
@@ -61,7 +61,7 @@ function commandParser(message) {
 }
 
 // command setup
-client.commands = new discord.Collection();
+client.commands = new Collection();
 const commandFiles = readdirSync("./commands").filter((file) => file.endsWith(".js"));
 
 for (const file of commandFiles) {
@@ -74,7 +74,7 @@ for (const file of commandFiles) {
 // client listeners
 client.login(TOKEN);
 
-client.on("ready", () => {
+client.once("ready", () => {
   shardID = client.shard.ids;
   log(`Bot is logged in. Shard: ${shardID}`);
   let shardGuilds = [];
@@ -105,6 +105,19 @@ client.on("nilesCalendarUpdate", (gid, cid) => {
   if (channel) { // only run updater if channel is on shard
     debug(`nilesCalendarUpdate | gid ${gid} cid ${cid} | shard ${shardID}`);
     workerUpdate(gid, channel);
+  }
+});
+
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isCommand()) return;
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({ content: "There was an error while executing this command!", ephemeral: true });
   }
 });
 

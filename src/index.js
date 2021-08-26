@@ -1,4 +1,4 @@
-const { secrets } = require("./settings.js");
+const { secrets } = require("../settings.js");
 const Bree = require("bree");
 const { ShardingManager } = require("discord.js");
 const manager = new ShardingManager("./bot.js", { token: secrets.bot_token });
