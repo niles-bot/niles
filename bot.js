@@ -63,7 +63,7 @@ const validCmd = [
   // bot help
   "stats", "info", "invite", "ping", 
   // admin cmd
-  "reset", "debug"
+  "reset", "debug", "deny"
 ];
 
 /**

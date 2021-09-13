@@ -9,6 +9,7 @@ const settings = require("../settings.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
 const updaterList = require("./updaterList.js");
+const denyList = require("./denylist.js");
 const discordLog = helpers.log;
 const eventType = helpers.eventType;
 const { doHandler } = require("./displayoptions.js");
@@ -930,6 +931,12 @@ function logID(channel, args, guild) {
     // no input
     else channel.send(i18n.t("collector.noarg", { name: "$t(calendarid)", lng: guild.lng, example: "`!id`, i.e. `!id 123abc@123abc.com`" }));
   }
+  // did not pass blacklist
+  else if (denyList.exists(newCalendarID)) {
+    log(`logID | ${guild.id} | denylisted`);
+    discordLog(`logID | ${guild.id} | denylisted`);
+    return channel.send("calendarID change denied");
+  }
   // did not pass validation
   else if (!helpers.matchCalType(newCalendarID, channel, guild)) {
     log(`logID | ${guild.id} | failed calType`);
@@ -1080,6 +1087,20 @@ function adminCmd (cmd, args) {
         name: "settings.json"
       }]
     };
+  } else if (cmd === "deny") {
+    const calid = args[1];
+    const cmd = args[0];
+    if (cmd === "append") {
+      denyList.append(calid);
+      return `added ${calid}`;
+    } else if (cmd === "remove") {
+      denyList.remove(calid);  
+      return `removed ${calid}`;
+    } else if (cmd === "exists") {
+      return denyList.exists(calid);
+    } else {
+      return "Invalid subcommand";
+    }
   }
 }
 
@@ -1136,7 +1157,7 @@ function run(cmd, args, message) {
   } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id, "stop command");
   } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
-  } else if (["reset", "debug"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
+  } else if (["reset", "debug", "deny"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
   } else if (["calname"].includes(cmd)) { calName(args, guild, channel);
   } else if (["auth"].includes(cmd)) { setupAuth(args, guild, channel);
