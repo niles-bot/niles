@@ -99,6 +99,21 @@ function killUpdateTimer (guildID, reason = "none") {
 }
 
 /**
+ * Recreate calendar instead of killing
+ * @param {String} guildID 
+ * @param {String} reason 
+ */
+function recreateCalendar (guildID, channel, reason = "none") {
+  const message = `recreated ${guildID} | ${reason}`;
+  const guild = new guilds.Guild(guildID);
+  discordLog(message);
+  console.error(message);
+  // create calendar
+  getEvents(guild, channel);
+  postCalendar(guild, channel);
+}
+
+/**
  * Cleans messages from the channel
  * @param {Snowflake} channel - channel to delete the messages in
  * @param {Integer} numberMessages - number of messages to delete
@@ -184,7 +199,7 @@ function getEventsErrorHandler(err, guild, channel) {
   } else { discordLog(`getEvents error in guild: ${guild.id} : ${err}`);
   }
   channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-  killUpdateTimer(guild.id, "getEvents");
+  recreateCalendar(guild.id, channel, "getEvents");
 }
 
 /**
@@ -334,7 +349,8 @@ function generateCalendarCodeblock(guild) {
         const eventTitle = (event.summary) ? helpers.trimEventName(event.summary, guildSettings.trim) : " ";
         const duration = durationString(event, guild);
         const tempString = {[duration]: eventTitle};
-        sendString += (guildSettings.eventtime === "1" ? columnify(tempString, options) + "\n" : eventTitle + "\n");
+        const lineString = (guildSettings.seperateheader === "1" ? duration + "\n" + eventTitle : columnify(tempString, options));
+        sendString += (guildSettings.eventtime === "1" ? lineString + "\n" : eventTitle + "\n");
       });
       sendString += "```";
     }
@@ -471,7 +487,7 @@ function generateCalendar(guild, channel) {
 function startUpdateTimer(guildID, channelid) {
   if (updaterList.exists(guildID)) {
     log(`startUpdateTimer | ${guildID} | updater exists exists`);
-    return discordLog(`timer not started in guild: ${guildID}`);
+    return discordLog(`timer already exists in guild: ${guildID}`);
   } else {
     log(`startUpdateTimer | ${guildID} | no current updater`);
     discordLog(`Starting update timer in guild: ${guildID}`);
@@ -492,7 +508,7 @@ function updateCalendar(guild, channel, human) {
   if (!guildCalendarMessageID) {
     channel.send(i18n.t("update.undefined", { lng: guild.lng }));
     discordLog(`calendar undefined in ${guild.id}. Killing update timer.`);
-    return killUpdateTimer(guild.id, "calendar undefined");
+    return recreateCalendar(guild.id, channel, "calendar undefined");
   }
   const embed = generateCalendar(guild, channel);
   if (embed === 2048) return null;
@@ -504,7 +520,7 @@ function updateCalendar(guild, channel, human) {
       // If theres an updater running try and kill it.
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
       channel.send(i18n.t("update.not_found", { lng: guild.lng }));
-      killUpdateTimer(guild.id, "previous not found");
+      recreateCalendar(guild.id, channel, "error fetching previous");
       return guild.setCalendarID("");
     });
   // if everything went well, set lastUpdate
@@ -526,7 +542,7 @@ function calendarUpdater(guild, channel, human) {
     updateCalendar(guild, channel, human);
   } catch (err) {
     discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
-    killUpdateTimer(guild.id, "error in autoupdater");
+    recreateCalendar(guild.id, channel, "error in updater");
   }
 }
 
@@ -1155,7 +1171,7 @@ function run(cmd, args, message) {
   } else if (["stats", "info"].includes(cmd)) { displayStats(channel);
   } else if (["get"].includes(cmd)) { getEvents(guild, channel);
   } else if (["stop"].includes(cmd)) { killUpdateTimer(guild.id, "stop command");
-  } else if (["delete"].includes(cmd)) { deleteEvent(args, guild, channel);
+  } else if (["delete"].includes(cmd)) { channel.send("delete does not work");     //deleteEvent(args, guild, channel);
   } else if (["next"].includes(cmd)) { nextEvent(guild, channel);
   } else if (["reset", "debug", "deny"].includes(cmd)) { channel.send (sentByAdmin ? adminCmd(cmd, args) : "Not Admin");
   } else if (["validate"].includes(cmd)) { validate(guild, channel);
