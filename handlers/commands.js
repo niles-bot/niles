@@ -106,6 +106,13 @@ function killUpdateTimer (guildID, reason = "none") {
 function recreateCalendar (guildID, channel, reason = "none") {
   const message = `recreated ${guildID} | ${reason}`;
   const guild = new guilds.Guild(guildID);
+  const lastUpdate = guild.getCalendar("lastUpdate");
+  if ((Date.now() - Date.parse(lastUpdate)) < 1000 * 60 * 2) {
+    const earlyEndMsg = `refusing to recreate within two minutes ${guildID} | ${reason}`;
+    console.error(earlyEndMsg);
+    discordLog(earlyEndMsg);
+    return;
+  }
   discordLog(message);
   console.error(message);
   // create calendar
