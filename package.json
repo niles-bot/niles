@@ -1,6 +1,6 @@
 {
   "name": "@niles-bot/niles",
-  "version": "4.6.6",
+  "version": "5.0.0",
   "description": "niles discord bot",
   "main": "index.js",
   "scripts": {
@@ -14,18 +14,22 @@
     "@discordjs/builders": "^0.6.0",
     "@discordjs/rest": "^0.1.0-canary.0",
     "@googleapis/calendar": "^0.2.0",
+    "@types/better-sqlite3": "^7.4.2",
+    "@types/debug": "^4.1.7",
+    "@types/luxon": "^2.0.8",
+    "better-sqlite3": "^7.4.6",
     "bree": "^6.2.0",
     "columnify": "^1.5.4",
     "debug": "^4.3.2",
     "discord-api-types": "^0.22.0",
-    "discord.js": "^12.5.3",
+    "discord.js": "^13.5.0",
+    "dotenv": "^10.0.0",
     "i18next": "^20.3.2",
     "i18next-fs-backend": "^1.1.1",
     "luxon": "^1.27.0",
     "promise-defer": "^1.0.0",
     "timezone-soft": "^1.2.0",
-    "typescript": "^4.5.4",
-    "wavy": "^1.0.4"
+    "typescript": "^4.5.4"
   },
   "devDependencies": {
     "eslint": "^7.30.0"
