@@ -3,7 +3,7 @@ const { readFileSync, writeFileSync, existsSync} = require("fs");
 const { join } = require("path");
 const debug = require("debug")("niles:updater-list");
 // module imports
-const { discordLog } = require("~/handlers/discordLog.js");
+const { errorLog } = require("~/src/handlers/errorLog.js");
 // const
 const FILENAME = join(__dirname, "..", "stores", "todo_list.json");
 
@@ -64,8 +64,7 @@ const getIterator = () => load()[Symbol.iterator]();
 function killUpdateTimer (guildID, reason = "none") {
   remove(guildID);
   const message = `removed ${guildID} | ${reason}`;
-  discordLog(message);
-  console.error(message);
+  errorLog(message);
 }
 
 /**
@@ -76,10 +75,10 @@ function killUpdateTimer (guildID, reason = "none") {
 function startUpdateTimer(guildID, channelid) {
   if (exists(guildID)) {
     debug(`startUpdateTimer | ${guildID} | updater exists exists`);
-    return discordLog(`timer not started in guild: ${guildID}`);
+    return errorLog(`timer not started in guild: ${guildID}`);
   } else {
     debug(`startUpdateTimer | ${guildID} | no current updater`);
-    discordLog(`Starting update timer in guild: ${guildID}`);
+    errorLog(`Starting update timer in guild: ${guildID}`);
     append(guildID, channelid);
   }
 }

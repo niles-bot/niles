@@ -53,7 +53,12 @@ function getStringTime(date, guild) {
   debug(`getStringTime | ${guild.id}`);
   const format = guild.getSetting("format");
   const zDate = DateTime.fromISO(date, {setZone: true});
-  return zDate.toLocaleString({ hour: "2-digit", minute: "2-digit", hour12: (format === 12), locale: guild.lng });
+  return zDate.toLocaleString({
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: (format === 12),
+    locale: guild.lng
+  });
 }
 
 /**
@@ -170,26 +175,25 @@ function embedEventString(event, guild) {
 /**
  * Generate embed for calendar display
  * @param {Guild} guild - guild to create for
+ * @param {[Event]} events - Events to create embed for
  */
-function generateCalendarEmbed(guild) {
+function generateCalendarEmbed(guild, events) {
   debug(`generateCalendarEmbed | ${guild.id}`);
-  let guildCalendar = guild.getCalendar("events");
   let guildSettings = guild.getSetting();
   const dayMap = guild.getDayMap();
   let msgLength = 0;
   let fields = [];
   for (let i = 0; i < dayMap.length; i++) {
-    let key = "day" + String(i);
     let tempValue = "";
     let fieldObj = {
       name: "**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit", locale: guild.lng }),
       inline: (guildSettings.inline === "1")
     };
-    if (guildSettings.emptydays === "0" && guildCalendar[key].length === 0) continue;
-    if (guildCalendar[key].length === 0) tempValue = "\u200b";
+    if (guildSettings.emptydays === "0" && events[i].length === 0) continue;
+    if (events[i].length === 0) tempValue = "\u200b";
     else {
       // Map events for each day
-      guildCalendar[key].forEach((event) => {
+      events[i].forEach((event) => {
         tempValue += embedEventString(event, guild);
       });
     }
@@ -248,7 +252,7 @@ function generateCalendar(guild, channel) {
       return 2048;
     }
   } else if (guildSettings.style === "embed") {
-    embed.fields = generateCalendarEmbed(guild);
+    embed.fields = generateCalendarEmbed(guild, events);
   }
   // add help message
   if (guildSettings.helpmenu === "1") {
@@ -266,7 +270,7 @@ function generateCalendar(guild, channel) {
  * @param {Guild} guild - Guild to post relative to
  * @param {Snowflake} channel - Initiating channel
  */
-function postCalendar(guild, channel) {
+function postCalendar(guild, channel, events) {
   debug(`postCalendar | ${guild.id}`);
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID) {
@@ -274,19 +278,17 @@ function postCalendar(guild, channel) {
       .then((message) => message.delete())
       .catch((err) => discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`));
   }
-  try {
-    const embed = generateCalendar(guild, channel);
-    if (embed === 2048) return null;
-    channel.send({ embed }).then((sent) => {
-      debug(`postCalendar | ${guild.id} | calID ${sent.id}`);
-      guild.setCalendarID(sent.id);
-      if (guild.getSetting("pin") === "1") sent.pin();
-    });
-    updaterList.startUpdateTimer(guild.id, channel.id);
-  } catch (err) {
+  const embed = generateCalendar(guild, channel);
+  if (embed === 2048) return null;
+  channel.send({ embed }).then((sent) => {
+    debug(`postCalendar | ${guild.id} | calID ${sent.id}`);
+    guild.setCalendarID(sent.id);
+    if (guild.getSetting("pin") === "1") sent.pin();
+  }).catch((err) => {
     if (err===2048) discordLog(`function postCalendar error in guild: ${guild.id} : ${err} - Calendar too long`);
-    else discordLog(`function postCalendar error in guild: ${guild.id} : ${err}`);
-  }
+    discordLog(`function postCalendar error in guild: ${guild.id} : ${err}`);
+  });
+  updaterList.startUpdateTimer(guild.id, channel.id);
 }
 
 /**

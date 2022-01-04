@@ -75,16 +75,6 @@ const defaultSettings = {
 };
 
 /**
- * Delete folder recursively
- * @param {String} path 
- */
-function deleteFolderRecursive(path) {
-  if (fs.existsSync(path)) {
-    fs.rmdirSync(path, {recursive: true});
-  }
-}
-
-/**
  * Writes guild-specific setting
  * @param {String} guildID - ID of guild to write setting to 
  * @param {Object} json - json array of values to write
@@ -118,7 +108,7 @@ function createGuild(guildID) {
  */
 function deleteGuild(guildID) {
   const guildPath = join(__dirname, "..", "stores", guildID);
-  deleteFolderRecursive(guildPath);
+  fs.rmdir(guildPath);
   debug(`Guild ${guildID} has been deleted`);
 }
 
@@ -136,7 +126,8 @@ function recreateGuild(guildID) {
  * @param {String} path - path of file to read
  */
 function readFile(path) {
-  try { return JSON.parse(fs.readFileSync(path, "utf8"));
+  try {
+    return JSON.parse(fs.readFileSync(path, "utf8"));
   } catch (err) {
     debug("error reading file " + err);
     return {}; // return valid JSON to trigger update
@@ -172,7 +163,7 @@ function generateDayMap(settings) {
   let d = DateTime.fromJSDate(new Date()).setZone(settings.timezone);
   // if Option to show past events is set, start at startOf Day instead of NOW()
   if (settings.showpast === "1") d = d.startOf("day");
-  dayMap[0] =  d;
+  dayMap[0] = d;
   for (let i = 1; i < settings.days; i++) {
     dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
   }

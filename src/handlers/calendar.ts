@@ -8,21 +8,10 @@ const { i18n } = require("~/handlers/strings.js");
 const { killUpdateTimer } = require("~/handlers/updaterList.js");
 
 /**
- * Send message with deletion timeout
- * @param {Snowflake} channel - channel to send message in
- * @param {String} content - content of message
- * @param {Number} [timeout=5000] - time in milliseconds before message is deleted
- */
-function send(channel, content, timeout=5000) {
-  channel.send(content)
-    .then((message) => message.delete({ timeout }));
-}
-
-/**
  * List events within date range
  * @param {Guild} guild - Guild to pull from
  */
-function listEvents(guild) {
+async function listEvents(guild) {
   debug(`listEvents | ${guild.id}`);
   const dayMap = guild.getDayMap();
   const calendarID = guild.getSetting("calendarID");
@@ -30,12 +19,12 @@ function listEvents(guild) {
   const params = {
     calendarId: calendarID,
     timeMin: dayMap[0].toISO(),
-    timeMax: dayMap[6].toISO(),
+    timeMax: dayMap[dayMap.length-1].toISO(),
     singleEvents: true,
     timeZone: guild.tz,
     orderBy: "startTime"
   };
-  return gCal.events.list(params);
+  return await gCal.events.list(params);
 }
 
 /**
@@ -59,15 +48,14 @@ function getEventsErrorHandler(err, guild, channel) {
 /**
  * Get Events from Google Calendar
  * @param {Guild} guild - Guild to pull settings from
- * @param {Snowflake} channel - channel to respond to
+ * @returns {[Event]} - Array of events
  */
-function getEvents(guild, channel) {
+async function getEvents(guild) {
   debug(`getEvents | ${guild.id}`);
   guild.update(); // update guild
   const dayMap = guild.getDayMap();
   const auth = guild.getAuth();
-  const tz = guild.tz;
-  let events = {};
+  const timeZone = guild.tz;
   // construct calendar with old calendar file
   const params = {
     calendarId: guild.getSetting("calendarID"),
@@ -75,39 +63,31 @@ function getEvents(guild, channel) {
     timeMax: dayMap[dayMap.length-1].endOf("day").toISO(), // get all events of last day!
     singleEvents: true,
     orderBy: "startTime",
-    timeZone: tz
+    timeZone
   };
   const gCal = gCalendar({version: "v3", auth});
-  try {
-    gCal.events.list(params).then((res) => {
-      debug(`getEvents - list | ${guild.id}`);
-      for (let day = 0; day < dayMap.length; day++) {
-        let key = "day" + String(day);
-        let matches = [];
-        res.data.items.map((event) => {
-          let eType = eventHelper.eventTimeCorrector(dayMap[day], event, tz);
-          if (eType !== event.eventType.NOMATCH) {
-            matches.push({
-              id: event.id,
-              summary: event.summary,
-              start: event.start,
-              end: event.end,
-              description: eventHelper.descriptionParser(event.description),
-              location: event.location || event.hangoutLink,
-              type: eType
-            });
-          }
-          events[key] = matches;
+  const gCalEvents = await gCal.events.list(params);
+  // filter events
+  let filtered = [];
+  for (let day = 0; day < dayMap.length; day++) {
+    const matches = [];
+    gCalEvents.data.items.map((event) => {
+      const eType = eventHelper.eventTimeCorrector(dayMap[day], event, timeZone);
+      if (eType !== event.eventType.NOMATCH) {
+        matches.push({
+          id: event.id,
+          summary: event.summary,
+          start: event.start,
+          end: event.end,
+          description: eventHelper.descriptionParser(event.description),
+          location: event.location || event.hangoutLink,
+          type: eType
         });
       }
-      guild.setEvents(events);
-    }).catch((err) => {
-      getEventsErrorHandler(err, guild, channel);
+      filtered[day] = matches;
     });
-  } catch (err) {
-    channel.send(err.code);
-    return discordLog(`Error in function getEvents in guild: ${guild.id} : ${err}`);
   }
+  return filtered;
 }
 
 /**
@@ -130,7 +110,6 @@ function quickAddEvent(args, guild, channel) {
   }).catch((err) => { discordLog(`function quickAddEvent error in guild: ${guild.id} : ${err}`);
   });
 }
-
 
 module.exports = {
   listEvents,

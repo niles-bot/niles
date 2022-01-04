@@ -5,7 +5,6 @@
     },
     "parserOptions": {
         "ecmaVersion": 12,
-        "sourceType": "module",
         "ecmaFeatures": {}
     },
     "rules": {
@@ -59,7 +58,7 @@
         "no-unsafe-finally": 2,
         "no-unsafe-negation": 2,
         "no-unused-labels": 2,
-        "no-unused-vars": 2,
+        "no-unused-vars": 1,
         "no-useless-catch": 2,
         "no-useless-escape": 2,
         "no-with": 2,
@@ -72,7 +71,6 @@
         "semi": 2,
         "comma-dangle": 2,
         "no-negated-in-lhs": 2,
-        "require-jsdoc": 2,
         "arrow-parens": 2
     }
 }

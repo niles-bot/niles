@@ -24,6 +24,7 @@
     "luxon": "^1.27.0",
     "promise-defer": "^1.0.0",
     "timezone-soft": "^1.2.0",
+    "typescript": "^4.5.4",
     "wavy": "^1.0.4"
   },
   "devDependencies": {
