@@ -1,15 +1,12 @@
 // package imports
-const { DateTime } = require("luxon");
+import { DateTime } from "luxon";
 const debug = require("debug")("niles:guilds");
-const fs = require("fs");
+import fs from "fs";
 const { join } = require("path");
 // module imports
 const { oauth2, sa } = require("../settings.js");
+import db from "./sqlite";
 
-/**
- * Gets all known guilds
- * @returns {[String]} - Array of guildids
- */
 function getKnownGuilds() {
   debug("start getKnownGuilds");
   let fullPath = join(__dirname, "stores");
@@ -18,10 +15,6 @@ function getKnownGuilds() {
     .map((dirent) => dirent.name);
 }
 
-/**
- * Add any missing guilds to guilds database
- * @param {[String]} availableGuilds - array of available guilds
- */
 function addMissingGuilds(availableGuilds) {
   //Create databases for any missing guilds
   const knownGuilds = getKnownGuilds();
@@ -74,12 +67,6 @@ const defaultSettings = {
   "lng": "en"
 };
 
-/**
- * Writes guild-specific setting
- * @param {String} guildID - ID of guild to write setting to 
- * @param {Object} json - json array of values to write
- * @param {String} file - file name to write to - calendar/settings 
- */
 function writeGuildSpecific(guildID, json, file) {
   debug(`writeGuildSpecific | ${guildID} | file: ${file}`);
   let fullPath = join(__dirname, "..", "stores", guildID, file + ".json");
@@ -88,10 +75,6 @@ function writeGuildSpecific(guildID, json, file) {
   });
 }
 
-/**
- * Create new guild files
- * @param {String} guildID - Guild to create files for
- */
 function createGuild(guildID) {
   const guildPath = join(__dirname, "..", "stores", guildID);
   if (!fs.existsSync(guildPath)) { // create directory and new files
@@ -102,29 +85,18 @@ function createGuild(guildID) {
   }
 }
 
-/**
- * Delete guild settings
- * @param {String} guildID - guild to delete configuration for
- */
 function deleteGuild(guildID) {
   const guildPath = join(__dirname, "..", "stores", guildID);
   fs.rmdir(guildPath);
   debug(`Guild ${guildID} has been deleted`);
 }
 
-/**
- * Delete and recreate guild settings
- * @param {StringDecoder} guildID 
- */
+
 function recreateGuild(guildID) {
   deleteGuild(guildID);
   createGuild(guildID);
 }
 
-/**
- * Try and read file
- * @param {String} path - path of file to read
- */
 function readFile(path) {
   try {
     return JSON.parse(fs.readFileSync(path, "utf8"));
@@ -134,11 +106,6 @@ function readFile(path) {
   }
 }
 
-/**
- * Get guild-specific file
- * @param {String} guildID 
- * @param {String} file 
- */
 function getGuildSpecific(guildID, file) {
   debug(`getGuildSpecific | ${guildID} | file: ${file}`);
   let filePath = join(__dirname, "..", "stores", guildID, file);
@@ -152,11 +119,6 @@ function getGuildSpecific(guildID, file) {
       : storedData;
 }
 
-/**
- * Generate daymap
- * @param {Object} settings - guildsettings to build around
- * @returns {dayMap} - dayMap for guild
- */
 function generateDayMap(settings) {
   let dayMap = [];
   // allowing all days to be correctly TZ adjusted
@@ -268,3 +230,17 @@ module.exports = {
   recreateGuild,
   addMissingGuilds
 };
+// ts rewrite
+
+import Database from 'better-sqlite3';
+const db = require('better-sqlite3')('foobar.db', options);
+
+export class NilesGuild {
+  constructor(guildID: string) {}
+  async init() {
+    //
+  }
+  async getSetting(key: string): Promise<string | boolean | number> {
+
+  }
+}
