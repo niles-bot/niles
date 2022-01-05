@@ -1,5 +1,9 @@
-admin:
-  set: Set admin role to {{role}}
+set: Set $t(admin) to {{role}}
+
+admin: admin role
+
+### old bindings
+
 auth:
   sa:
     notinstalled: SA credentials not installed

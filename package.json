@@ -6,33 +6,38 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "windowsDebug": "@powershell -Command $env:DEBUG='niles:*';node index.js"
+    "windowsDebug": "@powershell -Command $env:DEBUG='niles:*';node index.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "author": "Sean Coffey",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/builders": "^0.6.0",
-    "@discordjs/rest": "^0.1.0-canary.0",
-    "@googleapis/calendar": "^0.2.0",
-    "@types/better-sqlite3": "^7.4.2",
+    "@discordjs/builders": "^0.11.0",
+    "@discordjs/rest": "^0.2.0-canary.0",
+    "@googleapis/calendar": "^1.0.1",
+    "@keyv/sqlite": "^2.0.4",
     "@types/debug": "^4.1.7",
+    "@types/i18next-fs-backend": "^1.1.2",
+    "@types/keyv": "^3.1.3",
     "@types/luxon": "^2.0.8",
-    "better-sqlite3": "^7.4.6",
-    "bree": "^6.2.0",
+    "bree": "^7.1.5",
     "columnify": "^1.5.4",
-    "debug": "^4.3.2",
-    "discord-api-types": "^0.22.0",
+    "debug": "^4.3.3",
+    "discord-api-types": "^0.26.1",
     "discord.js": "^13.5.0",
     "dotenv": "^10.0.0",
-    "i18next": "^20.3.2",
-    "i18next-fs-backend": "^1.1.1",
-    "luxon": "^1.27.0",
+    "i18next": "^21.6.5",
+    "i18next-fs-backend": "^1.1.4",
+    "keyv": "^4.0.4",
+    "luxon": "^2.3.0",
     "promise-defer": "^1.0.0",
-    "timezone-soft": "^1.2.0",
+    "timezone-soft": "^1.3.1",
     "typescript": "^4.5.4"
   },
   "devDependencies": {
-    "eslint": "^7.30.0"
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
+    "eslint": "^8.6.0"
   },
   "repository": {
     "type": "git",

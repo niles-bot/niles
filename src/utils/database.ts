@@ -1,9 +1,3 @@
-import { sqliteDB } from "./sqlite";
+import Keyv from "keyv";
 
-const db = new sqliteDB();
-const initDb = async (): Promise<void> => await db.init();
-
-export {
-  db,
-  initDb,
-};
+export const db = new Keyv("sqlite://config/niles.db", { namespace: "guilds" });

@@ -6,7 +6,7 @@ require("dotenv").config();
 const {
   BOT_TOKEN: token,
   BOT_CLIENT_ID: clientId,
-  DEV_GUILD_IDS: guildIds,
+  DEV_GUILD_IDS: guildIds
 } = process.env;
 
 const commands = readdirSync("./dist/commands")
@@ -19,7 +19,7 @@ Promise.all(
   guildIds.split(",").map(async (guildId) => {
     try {
       await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-        body: commands,
+        body: commands
       });
 
       console.log(

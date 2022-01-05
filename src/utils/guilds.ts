@@ -1,246 +1,73 @@
-// package imports
-import { DateTime } from "luxon";
-const debug = require("debug")("niles:guilds");
-import fs from "fs";
-const { join } = require("path");
-// module imports
-const { oauth2, sa } = require("../settings.js");
-import db from "./sqlite";
+import { db } from "./database";
+import Debug from "debug";
+const debug = Debug("niles:guilds");
 
-function getKnownGuilds() {
-  debug("start getKnownGuilds");
-  let fullPath = join(__dirname, "stores");
-  return fs.readdirSync(fullPath, { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => dirent.name);
-}
+type GuildValue = string | boolean | number;
+type GuildKeys = keyof typeof updateSettings | keyof typeof discordSettings | keyof typeof calendarSettings;
+type GuildNamespace = "update" | "discord" | "calendar" | "display";
 
-function addMissingGuilds(availableGuilds) {
-  //Create databases for any missing guilds
-  const knownGuilds = getKnownGuilds();
-  const unknownGuilds = availableGuilds.filter((x) => !knownGuilds.includes(x));
-  unknownGuilds.forEach((guildID) => {
-    debug(`creating new guild: ${guildID}`);
-    createGuild(guildID);
-  });
-}
-
-const emptyCal = {
-  "events": {
-    "day0": [],
-    "day1": [],
-    "day2": [],
-    "day3": [],
-    "day4": [],
-    "day5": [],
-    "day6": []
-  },
-  "lastUpdate": "",
-  "calendarMessageId": ""
+const updateSettings = {
+  channel: 0,
+  success: 0,
+  attempt: 0
 };
 
-// default guild settings
-const defaultSettings = {
-  "version": 1,
-  "prefix": "!",
-  "calendarID": "",
-  "calendarChannel": "",
-  "calendarName": "CALENDAR",
-  "timezone": "",
-  "helpmenu": "1",
-  "format": 12,
-  "tzDisplay": "0",
-  "allowedRoles": [],
-  "emptydays": "1",
-  "showpast": "0",
-  "trim": 0,
-  "days": 7,
-  "style": "code",
-  "inline": "0",
-  "description": "0",
-  "url": "0",
-  "auth": "sa",
-  "channelid": "",
-  "descLength": 0,
-  "startonly": "0",
-  "eventtime": "1",
-  "lng": "en"
+const discordSettings = {
+  admin: null as number,
+  lng: "en",
+  debug: false,
 };
 
-function writeGuildSpecific(guildID, json, file) {
-  debug(`writeGuildSpecific | ${guildID} | file: ${file}`);
-  let fullPath = join(__dirname, "..", "stores", guildID, file + ".json");
-  fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-    if (err) return debug("error writing guild specific database: " + err);
-  });
-}
-
-function createGuild(guildID) {
-  const guildPath = join(__dirname, "..", "stores", guildID);
-  if (!fs.existsSync(guildPath)) { // create directory and new files
-    fs.mkdirSync(guildPath); 
-    writeGuildSpecific(guildID, emptyCal, "calendar");
-    writeGuildSpecific(guildID, defaultSettings, "settings");
-    debug(`Guild ${guildID} has been created`);
-  }
-}
-
-function deleteGuild(guildID) {
-  const guildPath = join(__dirname, "..", "stores", guildID);
-  fs.rmdir(guildPath);
-  debug(`Guild ${guildID} has been deleted`);
-}
-
-
-function recreateGuild(guildID) {
-  deleteGuild(guildID);
-  createGuild(guildID);
-}
-
-function readFile(path) {
-  try {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
-  } catch (err) {
-    debug("error reading file " + err);
-    return {}; // return valid JSON to trigger update
-  }
-}
-
-function getGuildSpecific(guildID, file) {
-  debug(`getGuildSpecific | ${guildID} | file: ${file}`);
-  let filePath = join(__dirname, "..", "stores", guildID, file);
-  let storedData = readFile(filePath);
-  // merge defaults and stored settings to guarantee valid data - only for settings
-  // if settings - merge defaults and stored
-  // if calendar - send default if empty
-  // otherwise return normal
-  return (file === "settings.json") ? {...defaultSettings, ...storedData}
-    : (file === "calendar.json" && !Object.entries(storedData).length) ? emptyCal
-      : storedData;
-}
-
-function generateDayMap(settings) {
-  let dayMap = [];
-  // allowing all days to be correctly TZ adjusted
-  let d = DateTime.fromJSDate(new Date()).setZone(settings.timezone);
-  // if Option to show past events is set, start at startOf Day instead of NOW()
-  if (settings.showpast === "1") d = d.startOf("day");
-  dayMap[0] = d;
-  for (let i = 1; i < settings.days; i++) {
-    dayMap[i] = d.plus({ days: i }); //DateTime is immutable, this creates new objects!
-  }
-  return dayMap;
-}
-
-/**
- * @class
- */
-function Guild(guildID) {
-  // Load Settings
-  this.settings = getGuildSpecific(guildID, "settings.json"); 
-  /**
-   * Get specific or all settings
-   * @param {String} [key] - Optional key to fetch 
-   */
-  this.getSetting = (key) => (key ? this.settings[key] : this.settings);
-  /**
-   * Sets specific setting to value
-   * @param {String} key - key of setting to change
-   * @param {String} value - value to set key to
-   */
-  this.setSetting = (key, value) => {
-    this.settings[key] = value;
-    writeGuildSpecific(guildID, this.settings, "settings");
-  };
-  // common properties
-  this.prefix = this.settings.prefix;
-  this.id = guildID;
-  this.tz = this.settings.timezone;
-  this.lng = this.settings.lng;
-  // calendar
-  this.calendar = getGuildSpecific(guildID, "calendar.json");
-  /**
-   * Get calendar file
-   * @param {String} [key] - Optionally get specific key 
-   */
-  this.getCalendar = (key) => this.calendar[key];
-  // Write current calendar file
-  this.writeCalendar = () => writeGuildSpecific(guildID, this.calendar, "calendar");
-  /**
-   * Set calendar last update
-   * @param {String} date 
-   */
-  this.setCalendarLastUpdate = (date) => {
-    this.calendar.lastUpdate = date;
-    this.writeCalendar();
-  };
-  /**
-   * Set Calendar day to value
-   * @param {Integer} day - Key to change
-   * @param {[Object]} events - events to set 
-   */
-  this.setEvents = (events) => {
-    this.calendar["events"] = events;
-    this.writeCalendar();
-  };
-  // calendarID
-  /**
-   * Set Calendar Message ID
-   * @param {String} calendarID - ID of calendar message 
-   */
-  this.setCalendarID = (calendarID) => {
-    this.calendar.calendarMessageId = calendarID;
-    this.writeCalendar();
-  };
-  // generate daymap
-  this.getDayMap = () => generateDayMap(this.settings);
-  // get OAuth2 Token
-  this.getToken = () => getGuildSpecific(guildID, "token.json");
-  /**
-   * Set OAuth2 token
-   * @param {Object} token - token object to write
-   */
-  this.setToken = (token) => writeGuildSpecific(guildID, token, "token");
-  /**
-   * Gets guild authentication
-   * @returns return googleAuth object
-   */
-  this.getAuth = () => {
-    if (this.settings.auth === "oauth") {
-      oauth2.setCredentials(this.getToken());
-      return oauth2;
-    // default to SA if oauth2 failed too
-    } else { return sa;
-    }
-  };
-  /**
-   * Update settings and calendar
-   */
-  this.update = () => {
-    debug(`Guild.update | ${guildID}`);
-    this.settings = getGuildSpecific(guildID, "settings.json");
-    this.calendar = getGuildSpecific(guildID, "calendar.json");
-  };
-}
-
-module.exports = {
-  Guild,
-  createGuild,
-  deleteGuild,
-  recreateGuild,
-  addMissingGuilds
+const calendarSettings = {
+  id: null as string,
+  timezone: "Europe/UTC",
+  days: 7,
+  token: null as string,
 };
-// ts rewrite
 
-import Database from 'better-sqlite3';
-const db = require('better-sqlite3')('foobar.db', options);
+const displaySettings = {
+  name: "CALENDAR",
+  title_link: null as string,
+  footer_help: true,
+  footer_tz: true,
+  time_24h: false,
+  title: true,
+  title_length: 40,
+  desc: true,
+  desc_length: 40,
+  event_end: true,
+  event_past: false,
+  day_empty: false,
+  inline: true,
+  url: false,
+};
+
+export const defaultSettings = {
+  update: updateSettings,
+  discord: discordSettings,
+  calendar: calendarSettings,
+  display: displaySettings
+};
 
 export class NilesGuild {
-  constructor(guildID: string) {}
-  async init() {
-    //
-  }
-  async getSetting(key: string): Promise<string | boolean | number> {
+  id: number
 
+  constructor(guildID: number) {
+    this.id = guildID;
+  }
+  get = async (namespace: GuildNamespace): Promise<Record<GuildKeys, GuildValue>> => {
+    debug(`get | ${this.id} | ${namespace}`);
+    return await db.get(`v1_${this.id}_${namespace}`) || defaultSettings[namespace];
+  }
+  getValue = async (namespace: GuildNamespace, key: GuildKeys): Promise<GuildValue> => {
+    debug(`get | ${this.id} | ${namespace} | ${key}`);
+    const options = await this.get(namespace);
+    return options[key];
+  }
+  set = async (namespace: GuildNamespace, key: GuildKeys, value: GuildValue): Promise<void> => {
+    debug(`set | ${this.id} | ${namespace} | ${key} | ${value}`);
+    const options = await this.get(namespace);
+    options[key] = value;
+    await db.set(`v1_${this.id}_${namespace}`, options);
   }
 }
