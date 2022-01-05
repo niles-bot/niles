@@ -43,7 +43,8 @@ const defaultSettings = {
   "descLength": 0,
   "startonly": "0",
   "eventtime": "1",
-  "lng": "en"
+  "lng": "en",
+  "lasterr": ""
 };
 
 /**
@@ -240,6 +241,8 @@ function Guild(guildID) {
     this.settings = getGuildSpecific(guildID, "settings.json");
     this.calendar = getGuildSpecific(guildID, "calendar.json");
   };
+  this.setLastErr = (err) => this.setSetting("lasterr", err);
+  this.getLastErr = () => this.getSetting("lasterr");
 }
 
 module.exports = {

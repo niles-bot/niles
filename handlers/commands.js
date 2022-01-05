@@ -92,6 +92,10 @@ function setupAuth(args, guild, channel) {
  * @param {String} reason - reason for removal
  */
 function killUpdateTimer (guildID, reason = "none") {
+  // null out last err
+  const guild = new guilds.Guild(guildID);
+  guild.setLastErr("");
+  // remove from updaterlist
   updaterList.remove(guildID);
   const message = `removed ${guildID} | ${reason}`;
   discordLog(message);
@@ -206,7 +210,8 @@ function getEventsErrorHandler(err, guild, channel) {
   } else { discordLog(`getEvents error in guild: ${guild.id} : ${err}`);
   }
   channel.send(i18n.t("timerkilled", { lng: guild.lng }));
-  recreateCalendar(guild.id, channel, "getEvents");
+  //recreateCalendar(guild.id, channel, "getEvents");
+  killUpdateTimer(guild.id, "getEvents");
 }
 
 /**
@@ -515,7 +520,8 @@ function updateCalendar(guild, channel, human) {
   if (!guildCalendarMessageID) {
     channel.send(i18n.t("update.undefined", { lng: guild.lng }));
     discordLog(`calendar undefined in ${guild.id}. Killing update timer.`);
-    return recreateCalendar(guild.id, channel, "calendar undefined");
+    //return recreateCalendar(guild.id, channel, "calendar undefined");
+    return killUpdateTimer (guild.id, "calendar undefined");
   }
   const embed = generateCalendar(guild, channel);
   if (embed === 2048) return null;
@@ -524,10 +530,17 @@ function updateCalendar(guild, channel, human) {
     .catch((err) => {
       log(`updateCalendar | ${err}`);
       discordLog(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
+      console.log(guild.getLastErr());
+      if (guild.getLastErr() !== err.code && err.code == 10008) {
+        // if last err was not also unknown message error, just skip this cycle
+        guild.setLastErr(err.code);
+        discordLog(`skipping update cycle in guild: ${guild.id}`);
+        return;
+      }
       // If theres an updater running try and kill it.
       channel.send(i18n.t("timerkilled", { lng: guild.lng }));
       channel.send(i18n.t("update.not_found", { lng: guild.lng }));
-      recreateCalendar(guild.id, channel, "error fetching previous");
+      killUpdateTimer(guild.id, "error fetching previous");
       return guild.setCalendarID("");
     });
   // if everything went well, set lastUpdate
@@ -549,7 +562,7 @@ function calendarUpdater(guild, channel, human) {
     updateCalendar(guild, channel, human);
   } catch (err) {
     discordLog(`error in autoupdater in guild: ${guild.id} : ${err}`);
-    recreateCalendar(guild.id, channel, "error in updater");
+    killUpdateTimer(guild.id, channel, "error in updater");
   }
 }
 
