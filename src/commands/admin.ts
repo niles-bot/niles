@@ -29,6 +29,6 @@ async function setRoles(interaction: CommandInteraction, guild: NilesGuild) {
   const discordSettings = await guild.get("discord");
   // add role
   debug(`setRoles | ${guild.id} | set role: ${role}`);
-  await interaction.reply(i18n.t("admin.set", { lng: discordSettings.lng as string, role: `<@&${role}>` }));
-  return guild.set("discord", "admin", role);
+  interaction.reply(i18n.t("admin.set", { lng: discordSettings.lng as string, role: `<@&${role}>` }));
+  guild.set("discord", "admin", role);
 }
