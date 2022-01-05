@@ -243,7 +243,7 @@ function createCalendarCodeblock(guild) {
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng }) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit", locale: guild.lng });
+    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long" },  { locale: guild.lng }) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" } , {locale: guild.lng });
     // if there are no events on the day
     if (guildCalendar[key].length === 0) {
       // if empty days hidden, skip day
@@ -318,7 +318,7 @@ function generateCalendarEmbed(guild) {
     let key = "day" + String(i);
     let tempValue = "";
     let fieldObj = {
-      name: "**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit", locale: guild.lng }),
+      name: "**" + dayMap[i].toLocaleString({ weekday: "long" }, { locale: guild.lng }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit" }, { locale: guild.lng }),
       inline: (guildSettings.inline === "1")
     };
     if (guildSettings.emptydays === "0" && guildCalendar[key].length === 0) continue;

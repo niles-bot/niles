@@ -56,9 +56,9 @@ function getStringTime(date, guild) {
   return zDate.toLocaleString({
     hour: "2-digit",
     minute: "2-digit",
-    hour12: (format === 12),
-    locale: guild.lng
-  });
+    hour12: (format === 12)
+  }, { locale: guild.lng }
+);
 }
 
 /**
@@ -112,7 +112,7 @@ function createCalendarCodeblock(guild) {
   for (let i = 0; i < dayMap.length; i++) {
     let key = "day" + String(i);
     let sendString = "";
-    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng }) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit", locale: guild.lng });
+    sendString += "\n**" + dayMap[i].toLocaleString({ weekday: "long" }, { locale: guild.lng }) + "** - "+ dayMap[i].toLocaleString({ month: "long", day: "2-digit" }, { locale: guild.lng });
     // if there are no events on the day
     if (guildCalendar[key].length === 0) {
       // if empty days hidden, skip day
@@ -186,7 +186,7 @@ function generateCalendarEmbed(guild, events) {
   for (let i = 0; i < dayMap.length; i++) {
     let tempValue = "";
     let fieldObj = {
-      name: "**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit", locale: guild.lng }),
+      name: "**" + dayMap[i].toLocaleString({ weekday: "long" }, { locale: guild.lng }) + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit" }, { locale: guild.lng }),
       inline: (guildSettings.inline === "1")
     };
     if (guildSettings.emptydays === "0" && events[i].length === 0) continue;

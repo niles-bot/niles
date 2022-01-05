@@ -11,8 +11,8 @@ const generateCalendarFields (eventsArr, options) {
     // skip empty days if not supposed to display
     if (!day && !options.display.emptydays) continue;
     let fieldObj = {
-      name: "**" + dayMap[i].toLocaleString({ weekday: "long", locale: guild.lng })
-        + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit", locale: guild.lng }),
+      name: "**" + dayMap[i].toLocaleString({ weekday: "long" }, { locale: guild.lng })
+        + "** - " + dayMap[i].toLocaleString({ month: "long", day: "2-digit" }, { locale: guild.lng }),
       inline: options.display.inline
     }
     let dayString = "\u200b";
