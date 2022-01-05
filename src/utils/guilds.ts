@@ -1,4 +1,4 @@
-import { db } from "./database";
+import { db } from "~/src/utils/database";
 import Debug from "debug";
 const debug = Debug("niles:guilds");
 
@@ -7,13 +7,13 @@ type GuildKeys = keyof typeof updateSettings | keyof typeof discordSettings | ke
 type GuildNamespace = "update" | "discord" | "calendar" | "display";
 
 const updateSettings = {
-  channel: 0,
+  channel: "0",
   success: 0,
   attempt: 0
 };
 
 const discordSettings = {
-  admin: null as number,
+  admin: null as string,
   lng: "en",
   debug: false,
 };
@@ -50,9 +50,9 @@ export const defaultSettings = {
 };
 
 export class NilesGuild {
-  id: number
+  id: string
 
-  constructor(guildID: number) {
+  constructor(guildID: string) {
     this.id = guildID;
   }
   get = async (namespace: GuildNamespace): Promise<Record<GuildKeys, GuildValue>> => {

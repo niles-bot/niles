@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { NilesGuild } from "../utils/guilds";
+import { NilesGuild } from "~/src/utils/guilds";
 import { CommandInteraction } from "discord.js";
-import { Command } from "../structures/command";
-import { i18n } from "../utils/strings";
+import { Command } from "~/src/structures/command";
+import { i18n } from "~/src/utils/strings";
 import Debug from "debug";
 const debug = Debug("niles:cmd");
 
@@ -14,7 +14,7 @@ export default {
       option.setName("role")
         .setDescription("Role to allow to interact with Niles")),
   execute(interaction: CommandInteraction) {
-    const guild = new Guild(interaction.guildId);
+    const guild = new NilesGuild(interaction.guildId);
     setRoles(interaction, guild);
   }
 } as Command;
