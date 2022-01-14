@@ -31,7 +31,12 @@ const logger = {
  */
 function workerMessageHandler(msg) {
   const { guild, channel } = msg.message;
-  manager.broadcastEval(`this.emit('nilesCalendarUpdate', '${guild}', '${channel}')`);
+  try {
+    manager.broadcastEval(`this.emit('nilesCalendarUpdate', '${guild}', '${channel}')`);
+  } catch (err){
+    console.log(err);
+    if (err.name === "Error [SHARDING_NO_SHARDS]") process.exit();
+  }
 }
 
 const bree = new Bree({
