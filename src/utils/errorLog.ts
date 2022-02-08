@@ -1,4 +1,4 @@
-import { secrets } from "~/src/settings";
+import { secrets } from "niles/settings";
 import { WebhookClient } from "discord.js";
 const { error_webhook_id, error_webhook_token } = secrets;
 const webhookClient = new WebhookClient({ id: error_webhook_id, token: error_webhook_token });

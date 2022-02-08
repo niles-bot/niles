@@ -50,7 +50,7 @@ export const defaultSettings = {
 };
 
 export class NilesGuild {
-  id: string
+  id: string;
 
   constructor(guildID: string) {
     this.id = guildID;
@@ -58,16 +58,16 @@ export class NilesGuild {
   get = async (namespace: GuildNamespace): Promise<Record<GuildKeys, GuildValue>> => {
     debug(`get | ${this.id} | ${namespace}`);
     return await db.get(`v1_${this.id}_${namespace}`) || defaultSettings[namespace];
-  }
+  };
   getValue = async (namespace: GuildNamespace, key: GuildKeys): Promise<GuildValue> => {
     debug(`get | ${this.id} | ${namespace} | ${key}`);
     const options = await this.get(namespace);
     return options[key];
-  }
+  };
   set = async (namespace: GuildNamespace, key: GuildKeys, value: GuildValue): Promise<void> => {
     debug(`set | ${this.id} | ${namespace} | ${key} | ${value}`);
     const options = await this.get(namespace);
     options[key] = value;
     await db.set(`v1_${this.id}_${namespace}`, options);
-  }
+  };
 }

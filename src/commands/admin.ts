@@ -1,8 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { NilesGuild } from "~/src/utils/guilds";
+import { NilesGuild } from "utils/guilds";
 import { CommandInteraction } from "discord.js";
-import { Command } from "~/src/structures/command";
-import { i18n } from "~/src/utils/strings";
+import { Command } from "niles/types/command";
 import Debug from "debug";
 const debug = Debug("niles:cmd");
 
@@ -26,9 +25,8 @@ export default {
  */
 async function setRoles(interaction: CommandInteraction, guild: NilesGuild) {
   const role = interaction.options.getRole("role").id;
-  const discordSettings = await guild.get("discord");
   // add role
   debug(`setRoles | ${guild.id} | set role: ${role}`);
-  interaction.reply(i18n.t("admin.set", { lng: discordSettings.lng as string, role: `<@&${role}>` }));
-  guild.set("discord", "admin", role);
+  interaction.reply(`Admin role set to \`<@&${role}>\``);
+  await guild.set("discord", "admin", role);
 }
