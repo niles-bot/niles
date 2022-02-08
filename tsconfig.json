@@ -88,6 +88,6 @@
     "resolveJsonModule": true
   },
   "include": [
-    "./src/**/*", "src/settings.ts", "src-js/jobs", "src-js/commands/bot.ts", "src-js/bot.ts",
+    "./src/**/*", "src/settings.ts", "src-js/jobs", "src-js/commands/bot.ts", "src-js/bot.ts", "src-js/commands/calname.ts", "src-js/commands/display.ts",
   ]
 }

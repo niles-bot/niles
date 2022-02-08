@@ -1,7 +1,9 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
-const { Guild } = require("~/handlers/guilds.js");
-const { i18n } = require("~/handlers/strings.js");
-let debug = require("~/src/handlers/logger");
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { NilesGuild } from "utils/guilds";
+import { CommandInteraction } from "discord.js";
+import { Command } from "niles/types/command";
+import Debug from "debug";
+const debug = Debug("niles:cmd");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,6 +20,20 @@ module.exports = {
     setCalName(interaction, guild);
   }
 };
+
+export default {
+  data: new SlashCommandBuilder()
+    .setName("admin")
+    .setDescription("Set allowed role")
+    .addRoleOption((option) =>
+      option.setName("role")
+        .setDescription("Role to allow to interact with Niles")),
+  execute(interaction: CommandInteraction) {
+    const guild = new NilesGuild(interaction.guildId);
+    setRoles(interaction, guild);
+  }
+} as Command;
+
 
 /**
  * Rename Calendar Name
