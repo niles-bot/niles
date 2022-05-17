@@ -14,7 +14,7 @@ try {
   process.exit(1);
 }
 
-manager.spawn(); // spawn auto
+manager.spawn({ amount: "auto", delay: 1000 }); // spawn auto
 manager.on("shardCreate", (shard) => {
   console.log(`Spawned shard ${shard.id}`);
 });
@@ -26,14 +26,23 @@ const logger = {
 };
 
 /**
+ * Emit update message
+ * @param {Client} client 
+ * @param {Object} args - Arguments to pass through 
+ */
+function emitUpdate (client, { guild, channel}) {
+  client.emit("nilesCalendarUpdate", guild, channel);
+}
+
+/**
  * handle worker messages
  * @param {{channel, guild}} msg 
  */
 function workerMessageHandler(msg) {
   const { guild, channel } = msg.message;
   try {
-    manager.broadcastEval(`this.emit('nilesCalendarUpdate', '${guild}', '${channel}')`);
-  } catch (err){
+    manager.broadcastEval(emitUpdate, { context: { guild, channel }});
+  } catch (err) {
     console.log(err);
     if (err.name === "Error [SHARDING_NO_SHARDS]") process.exit();
   }

@@ -10,7 +10,7 @@ const { i18n } = require("./strings.js");
 function send(channel, content, timeout=5000) {
   channel.send(content)
     .then((message) => {
-      message.delete({ timeout });
+      setTimeout(() => message.delete(), timeout);
     });
 }
 
