@@ -2,7 +2,7 @@ const discord = require("discord.js");
 const { readdirSync } = require("fs");
 const { join } = require("path");
 const debug = require("debug")("niles:bot");
-const client = new discord.Client();
+const client = new discord.Client({ intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES] });
 exports.client = client;
 const TOKEN = require("./settings.js").secrets.bot_token;
 const commands = require("./handlers/commands.js");
@@ -87,7 +87,7 @@ function runCmd(message) {
   // check if user is allowed to interact with Niles
   if (!checkRole(message, guildSettings)) { // if no permissions, warn
     return message.channel.send(i18n.t("norole", { lng: guild.lng, allowedrole: guildSettings.allowedRoles[0] }))
-      .then((message) => message.delete({ timeout: 10000 }));
+      .then(setTimeout(() => message.delete(), 10000));
   }
   // check missing permisions
   const missingPermissions = permissionCheck(message.channel);
@@ -130,7 +130,7 @@ client.on("guildDelete", (guild) => {
   guilds.deleteGuild(guild.id);
 });
 
-client.on("message", (message) => {
+client.on("messageCreate", (message) => {
   try {
     if (message.channel.type === "dm" || message.author.bot) return; // ignore if dm or sent by bot
     runCmd(message); // run command through parser

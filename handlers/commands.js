@@ -26,7 +26,7 @@ const { zoneNames } = require("@mchangrh/tzdb-names");
  */
 function send(channel, content, timeout=5000) {
   channel.send(content)
-    .then((message) => message.delete({ timeout }));
+    .then((message) => setTimeout(() => message.delete(), timeout));
 }
 
 /**
@@ -51,7 +51,7 @@ function getAccessToken(force, guild, channel) {
     description: i18n.t("auth.oauth.prompt", { lng: guild.length, authUrl })
   };
   log("getAccessToken | send auth embed");
-  send(channel, { embed: authEmbed }, 30000 );
+  send(channel, { embeds: [authEmbed] }, 30000 );
   let collector = channel.createMessageCollector((msg) => !msg.author.bot, { time: 30000 });
   collector.on("collect", (m) => {
     settings.oauth2.getToken(m.content, (err, token) => {
@@ -159,13 +159,12 @@ function clean(channel, numMsg, deleteCal) {
 function deleteMessages(args, channel, lng) {
   const argMessages = Number(args[0]);
   const deleteCalendar = Boolean(args[1]);
-  const guild = new guilds.Guild(channel.guild.id);
   if (!argMessages || isNaN(argMessages)) {
     return channel.send(i18n.t("delete.noarg", { lng }));
   } else {
-    channel.send(i18n.t("delete.confirm", { lng, argMessages }));
-    helpers.yesThenCollector(channel, guild.lng)
-      .then(() => clean(channel, argMessages, deleteCalendar))
+    channel.send("[WARNING] Collector does not wait anymore, it will start deleting immediately");
+    setTimeout(1000);
+    clean(channel, argMessages, deleteCalendar)
       .catch((err) => discordLog(err));
   }
 }
@@ -466,7 +465,7 @@ function generateCalendar(guild, channel) {
   embed.setTitle(guildSettings.calendarName)
     .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
     .setColor("BLUE")
-    .setFooter("Last update")
+    .setFooter({ text: "Last update" })
     .setTimestamp();
   // set description or fields
   if (isEmptyCalendar(guild, dayMap)) {
@@ -526,7 +525,7 @@ function updateCalendar(guild, channel, human) {
   const embed = generateCalendar(guild, channel);
   if (embed === 2048) return null;
   channel.messages.fetch(guildCalendarMessageID)
-    .then((m) => m.edit({ embed }))
+    .then((m) => m.edit({ embeds: [embed] }))
     .catch((err) => {
       log(`updateCalendar | ${err}`);
       discordLog(`error fetching previous calendar message in guild: ${guild.id} : ${err}`);
@@ -587,13 +586,13 @@ function postCalendar(guild, channel) {
   const guildCalendarMessageID = guild.getCalendar("calendarMessageId");
   if (guildCalendarMessageID) {
     channel.messages.fetch(guildCalendarMessageID)
-      .then((message) => message.delete())
+      .then((message) => setTimeout(() => message.delete(), 10000))
       .catch((err) => discordLog(`error fetching previous calendar in guild: ${guild.id} : ${err}`));
   }
   try {
     const embed = generateCalendar(guild, channel);
     if (embed === 2048) return null;
-    channel.send({ embed }).then((sent) => {
+    channel.send({ embeds: [embed] }).then((sent) => {
       log(`postCalendar | ${guild.id} | calID ${sent.id}`);
       guild.setCalendarID(sent.id);
       if (guild.getSetting("pin") === "1") sent.pin();
@@ -756,13 +755,13 @@ function deleteEvent(args, guild, channel) {
   let promptDate = (event.start.dateTime ? event.start.dateTime : event.start.date);
   send(channel, i18n.t("deleteevent.prompt", {lng: guild.lng, summary: event.summary, promptDate}), 30000);
   const calendarID = guild.getSetting("calendarID");
-  helpers.yesThenCollector(channel, guild.lng).then(() => { // collect yes
-    deleteEventById(event.id, calendarID, channel)
-      .then(() => { send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: event.summary }));
-      }).then((res) => { res.delete({ timeout: 10000 });
-      }).catch((err) => { discordLog(err);
-      });
-  });
+  helpers.yesThenCollector(channel, guild.lng)
+    .then(() => { // collect yes
+      deleteEventById(event.id, calendarID, channel);
+    })
+    .then(() => send(channel, i18n.t("deleteevent.confirm", {lng: guild.lng, summary: event.summary })))
+    .then((message) => setTimeout(() => message.delete(), 10000))
+    .catch((err) => discordLog(err));
 }
 
 /**
@@ -866,7 +865,7 @@ function displayStats(channel) {
       ],
       footer: { text: "Created by the Niles Bot Team" }
     };
-    return channel.send({ embed: embedObj });
+    return channel.send({ embeds: [embedObj] });
   }).catch((err) => {
     discordLog(err);
   });
@@ -885,13 +884,9 @@ function calName(args, guild, channel) {
   // chain togeter args
   else newCalName = args.join(" "); // join
   if (newCalName.length > 256) { return send("Calendar title cannot be more than 256 characters"); }
-  send(channel, i18n.t("calname.prompt", { newCalName, lng: guild.lng }), 30000);
-  helpers.yesThenCollector(channel, guild.lng).then(() => {
-    guild.setSetting("calendarName", newCalName);
-    log(`calName | ${guild.id} | changed to ${newCalName}`);    
-    return send(channel, i18n.t("calname.confirm", { newCalName, lng: guild.lng }));
-  }).catch((err) => { discordLog(err);
-  });
+  guild.setSetting("calendarName", newCalName);
+  log(`calName | ${guild.id} | changed to ${newCalName}`);    
+  return send(channel, i18n.t("calname.confirm", { newCalName, lng: guild.lng }));
 }
 
 /**
@@ -917,11 +912,8 @@ function setChannel(args, guild, channel) {
     send(channel, i18n.t("setchannel.delete", { lng: guild.lng }));
   } else if (args[0] === "set") {
     log(`setChannel | ${guild.id} | set: ${channel.name}`);
-    send(channel, i18n.t("setchannel.prompt", { channel: channel.name, lng: guild.lng }), 30000);
     // set after collecting yes
-    helpers.yesThenCollector(channel, guild.lng).then(() => { return guild.setSetting("channelid", channel.id);
-    }).catch((err) => { discordLog(err);
-    });
+    return guild.setSetting("channelid", channel.id);
   }
 }
 
@@ -940,10 +932,8 @@ function setLocale(args, guild, channel) {
     channel.send(`The current locale is ${currentLocale} for date formatting and ${i18n.t("language", {lng: currentLocale})} for text.`);
   } else if (localeRegex.test(locale)) { // passes validation
     channel.send(`I've been setup to use ${currentLocale}, do you want to overwrite this and use ${locale}? (Please see https://nilesbot.com/locale for details) **(y/n)**`);
-    helpers.yesThenCollector(channel, "en").then(() => {
-      log(`setLocale | ${guild.id} | set to locale: ${locale}`);
-      return guild.setSetting("lng", locale);
-    }).catch((err) => { discordLog(err); });
+    log(`setLocale | ${guild.id} | set to locale: ${locale}`);
+    return guild.setSetting("lng", locale);
   // fails validation
   } else {
     log(`setLocale | ${guild.id} | failed validation: ${locale}`);
@@ -980,11 +970,8 @@ function logID(channel, args, guild) {
   // overwrite calendarid, passed validation
   } else if (oldCalendarID) {
     channel.send(i18n.t("collector.overwrite_prompt", { old: oldCalendarID, new: newCalendarID, lng: guild.lng }));
-    helpers.yesThenCollector(channel, guild.lng).then(() => {
-      log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
-      return guild.setSetting("calendarID", newCalendarID);
-    }).catch((err) => { discordLog(err);
-    });
+    log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
+    return guild.setSetting("calendarID", newCalendarID);
   // no set calendarid, passed validation
   } else {
     log(`logID | ${guild.id} | set to newID: ${newCalendarID}`);
@@ -1017,18 +1004,8 @@ function logTz(channel, args, guild) {
   }
   // valid input
   else if (newTz) { // tz parserd
-    if (currentTz) { // timezone set
-      channel.send(i18n.t("collector.overwrite_prompt", { lng: guild.lng, old: currentTz, new: newTz }));
-      helpers.yesThenCollector(channel, guild.lng).then(() => {
-        log(`logTz | ${guild.id} | set to new tz: ${newTz}`);
-        return guild.setSetting("timezone", newTz);
-      }).catch((err) => { discordLog(err);
-      });
-    // timezone is not set
-    } else {
-      log(`logTz | ${guild.id} | set to new tz: ${tz}`);
-      guild.setSetting("timezone", newTz); }
-  // fails validation
+    log(`logTz | ${guild.id} | set to new tz: ${tz}`);
+    guild.setSetting("timezone", newTz);
   } else {
     log(`logID | ${guild.id} | failed validation: ${tz}`);
     channel.send(i18n.t("collector.invalid", { name: "$t(timezone)", lng: guild.lng })); }
@@ -1046,11 +1023,9 @@ function setPrefix(channel, args, guild) {
   if (!newPrefix) { channel.send(i18n.t("collector.exist", { old: guild.prefix, name: "prefix", lng: guild.lng }));
   } else if (newPrefix) {
     channel.send(`Do you want to set the prefix to \`${newPrefix}\` ? **(y/n)**`);
-    helpers.yesThenCollector(channel, guild.lng).then(() => {
-      log(`setPrefix | ${guild.id} | set to: ${newPrefix}`);
-      channel.send(`prefix set to ${newPrefix}`);
-      return guild.setSetting("prefix", newPrefix);
-    }).catch((err) => { discordLog(err); });
+    log(`setPrefix | ${guild.id} | set to: ${newPrefix}`);
+    channel.send(`prefix set to ${newPrefix}`);
+    return guild.setSetting("prefix", newPrefix);
   }
 }
 
@@ -1085,13 +1060,21 @@ function setRoles(message, args, guild) {
     } else {
       // restricting succeeded
       log(`setRoles | ${guild.id} | prompt role: ${adminRole}`);
-      message.channel.send(i18n.t("admin.prompt", {lng, adminRole}));
       roleArray = [adminRole];
     }
     // prompt for confirmation
-    helpers.yesThenCollector(message.channel, guild.lng).then(() => { return guild.setSetting("allowedRoles", roleArray);
-    }).catch((err) => { discordLog(err); });
+    return guild.setSetting("allowedRoles", roleArray);
   }
+}
+
+// restart shard function
+/**
+ * Restart targeted shard
+ * @param {Client} client 
+ * @param {Object} args - argument to be passed through 
+ */
+function restartShard(client, { shardNo }) {
+  if (client.shard.ids.includes(shardNo)) process.exit();
 }
 
 /**
@@ -1109,7 +1092,8 @@ function adminCmd (cmd, args) {
     } else {
       response = `Restarting shard ${shardNo}`;
       discordLog(response);
-      client.shard.broadcastEval(`if (this.shard.ids.includes(${shardNo})) process.exit();`);
+
+      client.shard.broadcastEval(restartShard, {context: { arg: shardNo}});
     }
     return response;
   } else if (cmd === "debug") {
@@ -1163,7 +1147,7 @@ function run(cmd, args, message) {
     const inviteEmbed = {
       description: `Click [here](https://discord.com/oauth2/authorize?permissions=97344&scope=bot&client_id=${client.user.id}) to invite me to your server`,
       color: 0xFFFFF };
-    channel.send({ embed: inviteEmbed });
+    channel.send({ embeds: [inviteEmbed] });
   } else if (["admin"].includes(cmd)) { setRoles(message, args, guild);
   } else if (["prefix"].includes(cmd)) { setPrefix(channel, args, guild);
   } else if (["id"].includes(cmd)) { logID(channel, args, guild);
@@ -1200,7 +1184,7 @@ function run(cmd, args, message) {
   } else if (["channel"].includes(cmd)) { setChannel(args, guild, channel);
   } else if (["locale"].includes(cmd)) {setLocale(args, guild,channel);
   }
-  message.delete({ timeout: 5000 });
+  setTimeout(() => message.delete(), 10000);
 }
 
 module.exports = {
