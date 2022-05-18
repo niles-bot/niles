@@ -35,6 +35,9 @@ const commandData = new SlashCommandBuilder()
       ).addBooleanOption(option =>
         option.setName("emptydays")
           .setDescription("Show empty days")
+      ).addBooleanOption(option =>
+        option.setName("pastevents")
+          .setDescription("Show past events")
       )
   )
 
