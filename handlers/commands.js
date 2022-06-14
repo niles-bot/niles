@@ -323,6 +323,21 @@ function durationString(event, guild) {
 }
 
 /**
+ * Creates event discord timestamp
+ * @param {Event} event - Event to create for
+ * @returns {String}
+ */
+function generateEventTimeStamp(event, guild) {
+  // check for early exit condition
+  // middle of multi-day or no time, return empty string
+  if (Object.keys(event.start).includes("date") || event.type === eventType.MULTIMID) return "";
+  // event must have dateTime
+  const zDate = DateTime.fromISO(event.start.dateTime, {setZone: true});
+  const timestamp = date.getTime();
+  return `<t:${timestamp}:R>`;
+}
+
+/**
  * Generate codeblock messsage for calendar display
  * @param {Guild} guild - guild to create for
  */
@@ -381,7 +396,8 @@ function embedEventString(event, guild) {
   const guildSettings = guild.getSetting();
   const duration = durationString(event, guild);
   const eventTitle = eventNameCreator(event, guildSettings); // add link if there is a location
-  let eventString = (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle}\n`: `${eventTitle}\n`);
+  const eventTimeStamp = generateEventTimeStamp(event);
+  let eventString = (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle} ${eventTimeStamp}\n`: `${eventTitle}\n`);
   // limit description length
   const descLength = guildSettings.descLength;
   const description = event.description;
