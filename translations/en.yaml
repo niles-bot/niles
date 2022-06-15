@@ -75,6 +75,7 @@ displayoptions:
     confirmOff: Set {{help}} off
     pin: calendar pinning
     tzDisplay: calendar timezone display
+    timestamp: timestamp display
     emptydays: calendar empty days
     showpast: display of today's past events
     startonly: start time only

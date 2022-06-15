@@ -396,7 +396,7 @@ function embedEventString(event, guild) {
   const guildSettings = guild.getSetting();
   const duration = durationString(event, guild);
   const eventTitle = eventNameCreator(event, guildSettings); // add link if there is a location
-  const eventTimeStamp = generateEventTimeStamp(event);
+  const eventTimeStamp = (guildSettings.timestamp === "1" ? generateEventTimeStamp(event): '');
   let eventString = (guildSettings.eventtime === "1" ? `**${duration}** | ${eventTitle} ${eventTimeStamp}\n`: `${eventTitle}\n`);
   // limit description length
   const descLength = guildSettings.descLength;

@@ -71,6 +71,9 @@ const doHelpArray = {
     name: "days",
     default: 7,
     max: 60
+  }, timestamp: {
+    type: "binaryNumber",
+    name: "timestamp",
   }
 };
 
