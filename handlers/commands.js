@@ -333,7 +333,7 @@ function generateEventTimeStamp(event, guild) {
   if (Object.keys(event.start).includes("date") || event.type === eventType.MULTIMID) return "";
   // event must have dateTime
   const zDate = DateTime.fromISO(event.start.dateTime, {setZone: true});
-  const timestamp = date.getTime();
+  const timestamp = zDate.toSeconds();
   return `<t:${timestamp}:R>`;
 }
 
