@@ -327,7 +327,7 @@ function durationString(event, guild) {
  * @param {Event} event - Event to create for
  * @returns {String}
  */
-function generateEventTimeStamp(event, guild) {
+function generateEventTimeStamp(event) {
   // check for early exit condition
   // middle of multi-day or no time, return empty string
   if (Object.keys(event.start).includes("date") || event.type === eventType.MULTIMID) return "";
