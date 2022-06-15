@@ -117,6 +117,7 @@ displayoptions:
       !displayoptions url          (0|1)         hide/show "location" as embedded link (embed only)
       !displayoptions startonly    (0|1)         only show start time
       !displayoptions eventtime    (0|1)         don't show event time
+      !displayoptions timestamp    (0|1)         hide/show discord timestamp after the event description (embed only)
       !displayoptions desclength   (n)           trim description to n characters (0 =  off)
     ```
 
