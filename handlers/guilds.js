@@ -44,7 +44,8 @@ const defaultSettings = {
   "startonly": "0",
   "eventtime": "1",
   "lng": "en",
-  "lasterr": ""
+  "lasterr": "",
+  "timestamp": "1",
 };
 
 /**
