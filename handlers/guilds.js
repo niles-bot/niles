@@ -214,7 +214,11 @@ function Guild(guildID) {
     this.writeCalendar();
   };
   // generate daymap
-  this.getDayMap = () => generateDayMap(this.settings);
+  this.getDayMap = () => {
+    const settings = getGuildSpecific(guildID, "settings.json");
+    this.settings = settings;
+    return generateDayMap(settings);
+  };
   // get OAuth2 Token
   this.getToken = () => getGuildSpecific(guildID, "token.json");
   /**
