@@ -83,7 +83,7 @@ function runCmd(message) {
   args = args ? args : []; // return empty array if no args
   // if no command, return
   if (!cmd) return;
-  cmd = cmd.toLowerCase();
+  cmd = cmd?.toLowerCase();
   // ignore non-whitelisted commands
   if (!validCmd.includes(cmd)) return;
   // check if user is allowed to interact with Niles
