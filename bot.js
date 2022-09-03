@@ -81,6 +81,8 @@ function runCmd(message) {
   // if mentioned return second object as command, if not - return first object as command
   let cmd = message.mentions.has(client.user.id) ? args.splice(0, 2)[1] : args.shift();
   args = args ? args : []; // return empty array if no args
+  // if no command, return
+  if (!cmd) return;
   cmd = cmd.toLowerCase();
   // ignore non-whitelisted commands
   if (!validCmd.includes(cmd)) return;
