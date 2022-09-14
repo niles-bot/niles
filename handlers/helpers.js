@@ -91,7 +91,8 @@ function checkRole(message, guildSettings) {
 function permissionCheck(channel) {
   debug(`permissionCheck | ${channel.guild.id}`);
   const minimumPermissions = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
-  const botPermissions = channel.permissionsFor(bot.client.user).toArray();
+  const botPermissions = channel.permissionsFor(bot.client.user)?.toArray();
+  if (!botPermissions) return []; // bypass for forums channels
   const missingPermissions = minimumPermissions.filter((perm) => !botPermissions.includes(perm)).join(", ");
   debug(`permissioncheck | missing: ${missingPermissions}`);
   return (missingPermissions);
