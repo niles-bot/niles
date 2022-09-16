@@ -629,6 +629,10 @@ function postCalendar(guild, channel) {
 function quickAddEvent(args, guild, channel) {
   log(`quickAddEvent | ${guild.id} | args ${args}`);
   if (!args[0]) return send(channel, i18n.t("quick_add.noarg", { lng: guild.lng }));
+  const zwsp = "​";
+  let text = args.join(" "); //join
+  if (["["].includes(text[0]))
+    text = zwsp + text; // add zswp if starts with """invalid""" characters
   const params = {
     calendarId: guild.getSetting("calendarID"),
     text: args.join(" ") // join
