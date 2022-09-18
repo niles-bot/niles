@@ -67,6 +67,23 @@ function getAccessToken(force, guild, channel) {
 }
 
 /**
+ * Force Set Access Token
+ * @param {string} guild guildID of target
+ * @param {Channel} channel channel of target
+ * @param {*} input 
+ * @returns 
+ */
+function setAccessToken(guild, channel, input) {
+  if (!settings.oauth2) { return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng })); }
+  settings.oauth2.getToken(input, (err, token) => {
+    if (err) return send(channel, i18n.t("auth.oauth.err", { lng: guild.lng, err }));
+    send(channel, i18n.t("auth.oauth.confirm", { lng: guild.lng }));
+    guild.setSetting("auth", "oauth");
+    guild.setToken(token);
+  });
+}
+
+/**
  * Guide user through authentication setup
  * @param {[String]} args - Arguments passed in
  * @param {Guild} guild - Guild to pull settings form
@@ -77,6 +94,9 @@ function setupAuth(args, guild, channel) {
   log(`setupAuth | ${guild.id}`);
   if (args[0] === "oauth") {
     if (!settings.oauth2) return send(channel, i18n.t("auth.oauth.notinstalled", { lng: guild.lng }));
+    if (args[1] === "set") {
+      return setAccessToken(guild, channel, args[2]);
+    }
     getAccessToken((args[1] === "force"), guild, channel);
   } else if (args[0] === "sa") {
     if (!settings.sa) return send(channel, i18n.t("auth.sa.notinstalled", { lng: guild.lng }));
