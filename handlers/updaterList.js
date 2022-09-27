@@ -7,7 +7,17 @@ const filename = join(__dirname, "..", "stores", "todo_list.json");
  * Load json file
  * @returns {[{guild, channel}]} - Array with objects containing guild and chnanel
  */
-const load = () => !existsSync(filename) ? [] : JSON.parse(readFileSync(filename, "utf8")).list;
+const load = () => !existsSync(filename) ? [] : safeLoadFile();
+
+const safeLoadFile = () => {
+  try {
+    const data = readFileSync(filename, "utf8");
+    const json = JSON.parse(data);
+    return json.list;
+  } catch (err) {
+    return [];
+  }
+};
 
 /**
  * Append guild to list

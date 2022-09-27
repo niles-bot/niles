@@ -114,7 +114,7 @@ function setupAuth(args, guild, channel) {
 function killUpdateTimer (guildID, reason = "none") {
   // null out last err
   const guild = new guilds.Guild(guildID);
-  guild.setLastErr("");
+  guild.setLastErr(reason);
   // remove from updaterlist
   updaterList.remove(guildID);
   const message = `removed ${guildID} | ${reason}`;
