@@ -499,10 +499,12 @@ function generateCalendar(guild, channel) {
   // create embed
   let embed = new discord.MessageEmbed();
   embed.setTitle(guildSettings.calendarName)
-    .setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID)
     .setColor("BLUE")
     .setFooter({ text: "Last update" })
     .setTimestamp();
+  if (guildSettings.calurl === "1") {
+    embed.setURL("https://calendar.google.com/calendar/embed?src=" + guildSettings.calendarID);
+  }
   // set description or fields
   if (isEmptyCalendar(guild, dayMap)) {
     embed.setDescription("```No Upcoming Events```");

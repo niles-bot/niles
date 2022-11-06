@@ -45,7 +45,8 @@ const defaultSettings = {
   "eventtime": "1",
   "lng": "en",
   "lasterr": "",
-  "timestamp": "0"
+  "timestamp": "0",
+  "calurl": "1"
 };
 
 /**

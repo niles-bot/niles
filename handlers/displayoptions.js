@@ -73,7 +73,10 @@ const doHelpArray = {
     max: 60
   }, timestamp: {
     type: "binaryNumber",
-    name: "timestamp",
+    name: "timestamp"
+  }, calurl: {
+    type: "binaryNumber",
+    name: "calurl"
   }
 };
 
