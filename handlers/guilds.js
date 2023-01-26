@@ -67,7 +67,8 @@ function deleteFolderRecursive(path) {
  */
 function writeGuildSpecific(guildID, json, file) {
   log(`writeGuildSpecific | ${guildID} | file: ${file}`);
-  let fullPath = join(__dirname, "..", "stores", guildID, file + ".json");
+  const basePath = process.env.STORE_PATH ?? join(__dirname, "..", "stores");
+  let fullPath = join(basePath, guildID, file + ".json");
   fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
     if (err) return log("error writing guild specific database: " + err);
   });
@@ -78,7 +79,8 @@ function writeGuildSpecific(guildID, json, file) {
  * @param {String} guildID - Guild to create files for
  */
 function createGuild(guildID) {
-  const guildPath = join(__dirname, "..", "stores", guildID);
+  const basePath = process.env.STORE_PATH ?? join(__dirname, "..", "stores");
+  const guildPath = join(basePath, guildID);
   if (!fs.existsSync(guildPath)) { // create directory and new files
     fs.mkdirSync(guildPath); 
     writeGuildSpecific(guildID, emptyCal, "calendar");
@@ -92,7 +94,8 @@ function createGuild(guildID) {
  * @param {String} guildID - guild to delete configuration for
  */
 function deleteGuild(guildID) {
-  const guildPath = join(__dirname, "..", "stores", guildID);
+  const basePath = process.env.STORE_PATH ?? join(__dirname, "..", "stores");
+  const guildPath = join(basePath, guildID);
   deleteFolderRecursive(guildPath);
   log(`Guild ${guildID} has been deleted`);
 }
@@ -125,7 +128,8 @@ function readFile(path) {
  */
 function getGuildSpecific(guildID, file) {
   log(`getGuildSpecific | ${guildID} | file: ${file}`);
-  let filePath = join(__dirname, "..", "stores", guildID, file);
+  const basePath = process.env.STORE_PATH ?? join(__dirname, "..", "stores");
+  let filePath = join(basePath, guildID, file);
   let storedData = readFile(filePath);
   // merge defaults and stored settings to guarantee valid data - only for settings
   // if settings - merge defaults and stored

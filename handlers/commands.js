@@ -1139,13 +1139,14 @@ function adminCmd (cmd, args) {
     }
     return response;
   } else if (cmd === "debug") {
+    const storePath = process.env.STORE_PATH ?? "stores";
     return {
       content: `debug for guild ${args[0]}`,
       files: [{
-        attachment: `stores/${args[0]}/calendar.json`,
+        attachment: `${storePath}/${args[0]}/calendar.json`,
         name: "calendar.json"
       }, {
-        attachment: `stores/${args[0]}/settings.json`,
+        attachment: `${storePath}/${args[0]}/settings.json`,
         name: "settings.json"
       }]
     };

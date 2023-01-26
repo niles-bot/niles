@@ -1,7 +1,8 @@
 const { readFileSync, writeFileSync, existsSync} = require("fs");
 const { join } = require("path");
 const log = require("debug")("niles:updater-list");
-const filename = join(__dirname, "..", "stores", "todo_list.json");
+const basePath = process.env.STORE_PATH ?? join(__dirname, "..", "stores");
+const filename = join(basePath, "todo_list.json");
 
 /**
  * Load json file

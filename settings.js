@@ -1,4 +1,5 @@
-const secrets = require("./config/secrets.json");
+let secretsPath = process.env.SECRETS_PATH ?? "./config/secrets.json";
+const secrets = require(secretsPath);
 const { readFileSync } = require("fs");
 const { auth } = require("@googleapis/calendar");
 

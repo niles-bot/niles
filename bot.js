@@ -28,7 +28,7 @@ client.on("nilesCalendarUpdate", (gid, cid) => {
  */
 function getKnownGuilds() {
   debug("start getKnownGuilds");
-  let fullPath = join(__dirname, "stores");
+  let fullPath = process.env.STORE_PATH ?? join(__dirname, "stores");
   return readdirSync(fullPath, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
