@@ -16,7 +16,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/niles-bot/${{ inputs.name }}
+            ghcr.io/niles-bot/niles
           flavor: |
             latest=true
       - name: Set up QEMU
