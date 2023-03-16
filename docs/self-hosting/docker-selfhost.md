@@ -27,7 +27,7 @@ docker run -d \
   -v ./secrets.json:/usr/src/niles/config/secrets.json \ 
   -v ./niles-sa.json:/usr/src/niles/config/niles-sa.json \
   -v ./niles-oauth.json:/usr/src/niles/config/niles-oauth.json \
-  mchangrh/niles:latest
+  ghcr.io/niles-bot/niles:latest
 ```
 
 ## System Requirements
