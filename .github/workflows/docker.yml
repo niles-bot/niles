@@ -3,6 +3,7 @@ name: docker-ci
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   docker:
@@ -30,7 +31,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GH_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         uses: docker/build-push-action@v2
         with:
